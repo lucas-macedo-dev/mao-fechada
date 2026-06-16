@@ -240,7 +240,7 @@ function App() {
   if (!user) {
     return (
       <main className="layout">
-        <h1>Muquirana Finance Control</h1>
+        <h1>Pão duro Controle Financeiro</h1>
         <p className="subtitle">Simple personal finance now, mobile-ready later.</p>
 
         <div className="grid two">
@@ -297,7 +297,7 @@ function App() {
     <main className="layout">
       <header className="header">
         <div>
-          <h1>Muquirana Finance Control</h1>
+          <h1>Pão duro Controle Financeiro</h1>
           <p className="subtitle">
             {user.name} • Plan: {user.plan} • Subscription: {user.subscription_status}
           </p>

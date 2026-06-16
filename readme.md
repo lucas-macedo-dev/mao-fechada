@@ -1,9 +1,9 @@
-# muquirana — Ambiente de Desenvolvimento
+# pao_duro — Ambiente de Desenvolvimento
 
 ## Estrutura do monorepo
 
 ```
-muquirana/
+pao_duro/
 ├── api/                        # Laravel (backend)
 │   ├── app/
 │   ├── routes/api.php
@@ -40,8 +40,8 @@ muquirana/
 
 ```bash
 # 1. Clonar o repositório
-git clone git@github.com:seu-usuario/muquirana.git
-cd muquirana
+git clone git@github.com:seu-usuario/pao_duro.git
+cd pao_duro
 
 # 2. Rodar o setup completo (cria .env, build, migrate, key:generate)
 make setup

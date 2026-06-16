@@ -1,4 +1,4 @@
-# Copilot instructions for `muquirana`
+# Copilot instructions for `pao_duro`
 
 ## Build, test, and lint commands
 
