@@ -35,7 +35,7 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key:      ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            rm -rf /var/www/fincontrol-web/*
+            rm -rf /var/www/mao-fechada/web/*
 
       - name: Copy build via SCP
         uses: appleboy/scp-action@v0.1.7
@@ -44,5 +44,5 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key:      ${{ secrets.SSH_PRIVATE_KEY }}
           source:   'web/dist/*'
-          target:   '/var/www/fincontrol-web'
+          target:   '/var/www/mao-fechada/web'
           strip_components: 2
