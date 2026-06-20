@@ -18,6 +18,7 @@ Route::prefix('v1')->group(function (): void {
     Route::middleware('auth:sanctum')->group(function (): void {
         Route::get('/auth/me', [AuthController::class, 'me']);
         Route::post('/auth/logout', [AuthController::class, 'logout']);
+        Route::patch('/users/me', [AuthController::class, 'updateProfile']);
         Route::patch('/users/me/preferences', [AuthController::class, 'updatePreferences']);
 
         Route::apiResource('categories', CategoryController::class);

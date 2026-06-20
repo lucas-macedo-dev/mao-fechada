@@ -72,6 +72,12 @@ export interface SubscriptionStatus {
   entitlements: Record<string, { limit: number | null; is_enforced: boolean }>
 }
 
+export interface Plan {
+  code: string
+  name: string
+  features: Record<string, { limit: number | null; is_enforced: boolean }>
+}
+
 export interface PaginatedResponse<T> {
   data: T[]
   meta: {

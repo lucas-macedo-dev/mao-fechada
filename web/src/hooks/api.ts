@@ -69,7 +69,7 @@ export function useCreateCategory() {
 }
 
 // Transactions
-export function useTransactions(params?: { category_id?: number; type?: string; payment_method?: string; month?: string; per_page?: number }) {
+export function useTransactions(params?: { category_id?: number; type?: string; payment_method?: string; month?: string; per_page?: number; page?: number }) {
   return useQuery({
     queryKey: ['transactions', params],
     queryFn: () => api.listTransactions(params),
@@ -80,7 +80,8 @@ export function useTransactions(params?: { category_id?: number; type?: string; 
 export function useCreateTransaction() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (payload: any) => api.createTransaction(payload),
+    mutationFn: (payload: { category_id: number; type: string; payment_method: string; amount: number; transacted_at: string; notes?: string }) =>
+      api.createTransaction(payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['transactions'] })
       queryClient.invalidateQueries({ queryKey: ['dashboard'] })
@@ -102,5 +103,25 @@ export function useSubscription() {
     queryKey: ['subscription'],
     queryFn: () => api.getSubscription(),
     enabled: !!localStorage.getItem('auth_token'),
+  })
+}
+
+export function usePlans() {
+  return useQuery({
+    queryKey: ['plans'],
+    queryFn: () => api.listPlans(),
+    enabled: !!localStorage.getItem('auth_token'),
+  })
+}
+
+export function useUpdateProfile() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (payload: { name?: string; email?: string; password?: string; password_confirmation?: string; locale?: string }) => api.updateProfile(payload),
+    onSuccess: (user) => {
+      queryClient.setQueryData(['auth', 'me'], user)
+      queryClient.invalidateQueries({ queryKey: ['subscription'] })
+    },
   })
 }

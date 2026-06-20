@@ -1,7 +1,28 @@
 import { useTranslation } from 'react-i18next'
 import { useDashboardSummary, useTransactions } from '../hooks/api'
+import { getCategoryIconClass } from '../constants/categoryIcons'
 import { useState } from 'react'
 import '../styles/pages.css'
+
+function formatTransactionDate(value: string): string {
+  const datePart = value.slice(0, 10)
+
+  if (/^\d{4}-\d{2}-\d{2}$/.test(datePart)) {
+    const [year, month, day] = datePart.split('-').map(Number)
+    return new Date(year, month - 1, day).toLocaleDateString()
+  }
+
+  const parsed = new Date(value)
+  return Number.isNaN(parsed.getTime()) ? value : parsed.toLocaleDateString()
+}
+
+function normalizeType(type: string | undefined): 'entrada' | 'saida' {
+  if (type === 'income' || type === 'entrada') {
+    return 'entrada'
+  }
+
+  return 'saida'
+}
 
 export function HomePage() {
   const { t } = useTranslation()
@@ -49,11 +70,16 @@ export function HomePage() {
                 {transactions.map((tx) => (
                   <div key={tx.id} className="transaction-item">
                     <div className="tx-info">
-                      <p className="tx-category">{tx.category?.name}</p>
-                      <p className="tx-date">{new Date(tx.transacted_at).toLocaleDateString()}</p>
+                      <p className="tx-category">
+                        <span className="category-icon-wrapper" aria-hidden="true">
+                          <i className={getCategoryIconClass(tx.category?.icon)} />
+                        </span>
+                        {tx.category?.name}
+                      </p>
+                      <p className="tx-date">{formatTransactionDate(tx.transacted_at)}</p>
                     </div>
-                    <p className={`tx-amount ${tx.type === 'entrada' ? 'income' : 'expense'}`}>
-                      {tx.type === 'entrada' ? '+' : '-'} R$ {Number(tx.amount).toFixed(2)}
+                    <p className={`tx-amount ${normalizeType(tx.type) === 'entrada' ? 'income' : 'expense'}`}>
+                      {normalizeType(tx.type) === 'entrada' ? '+' : '-'} R$ {Number(tx.amount).toFixed(2)}
                     </p>
                   </div>
                 ))}

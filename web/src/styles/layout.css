@@ -101,7 +101,7 @@
 .main-content {
   flex: 1;
   overflow-y: auto;
-  padding: 1rem;
+  padding: 1rem 1rem 5.5rem;
   position: relative;
 }
 
@@ -114,16 +114,17 @@
 /* Bottom Navigation - Mobile only */
 .bottom-nav {
   display: flex;
-  gap: 1rem;
+  gap: 0.25rem;
   padding: 1rem;
   background-color: #fff;
   border-top: 1px solid #e0e0e0;
-  position: sticky;
+  position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
   margin: 0;
   justify-content: space-around;
+  z-index: 20;
 }
 
 @media (min-width: 768px) {
@@ -136,5 +137,5 @@
   flex: 1;
   padding: 0.5rem;
   text-align: center;
-  font-size: 0.875rem;
+  font-size: 0.75rem;
 }

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\V1\UpdateProfileRequest;
 use App\Http\Requests\Api\V1\UpdateUserPreferencesRequest;
 use App\Models\User;
 use App\Support\ApiResponse;
@@ -66,10 +67,18 @@ class AuthController extends Controller
         ]);
     }
 
+    public function updateProfile(UpdateProfileRequest $request): JsonResponse
+    {
+        return $this->updateAuthenticatedUser($request->validated(), $request);
+    }
+
     public function updatePreferences(UpdateUserPreferencesRequest $request): JsonResponse
     {
-        $validated = $request->validated();
+        return $this->updateAuthenticatedUser($request->validated(), $request);
+    }
 
+    private function updateAuthenticatedUser(array $validated, Request $request): JsonResponse
+    {
         $request->user()->update($validated);
 
         return ApiResponse::data($request->user()->fresh());

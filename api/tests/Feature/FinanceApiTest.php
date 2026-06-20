@@ -174,3 +174,23 @@ it('allows locale preference update for authenticated user', function () {
     $response->assertOk()
         ->assertJsonPath('data.locale', 'en');
 });
+
+it('allows profile update for authenticated user', function () {
+    $user = User::factory()->create([
+        'name' => 'Old Name',
+        'email' => 'old@example.com',
+        'locale' => 'pt-BR',
+    ]);
+    Sanctum::actingAs($user);
+
+    $response = $this->patchJson('/api/v1/users/me', [
+        'name' => 'New Name',
+        'email' => 'new@example.com',
+        'locale' => 'en',
+    ]);
+
+    $response->assertOk()
+        ->assertJsonPath('data.name', 'New Name')
+        ->assertJsonPath('data.email', 'new@example.com')
+        ->assertJsonPath('data.locale', 'en');
+});

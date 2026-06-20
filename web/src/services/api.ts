@@ -1,5 +1,5 @@
 import axios from 'axios'
-import type { ApiError, User, Category, Transaction, DashboardSummary, MonthlySummary, SubscriptionStatus, PaginatedResponse } from '../types/api'
+import type { ApiError, User, Category, Transaction, DashboardSummary, MonthlySummary, SubscriptionStatus, PaginatedResponse, Plan } from '../types/api'
 
 const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api'
 
@@ -20,10 +20,19 @@ export function setAuthToken(token: string | null) {
 
 export function extractApiError(error: unknown): ApiError {
   if (axios.isAxiosError(error)) {
-    const data = (error.response?.data as any) || {}
-    return data.error || { type: 'unknown_error', message: error.message }
+    const responseData = error.response?.data
+    if (responseData && typeof responseData === 'object' && 'error' in responseData) {
+      const apiError = (responseData as { error?: ApiError }).error
+      if (apiError?.type && apiError?.message) {
+        return apiError
+      }
+    }
+
+    return { type: 'unknown_error', message: error.message }
   }
-  return { type: 'unknown_error', message: String(error) }
+
+  const fallbackMessage = error instanceof Error ? error.message : 'Unknown error'
+  return { type: 'unknown_error', message: fallbackMessage }
 }
 
 export const api = {
@@ -49,6 +58,11 @@ export const api = {
 
   updatePreferences: async (locale: string) => {
     const response = await client.patch<{ data: User }>('/v1/users/me/preferences', { locale })
+    return response.data.data
+  },
+
+  updateProfile: async (payload: { name?: string; email?: string; password?: string; password_confirmation?: string; locale?: string }) => {
+    const response = await client.patch<{ data: User }>('/v1/users/me', payload)
     return response.data.data
   },
 
@@ -83,6 +97,7 @@ export const api = {
     date_from?: string
     date_to?: string
     per_page?: number
+    page?: number
   }) => {
     const response = await client.get<PaginatedResponse<Transaction>>('/v1/transactions', { params })
     return response.data
@@ -134,7 +149,7 @@ export const api = {
 
   // Billing
   listPlans: async () => {
-    const response = await client.get<{ data: any[] }>('/v1/plans')
+    const response = await client.get<{ data: Plan[] }>('/v1/plans')
     return response.data.data
   },
 

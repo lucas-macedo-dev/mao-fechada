@@ -8,6 +8,8 @@ import { RegisterPage } from './pages/RegisterPage'
 import { HomePage } from './pages/HomePage'
 import { CategoriesPage } from './pages/CategoriesPage'
 import { TransactionsPage } from './pages/TransactionsPage'
+import { ProfilePage } from './pages/ProfilePage'
+import { SubscriptionPage } from './pages/SubscriptionPage'
 import i18n from './i18n/config'
 import './App.css'
 
@@ -51,6 +53,26 @@ function AppRoutes() {
           <PrivateRoute>
             <Layout>
               <TransactionsPage />
+            </Layout>
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/profile"
+        element={
+          <PrivateRoute>
+            <Layout>
+              <ProfilePage />
+            </Layout>
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/subscription"
+        element={
+          <PrivateRoute>
+            <Layout>
+              <SubscriptionPage />
             </Layout>
           </PrivateRoute>
         }

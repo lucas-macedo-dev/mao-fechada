@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next'
 import { useCategories, useCreateCategory } from '../hooks/api'
-import { useState, type FormEvent } from 'react'
+import { useState, type SyntheticEvent } from 'react'
+import { CATEGORY_ICON_OPTIONS, DEFAULT_CATEGORY_ICON, getCategoryIconClass } from '../constants/categoryIcons'
 import '../styles/pages.css'
 
 export function CategoriesPage() {
@@ -9,15 +10,17 @@ export function CategoriesPage() {
   const createMutation = useCreateCategory()
   const [name, setName] = useState('')
   const [type, setType] = useState('saida')
+  const [icon, setIcon] = useState(DEFAULT_CATEGORY_ICON)
   const [error, setError] = useState('')
 
-  const handleSubmit = async (e: FormEvent) => {
+  const handleSubmit = async (e: SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault()
     setError('')
     try {
-      await createMutation.mutateAsync({ name, type })
+      await createMutation.mutateAsync({ name, type, icon })
       setName('')
       setType('saida')
+      setIcon(DEFAULT_CATEGORY_ICON)
     } catch (err: any) {
       setError(err?.response?.data?.error?.message || 'Failed to create category')
     }
@@ -49,6 +52,28 @@ export function CategoriesPage() {
           </select>
         </div>
 
+        <div className="form-group">
+          <label>{t('categories.icon')}</label>
+          <div className="icon-picker-grid">
+            {CATEGORY_ICON_OPTIONS.map((option) => {
+              const selected = option.className === icon
+
+              return (
+                <button
+                  key={option.className}
+                  type="button"
+                  className={`icon-picker-button ${selected ? 'selected' : ''}`}
+                  onClick={() => setIcon(option.className)}
+                  aria-label={t(option.key)}
+                  title={t(option.key)}
+                >
+                  <i className={option.className} aria-hidden="true" />
+                </button>
+              )
+            })}
+          </div>
+        </div>
+
         {error && <div className="error-message">{error}</div>}
 
         <button type="submit" disabled={createMutation.isPending} className="btn btn-primary">
@@ -60,14 +85,24 @@ export function CategoriesPage() {
         {rootCategories.map((category) => (
           <div key={category.id} className="category-item">
             <div className="category-header">
-              <p className="category-name">{category.name}</p>
+              <p className="category-name">
+                <span className="category-icon-wrapper" aria-hidden="true">
+                  <i className={getCategoryIconClass(category.icon)} />
+                </span>
+                {category.name}
+              </p>
               <p className="category-type">{category.type}</p>
             </div>
             {category.children && category.children.length > 0 && (
               <div className="subcategories">
                 {category.children.map((subcategory) => (
                   <div key={subcategory.id} className="subcategory-item">
-                    <p className="subcategory-name">{subcategory.name}</p>
+                    <p className="subcategory-name">
+                      <span className="category-icon-wrapper" aria-hidden="true">
+                        <i className={getCategoryIconClass(subcategory.icon)} />
+                      </span>
+                      {subcategory.name}
+                    </p>
                   </div>
                 ))}
               </div>
