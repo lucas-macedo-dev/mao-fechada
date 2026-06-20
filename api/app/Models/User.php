@@ -57,7 +57,7 @@ class User extends Authenticatable
 
     public function getProfilePhotoUrlAttribute(): ?string
     {
-        if (! $this->profile_photo_path) {
+        if (!$this->profile_photo_path) {
             return null;
         }
 
