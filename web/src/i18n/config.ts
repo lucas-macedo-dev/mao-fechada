@@ -5,7 +5,7 @@ const resources = {
   'pt-BR': {
     translation: {
       'app.title': 'Mão Fechada',
-      'app.subtitle': 'Controle financeiro simples, pronto para mobile',
+      'app.subtitle': 'Controle financeiro simples, na palma da sua mão',
       'nav.home': 'Início',
       'nav.categories': 'Categorias',
       'nav.transactions': 'Extrato',
@@ -120,7 +120,7 @@ const resources = {
   en: {
     translation: {
       'app.title': 'Mao Fechada',
-      'app.subtitle': 'Simple finance control, mobile-ready',
+      'app.subtitle': 'Simple finance control, in the palm of your hand',
       'nav.home': 'Home',
       'nav.categories': 'Categories',
       'nav.transactions': 'Statement',
