@@ -1,9 +1,9 @@
-# pao_duro — Ambiente de Desenvolvimento
+# mao_fechada — Ambiente de Desenvolvimento
 
 ## Estrutura do monorepo
 
 ```
-pao_duro/
+mao_fechada/
 ├── api/                        # Laravel (backend)
 │   ├── app/
 │   ├── routes/api.php
@@ -40,8 +40,8 @@ pao_duro/
 
 ```bash
 # 1. Clonar o repositório
-git clone git@github.com:seu-usuario/pao_duro.git
-cd pao_duro
+git clone git@github.com:seu-usuario/mao_fechada.git
+cd mao_fechada
 
 # 2. Rodar o setup completo (cria .env, build, migrate, key:generate)
 make setup

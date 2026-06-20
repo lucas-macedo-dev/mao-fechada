@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next'
 import { useDashboardSummary, useTransactions } from '../hooks/api'
 import { getCategoryIconClass } from '../constants/categoryIcons'
 import { useState } from 'react'
+import appLogo from '../assets/icon_mao_fechada.png'
 import '../styles/pages.css'
 
 function formatTransactionDate(value: string): string {
@@ -38,7 +39,10 @@ export function HomePage() {
 
   return (
     <div className="page home-page">
-      <h1>{t('dashboard.title')}</h1>
+      <div className="page-title-with-logo">
+        <img src={appLogo} alt={t('app.title')} className="page-logo" />
+        <h1>{t('dashboard.title')}</h1>
+      </div>
 
       <div className="month-selector">
         <input type="month" value={month} onChange={(e) => setMonth(e.target.value)} />

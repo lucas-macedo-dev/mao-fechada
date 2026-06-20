@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { useCategories, useCreateTransaction, useTransactions } from '../hooks/api'
+import { useCategories, useCreateTransaction, useDeleteTransaction, useTransactions, useUpdateTransaction } from '../hooks/api'
 import { getCategoryIconClass } from '../constants/categoryIcons'
 import { extractApiError } from '../services/api'
 import { useMemo, useState, type SyntheticEvent } from 'react'
@@ -42,7 +42,16 @@ export function TransactionsPage() {
   const [success, setSuccess] = useState('')
 
   const createTransaction = useCreateTransaction()
+  const updateTransaction = useUpdateTransaction()
+  const deleteTransaction = useDeleteTransaction()
   const { data: categories = [] } = useCategories()
+  const [editingTransactionId, setEditingTransactionId] = useState<number | null>(null)
+  const [editType, setEditType] = useState<'entrada' | 'saida'>('saida')
+  const [editCategoryId, setEditCategoryId] = useState('')
+  const [editPaymentMethod, setEditPaymentMethod] = useState('pix')
+  const [editAmount, setEditAmount] = useState('')
+  const [editTransactedAt, setEditTransactedAt] = useState('')
+  const [editNotes, setEditNotes] = useState('')
 
   const params = {
     month,
@@ -64,6 +73,40 @@ export function TransactionsPage() {
     () => creatableCategories.find((category) => String(category.id) === categoryId),
     [creatableCategories, categoryId],
   )
+
+  const editableCategories = useMemo(
+    () => categories.filter((category) => normalizeType(category.type) === editType),
+    [categories, editType],
+  )
+
+  const handleStartEdit = (transaction: {
+    id: number
+    type: string
+    category_id: number
+    payment_method: string
+    amount: string | number
+    transacted_at: string
+    notes?: string
+  }) => {
+    setEditingTransactionId(transaction.id)
+    setEditType(normalizeType(transaction.type))
+    setEditCategoryId(String(transaction.category_id))
+    setEditPaymentMethod(transaction.payment_method)
+    setEditAmount(String(transaction.amount))
+    setEditTransactedAt(transaction.transacted_at.slice(0, 10))
+    setEditNotes(transaction.notes || '')
+    setError('')
+    setSuccess('')
+  }
+
+  const handleCancelEdit = () => {
+    setEditingTransactionId(null)
+    setEditCategoryId('')
+    setEditPaymentMethod('pix')
+    setEditAmount('')
+    setEditTransactedAt('')
+    setEditNotes('')
+  }
 
   const handleCreate = async (event: SyntheticEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -89,6 +132,55 @@ export function TransactionsPage() {
       setNotes('')
       setSuccess(t('transactions.create_success'))
       setPage(1)
+    } catch (err) {
+      setError(extractApiError(err).message)
+    }
+  }
+
+  const handleUpdate = async (event: SyntheticEvent<HTMLFormElement>, id: number) => {
+    event.preventDefault()
+    setError('')
+    setSuccess('')
+
+    if (!editCategoryId) {
+      setError(t('transactions.select_category'))
+      return
+    }
+
+    try {
+      await updateTransaction.mutateAsync({
+        id,
+        payload: {
+          category_id: Number(editCategoryId),
+          type: editType,
+          payment_method: editPaymentMethod,
+          amount: Number(editAmount),
+          transacted_at: editTransactedAt,
+          notes: editNotes || undefined,
+        },
+      })
+
+      handleCancelEdit()
+      setSuccess(t('transactions.update_success'))
+    } catch (err) {
+      setError(extractApiError(err).message)
+    }
+  }
+
+  const handleDelete = async (id: number) => {
+    if (!window.confirm(t('transactions.delete_confirm'))) {
+      return
+    }
+
+    setError('')
+    setSuccess('')
+
+    try {
+      await deleteTransaction.mutateAsync(id)
+      if (editingTransactionId === id) {
+        handleCancelEdit()
+      }
+      setSuccess(t('transactions.delete_success'))
     } catch (err) {
       setError(extractApiError(err).message)
     }
@@ -223,19 +315,138 @@ export function TransactionsPage() {
           <div className="transaction-list">
             {transactions.map((tx) => (
               <div key={tx.id} className="transaction-row card">
-                <div className="tx-details">
-                  <p className="tx-category">
-                    <span className="category-icon-wrapper" aria-hidden="true">
-                      <i className={getCategoryIconClass(tx.category?.icon)} />
-                    </span>
-                    {tx.category?.name}
-                  </p>
-                  <p className="tx-date">{formatTransactionDate(tx.transacted_at)}</p>
-                  {tx.notes && <p className="tx-notes">{tx.notes}</p>}
-                </div>
-                <p className={`tx-amount ${normalizeType(tx.type) === 'entrada' ? 'income' : 'expense'}`}>
-                  {normalizeType(tx.type) === 'entrada' ? '+' : '-'} R$ {Number(tx.amount).toFixed(2)}
-                </p>
+                {editingTransactionId === tx.id ? (
+                  <form className="inline-edit-form full-width" onSubmit={(event) => handleUpdate(event, tx.id)}>
+                    <div className="form-grid">
+                      <div className="form-group">
+                        <label htmlFor={`tx-edit-type-${tx.id}`}>{t('transactions.type')}</label>
+                        <select
+                          id={`tx-edit-type-${tx.id}`}
+                          value={editType}
+                          onChange={(event) => {
+                            const nextType = event.target.value === 'entrada' ? 'entrada' : 'saida'
+                            setEditType(nextType)
+                            setEditCategoryId('')
+                          }}
+                        >
+                          <option value="entrada">{t('categories.type_income')}</option>
+                          <option value="saida">{t('categories.type_expense')}</option>
+                        </select>
+                      </div>
+
+                      <div className="form-group">
+                        <label htmlFor={`tx-edit-category-${tx.id}`}>{t('transactions.category')}</label>
+                        <select
+                          id={`tx-edit-category-${tx.id}`}
+                          value={editCategoryId}
+                          onChange={(event) => setEditCategoryId(event.target.value)}
+                          required
+                        >
+                          <option value="">{t('transactions.select_category')}</option>
+                          {editableCategories.map((category) => (
+                            <option key={category.id} value={category.id}>
+                              {category.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div className="form-group">
+                        <label htmlFor={`tx-edit-payment-${tx.id}`}>{t('transactions.payment_method')}</label>
+                        <select
+                          id={`tx-edit-payment-${tx.id}`}
+                          value={editPaymentMethod}
+                          onChange={(event) => setEditPaymentMethod(event.target.value)}
+                        >
+                          {paymentMethods.map((method) => (
+                            <option key={method} value={method}>
+                              {t(`transactions.payment.${method}`)}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div className="form-group">
+                        <label htmlFor={`tx-edit-amount-${tx.id}`}>{t('transactions.amount')}</label>
+                        <input
+                          id={`tx-edit-amount-${tx.id}`}
+                          type="number"
+                          min="0.01"
+                          step="0.01"
+                          value={editAmount}
+                          onChange={(event) => setEditAmount(event.target.value)}
+                          required
+                        />
+                      </div>
+
+                      <div className="form-group">
+                        <label htmlFor={`tx-edit-date-${tx.id}`}>{t('transactions.date')}</label>
+                        <input
+                          id={`tx-edit-date-${tx.id}`}
+                          type="date"
+                          value={editTransactedAt}
+                          onChange={(event) => setEditTransactedAt(event.target.value)}
+                          required
+                        />
+                      </div>
+
+                      <div className="form-group full-width">
+                        <label htmlFor={`tx-edit-notes-${tx.id}`}>{t('transactions.notes')}</label>
+                        <input
+                          id={`tx-edit-notes-${tx.id}`}
+                          type="text"
+                          value={editNotes}
+                          onChange={(event) => setEditNotes(event.target.value)}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="inline-actions">
+                      <button type="submit" className="btn btn-primary" disabled={updateTransaction.isPending}>
+                        {updateTransaction.isPending ? t('common.loading') : t('common.save')}
+                      </button>
+                      <button type="button" className="btn btn-secondary" onClick={handleCancelEdit}>
+                        {t('common.cancel')}
+                      </button>
+                    </div>
+                  </form>
+                ) : (
+                  <>
+                    <div className="tx-details">
+                      <p className="tx-category">
+                        <span className="category-icon-wrapper" aria-hidden="true">
+                          <i className={getCategoryIconClass(tx.category?.icon)} />
+                        </span>
+                        {tx.category?.name}
+                      </p>
+                      <p className="tx-date">{formatTransactionDate(tx.transacted_at)}</p>
+                      {tx.notes && <p className="tx-notes">{tx.notes}</p>}
+                    </div>
+                    <div className="item-actions row-actions">
+                      <p className={`tx-amount ${normalizeType(tx.type) === 'entrada' ? 'income' : 'expense'}`}>
+                        {normalizeType(tx.type) === 'entrada' ? '+' : '-'} R$ {Number(tx.amount).toFixed(2)}
+                      </p>
+                      <button
+                        type="button"
+                        className="icon-action-btn"
+                        onClick={() => handleStartEdit(tx)}
+                        aria-label={t('transactions.edit')}
+                        title={t('transactions.edit')}
+                      >
+                        <i className="fa-solid fa-pen-to-square" aria-hidden="true" />
+                      </button>
+                      <button
+                        type="button"
+                        className="icon-action-btn danger"
+                        onClick={() => handleDelete(tx.id)}
+                        aria-label={t('transactions.delete')}
+                        title={t('transactions.delete')}
+                      >
+                        <i className="fa-solid fa-trash-can" aria-hidden="true" />
+                      </button>
+                    </div>
+                  </>
+                )}
               </div>
             ))}
           </div>

@@ -5,22 +5,22 @@ services:
     build:
       context: ./docker/php
       dockerfile: Dockerfile
-    container_name: pao_duro_api
+    container_name: mao_fechada_api
     working_dir: /var/www/api
     volumes:
       - ./api:/var/www/api
     environment:
-      - PHP_IDE_CONFIG=serverName=pao_duro
+      - PHP_IDE_CONFIG=serverName=mao_fechada
     depends_on:
       db:
         condition: service_healthy
     networks:
-      - pao_duro
+      - mao_fechada
 
   # ─── Nginx (serve o Laravel e faz proxy do React) ────────────────
   nginx:
     image: nginx:1.25-alpine
-    container_name: pao_duro_nginx
+    container_name: mao_fechada_nginx
     ports:
       - "8000:80"
     volumes:
@@ -29,18 +29,18 @@ services:
     depends_on:
       - api
     networks:
-      - pao_duro
+      - mao_fechada
 
   # ─── MySQL ───────────────────────────────────────────────────────
   db:
     image: mysql:8.0
-    container_name: pao_duro_db
+    container_name: mao_fechada_db
     ports:
       - "3306:3306"       # expõe para acessar via TablePlus / DBeaver
     environment:
-      MYSQL_DATABASE:      pao_duro
+      MYSQL_DATABASE:      mao_fechada
       MYSQL_ROOT_PASSWORD: secret
-      MYSQL_USER:          pao_duro
+      MYSQL_USER:          mao_fechada
       MYSQL_PASSWORD:      secret
     volumes:
       - db_data:/var/lib/mysql
@@ -50,21 +50,21 @@ services:
       timeout: 5s
       retries: 10
     networks:
-      - pao_duro
+      - mao_fechada
 
   # ─── Redis (cache, sessões, filas) ───────────────────────────────
   redis:
     image: redis:7-alpine
-    container_name: pao_duro_redis
+    container_name: mao_fechada_redis
     ports:
       - "6379:6379"
     networks:
-      - pao_duro
+      - mao_fechada
 
   # ─── Node (React dev server) ─────────────────────────────────────
   web:
     image: node:20-alpine
-    container_name: pao_duro_web
+    container_name: mao_fechada_web
     working_dir: /app
     volumes:
       - ./web:/app
@@ -75,12 +75,12 @@ services:
     environment:
       - VITE_API_URL=http://localhost:8000/api
     networks:
-      - pao_duro
+      - mao_fechada
 
 volumes:
   db_data:
   web_node_modules:
 
 networks:
-  pao_duro:
+  mao_fechada:
     driver: bridge

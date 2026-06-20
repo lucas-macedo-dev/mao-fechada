@@ -29,6 +29,18 @@
   margin-bottom: 2rem;
 }
 
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.sidebar-logo {
+  width: 42px;
+  height: 42px;
+  object-fit: contain;
+}
+
 .app-title {
   margin: 0;
   font-size: 1.5rem;
@@ -36,8 +48,31 @@
   color: #1a1a1a;
 }
 
+.user-identity {
+  margin-top: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.user-avatar {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 999px;
+  object-fit: cover;
+  border: 1px solid #dbe3fb;
+  background: #eef2ff;
+}
+
+.user-avatar-fallback {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #4f46e5;
+}
+
 .user-name {
-  margin: 0.5rem 0 0 0;
+  margin: 0;
   font-size: 0.875rem;
   color: #666;
 }

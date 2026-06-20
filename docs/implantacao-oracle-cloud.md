@@ -72,8 +72,8 @@ APP_FALLBACK_LOCALE=en
 DB_CONNECTION=mysql
 DB_HOST=127.0.0.1
 DB_PORT=3306
-DB_DATABASE=pao_duro
-DB_USERNAME=pao_duro
+DB_DATABASE=mao_fechada
+DB_USERNAME=mao_fechada
 DB_PASSWORD=senha_forte
 
 REDIS_CLIENT=phpredis

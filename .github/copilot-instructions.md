@@ -1,4 +1,4 @@
-# Copilot instructions for `pao_duro`
+# Copilot instructions for `mao_fechada`
 
 ## Build, test, and lint commands
 

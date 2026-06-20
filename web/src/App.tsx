@@ -241,7 +241,7 @@ function App() {
     return (
       <main className="layout auth-layout">
         <section className="card hero">
-          <h1>Pão duro Controle Financeiro</h1>
+          <h1>Mão Fechada Controle Financeiro</h1>
           <p className="subtitle">Simple personal finance now, mobile-ready later.</p>
         </section>
 
@@ -299,7 +299,7 @@ function App() {
     <main className="layout">
       <header className="header">
         <div>
-          <h1>Pão duro Controle Financeiro</h1>
+          <h1>Mão Fechada Controle Financeiro</h1>
           <p className="subtitle">
             {user.name} • Plan: {user.plan} • Subscription: {user.subscription_status}
           </p>

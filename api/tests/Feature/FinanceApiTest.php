@@ -4,6 +4,8 @@ use App\Models\Budget;
 use App\Models\Category;
 use App\Models\Transaction;
 use App\Models\User;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Laravel\Sanctum\Sanctum;
 
 it('denies unauthenticated access to finance endpoints', function () {
@@ -193,4 +195,25 @@ it('allows profile update for authenticated user', function () {
         ->assertJsonPath('data.name', 'New Name')
         ->assertJsonPath('data.email', 'new@example.com')
         ->assertJsonPath('data.locale', 'en');
+});
+
+it('allows profile photo upload for authenticated user', function () {
+    Storage::fake('public');
+
+    $user = User::factory()->create();
+    Sanctum::actingAs($user);
+
+    $response = $this->patch('/api/v1/users/me', [
+        'profile_photo' => UploadedFile::fake()->image('avatar.png', 300, 300),
+    ], [
+        'Accept' => 'application/json',
+    ]);
+
+    $response->assertOk()
+        ->assertJsonPath('data.id', $user->id);
+
+    $user->refresh();
+
+    expect($user->profile_photo_path)->not()->toBeNull();
+    Storage::disk('public')->assertExists($user->profile_photo_path);
 });

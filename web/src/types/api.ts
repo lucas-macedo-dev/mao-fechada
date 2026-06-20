@@ -5,6 +5,7 @@ export interface User {
   plan: string
   subscription_status: string
   locale: string
+  profile_photo_url?: string | null
 }
 
 export interface Category {

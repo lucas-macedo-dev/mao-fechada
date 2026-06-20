@@ -17,6 +17,18 @@
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
 }
 
+.auth-brand {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 0.75rem;
+}
+
+.auth-logo {
+  width: 72px;
+  height: 72px;
+  object-fit: contain;
+}
+
 .auth-card h1 {
   margin: 0 0 0.5rem 0;
   font-size: 2rem;
