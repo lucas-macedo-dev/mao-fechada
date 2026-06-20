@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Budget;
 use App\Models\Transaction;
 use App\Support\ApiResponse;
+use App\Support\TransactionTypeMapper;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -27,10 +28,10 @@ class MonthlySummaryController extends Controller
             ->get();
 
         $incomeTotal = $transactions
-            ->where('type', 'income')
+            ->whereIn('type', TransactionTypeMapper::incomeValues())
             ->sum('amount');
         $expenseTotal = $transactions
-            ->where('type', 'expense')
+            ->whereIn('type', TransactionTypeMapper::expenseValues())
             ->sum('amount');
 
         $budgets = Budget::query()
@@ -42,7 +43,7 @@ class MonthlySummaryController extends Controller
             ->keyBy('category_id');
 
         $actualByCategory = $transactions
-            ->where('type', 'expense')
+            ->whereIn('type', TransactionTypeMapper::expenseValues())
             ->groupBy('category_id')
             ->map(fn (Collection $group): float => (float) $group->sum('amount'));
         $categoryNames = $transactions
@@ -51,7 +52,7 @@ class MonthlySummaryController extends Controller
             ]);
 
         $allCategoryIds = $budgets->keys()->merge($actualByCategory->keys())->unique()->values();
-        $variance = $allCategoryIds->map(function (int|string $categoryId) use ($budgets, $actualByCategory): array {
+        $variance = $allCategoryIds->map(function (int|string $categoryId) use ($budgets, $actualByCategory, $categoryNames): array {
             $budget = $budgets->get($categoryId);
             $actual = (float) ($actualByCategory->get($categoryId, 0));
             $budgetAmount = (float) ($budget?->amount ?? 0);
