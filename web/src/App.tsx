@@ -239,12 +239,14 @@ function App() {
 
   if (!user) {
     return (
-      <main className="layout">
-        <h1>Pão duro Controle Financeiro</h1>
-        <p className="subtitle">Simple personal finance now, mobile-ready later.</p>
+      <main className="layout auth-layout">
+        <section className="card hero">
+          <h1>Pão duro Controle Financeiro</h1>
+          <p className="subtitle">Simple personal finance now, mobile-ready later.</p>
+        </section>
 
-        <div className="grid two">
-          <form className="card" onSubmit={handleRegister}>
+        <div className="grid two auth-grid">
+          <form className="card form-card" onSubmit={handleRegister}>
             <h2>Register</h2>
             <input
               placeholder="Name"
@@ -268,7 +270,7 @@ function App() {
             </button>
           </form>
 
-          <form className="card" onSubmit={handleLogin}>
+          <form className="card form-card" onSubmit={handleLogin}>
             <h2>Login</h2>
             <input
               placeholder="Email"
@@ -302,7 +304,7 @@ function App() {
             {user.name} • Plan: {user.plan} • Subscription: {user.subscription_status}
           </p>
         </div>
-        <button onClick={handleLogout} type="button">
+        <button onClick={handleLogout} type="button" className="secondary">
           Logout
         </button>
       </header>
@@ -331,7 +333,7 @@ function App() {
       </section>
 
       <section className="grid two">
-        <form className="card" onSubmit={handleCreateCategory}>
+        <form className="card form-card" onSubmit={handleCreateCategory}>
           <h2>Create Category</h2>
           <input
             placeholder="Category name"
@@ -352,7 +354,7 @@ function App() {
           </button>
         </form>
 
-        <form className="card" onSubmit={handleUpsertBudget}>
+        <form className="card form-card" onSubmit={handleUpsertBudget}>
           <h2>Monthly Budget</h2>
           <select
             value={budgetForm.category_id}
@@ -438,44 +440,76 @@ function App() {
 
       <section className="card">
         <h2>Transactions</h2>
-        <div className="table">
-          {transactions.map((transaction) => (
-            <div key={transaction.id} className="table-row">
-              <span>{transaction.transacted_at}</span>
-              <span>{transaction.category?.name ?? '-'}</span>
-              <span>{transaction.type}</span>
-              <span>{transaction.amount}</span>
-              <span>{transaction.notes ?? '-'}</span>
-              <div className="row">
-                <button type="button" className="secondary" onClick={() => beginEdit(transaction)}>
-                  Edit
-                </button>
-                <button
-                  type="button"
-                  className="secondary danger"
-                  onClick={() => void handleDeleteTransaction(transaction.id)}
-                >
-                  Delete
-                </button>
+        {transactions.length === 0 ? (
+          <p className="empty-state">No transactions yet for this month.</p>
+        ) : (
+          <div className="table">
+            {transactions.map((transaction) => (
+              <div key={transaction.id} className="table-row transaction-row">
+                <span className="field">
+                  <small>Date</small>
+                  <strong>{transaction.transacted_at}</strong>
+                </span>
+                <span className="field">
+                  <small>Category</small>
+                  <strong>{transaction.category?.name ?? '-'}</strong>
+                </span>
+                <span className="field">
+                  <small>Type</small>
+                  <strong>{transaction.type}</strong>
+                </span>
+                <span className="field">
+                  <small>Amount</small>
+                  <strong>{transaction.amount}</strong>
+                </span>
+                <span className="field">
+                  <small>Notes</small>
+                  <strong>{transaction.notes ?? '-'}</strong>
+                </span>
+                <div className="row actions">
+                  <button type="button" className="secondary" onClick={() => beginEdit(transaction)}>
+                    Edit
+                  </button>
+                  <button
+                    type="button"
+                    className="secondary danger"
+                    onClick={() => void handleDeleteTransaction(transaction.id)}
+                  >
+                    Delete
+                  </button>
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </section>
 
       <section className="card">
         <h2>Monthly Summary</h2>
-        <p>
-          Income: {summary?.income_total ?? 0} | Expense: {summary?.expense_total ?? 0} | Net:{' '}
-          {summary?.net_balance ?? 0}
-        </p>
+        <div className="summary-totals">
+          <p>Income: {summary?.income_total ?? 0}</p>
+          <p>Expense: {summary?.expense_total ?? 0}</p>
+          <p>Net: {summary?.net_balance ?? 0}</p>
+        </div>
         <div className="table">
           {(summary?.category_variance ?? []).map((item) => (
-            <div key={item.category_id} className="table-row">
-              <span>{item.category_name ?? `Category ${item.category_id}`}</span>
-              <span>Budget: {item.budget}</span>
-              <span>Actual: {item.actual}</span>
-              <span>Variance: {item.variance}</span>
+            <div key={item.category_id} className="table-row summary-row">
+              <span className="field">
+                <small>Category</small>
+                <strong>{item.category_name ?? `Category ${item.category_id}`}</strong>
+              </span>
+              <span className="field">
+                <small>Budget</small>
+                <strong>{item.budget}</strong>
+              </span>
+              <span className="field">
+                <small>Actual</small>
+                <strong>{item.actual}</strong>
+              </span>
+              <span className="field">
+                <small>Variance</small>
+                <strong>{item.variance}</strong>
+              </span>
             </div>
           ))}
         </div>

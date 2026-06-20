@@ -3,6 +3,7 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use App\Http\Middleware\ResolveApiLocale;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -20,7 +21,9 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        $middleware->appendToGroup('api', [
+            ResolveApiLocale::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
@@ -36,7 +39,7 @@ return Application::configure(basePath: dirname(__DIR__))
                 return response()->json([
                     'error' => [
                         'type' => 'validation_error',
-                        'message' => 'Validation failed.',
+                        'message' => __('messages.validation_failed'),
                         'details' => $exception->errors(),
                     ],
                 ], Response::HTTP_UNPROCESSABLE_ENTITY);
@@ -46,7 +49,7 @@ return Application::configure(basePath: dirname(__DIR__))
                 return response()->json([
                     'error' => [
                         'type' => 'authentication_error',
-                        'message' => 'Unauthenticated.',
+                        'message' => __('messages.unauthenticated'),
                     ],
                 ], Response::HTTP_UNAUTHORIZED);
             }
@@ -55,7 +58,7 @@ return Application::configure(basePath: dirname(__DIR__))
                 return response()->json([
                     'error' => [
                         'type' => 'authorization_error',
-                        'message' => $exception->getMessage() ?: 'Forbidden.',
+                        'message' => $exception->getMessage() ?: __('messages.forbidden'),
                     ],
                 ], Response::HTTP_FORBIDDEN);
             }
@@ -64,7 +67,7 @@ return Application::configure(basePath: dirname(__DIR__))
                 return response()->json([
                     'error' => [
                         'type' => 'not_found',
-                        'message' => 'Resource not found.',
+                        'message' => __('messages.resource_not_found'),
                     ],
                 ], Response::HTTP_NOT_FOUND);
             }
@@ -76,7 +79,7 @@ return Application::configure(basePath: dirname(__DIR__))
                 return response()->json([
                     'error' => [
                         'type' => $statusCode === Response::HTTP_FORBIDDEN ? 'authorization_error' : 'http_error',
-                        'message' => $exception->getMessage() ?: $fallbackMessage,
+                        'message' => $exception->getMessage() ?: $fallbackMessage ?: __('messages.http_error'),
                     ],
                 ], $statusCode);
             }
@@ -84,7 +87,7 @@ return Application::configure(basePath: dirname(__DIR__))
             return response()->json([
                 'error' => [
                     'type' => 'server_error',
-                    'message' => config('app.debug') ? $exception->getMessage() : 'Server error.',
+                    'message' => config('app.debug') ? $exception->getMessage() : __('messages.server_error'),
                 ],
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         });

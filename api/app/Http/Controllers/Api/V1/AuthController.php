@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\V1\UpdateProfileRequest;
+use App\Http\Requests\Api\V1\UpdateUserPreferencesRequest;
 use App\Models\User;
 use App\Support\ApiResponse;
 use Illuminate\Http\JsonResponse;
@@ -18,6 +20,7 @@ class AuthController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
             'password' => ['required', 'string', 'min:8'],
+            'locale' => ['sometimes', 'required', 'in:pt-BR,en'],
         ]);
 
         $user = User::query()->create($validated);
@@ -40,7 +43,7 @@ class AuthController extends Controller
 
         if (! $user || ! Hash::check($credentials['password'], $user->password)) {
             throw ValidationException::withMessages([
-                'email' => ['Invalid credentials.'],
+                'email' => [__('auth.failed')],
             ]);
         }
 
@@ -60,7 +63,24 @@ class AuthController extends Controller
         $request->user()->currentAccessToken()?->delete();
 
         return ApiResponse::data([
-            'message' => 'Logged out.',
+            'message' => __('messages.logged_out'),
         ]);
+    }
+
+    public function updateProfile(UpdateProfileRequest $request): JsonResponse
+    {
+        return $this->updateAuthenticatedUser($request->validated(), $request);
+    }
+
+    public function updatePreferences(UpdateUserPreferencesRequest $request): JsonResponse
+    {
+        return $this->updateAuthenticatedUser($request->validated(), $request);
+    }
+
+    private function updateAuthenticatedUser(array $validated, Request $request): JsonResponse
+    {
+        $request->user()->update($validated);
+
+        return ApiResponse::data($request->user()->fresh());
     }
 }

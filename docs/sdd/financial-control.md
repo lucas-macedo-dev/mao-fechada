@@ -3,6 +3,7 @@
 ## Objective
 - Provide a simple web-first personal finance flow for authenticated users.
 - Reuse the same `/api/v1` contracts for future mobile clients.
+- Deliver a mobile-first web layout with touch-friendly forms and readable finance cards.
 
 ## Entities
 - **User**: name, email, password, plan, subscription_status.
@@ -19,14 +20,16 @@
 - BR-06: Budget upsert is unique per user/category/year/month.
 - ⚠️ INFERRED: BR-07: Free/default plan has full core finance access until paid mobile gating is introduced.
 - ⚠️ GAP: BR-08: Exact premium feature gates and transition criteria for paid mobile are not yet defined.
+- BR-09: Web UI must keep all finance actions usable on small screens without changing API behavior.
 
 ## Dependencies
 - → `api-v1-contract`: Stable JSON envelopes for auth, validation, authorization, and domain responses.
-- → `web-spa`: React app consumes auth, categories, transactions, budgets, and summaries endpoints.
+- → `web-spa`: React app consumes auth, categories, transactions, budgets, and summaries endpoints with mobile-first responsive layout.
 - ← `future-mobile-client`: Mobile app will consume the same versioned API contracts.
 
 ## Constraints and Exceptions
 - Laravel backend must expose API routes under `/api/v1` with consistent `{ data }` success envelope.
 - Error responses must use `{ error: { type, message, details? } }`.
 - Monthly summary for empty months must return zero totals and valid structure.
+- Web screens must prioritize single-column/touch interaction on mobile and progressively enhance for larger breakpoints.
 - ⚠️ GAP: Final performance constraints/caching thresholds for large transaction volumes are not documented.

@@ -1,0 +1,95 @@
+export interface User {
+  id: number
+  name: string
+  email: string
+  plan: string
+  subscription_status: string
+  locale: string
+}
+
+export interface Category {
+  id: number
+  user_id: number
+  name: string
+  type: 'entrada' | 'saida'
+  icon?: string
+  parent_id?: number | null
+  children?: Category[]
+  created_at: string
+  updated_at: string
+}
+
+export interface Transaction {
+  id: number
+  user_id: number
+  category_id: number
+  type: 'entrada' | 'saida'
+  payment_method: string
+  amount: string | number
+  transacted_at: string
+  notes?: string
+  category?: Category
+  created_at: string
+  updated_at: string
+}
+
+export interface DashboardSummary {
+  month: string
+  totals: {
+    entradas: number
+    saidas: number
+    saldo: number
+  }
+  chart: {
+    entradas: number
+    saidas: number
+  }
+  recent_transactions: Transaction[]
+}
+
+export interface MonthlySummary {
+  year: number
+  month: number
+  income_total: number
+  expense_total: number
+  net_balance: number
+  category_variance: Array<{
+    category_id: number
+    category_name: string | null
+    budget: number
+    actual: number
+    variance: number
+  }>
+}
+
+export interface SubscriptionStatus {
+  plan_code: string
+  status: string
+  provider: string | null
+  trial_ends_at: string | null
+  current_period_ends_at: string | null
+  canceled_at: string | null
+  entitlements: Record<string, { limit: number | null; is_enforced: boolean }>
+}
+
+export interface Plan {
+  code: string
+  name: string
+  features: Record<string, { limit: number | null; is_enforced: boolean }>
+}
+
+export interface PaginatedResponse<T> {
+  data: T[]
+  meta: {
+    current_page: number
+    last_page: number
+    per_page: number
+    total: number
+  }
+}
+
+export interface ApiError {
+  type: string
+  message: string
+  details?: Record<string, string[]>
+}

@@ -89,3 +89,108 @@ it('returns monthly summary totals and variance', function () {
         ->assertJsonPath('data.expense_total', 300)
         ->assertJsonPath('data.net_balance', 1700);
 });
+
+it('returns hierarchical categories when tree flag is enabled', function () {
+    $user = User::factory()->create();
+    Sanctum::actingAs($user);
+
+    $root = Category::factory()->for($user)->create([
+        'name' => 'Moradia',
+        'type' => 'expense',
+        'parent_id' => null,
+    ]);
+
+    $child = Category::factory()->for($user)->create([
+        'name' => 'Aluguel',
+        'type' => 'expense',
+        'parent_id' => $root->id,
+    ]);
+
+    $response = $this->getJson('/api/v1/categories?tree=1');
+
+    $response->assertOk()
+        ->assertJsonPath('data.0.id', $root->id)
+        ->assertJsonPath('data.0.children.0.id', $child->id);
+});
+
+it('returns paginated transactions with filters', function () {
+    $user = User::factory()->create();
+    Sanctum::actingAs($user);
+
+    $expenseCategory = Category::factory()->for($user)->create([
+        'type' => 'expense',
+    ]);
+
+    Transaction::factory()->for($user)->create([
+        'category_id' => $expenseCategory->id,
+        'type' => 'expense',
+        'payment_method' => 'pix',
+        'transacted_at' => '2026-06-15',
+    ]);
+
+    Transaction::factory()->for($user)->create([
+        'category_id' => $expenseCategory->id,
+        'type' => 'expense',
+        'payment_method' => 'dinheiro',
+        'transacted_at' => '2026-05-15',
+    ]);
+
+    $response = $this->getJson('/api/v1/transactions?month=2026-06&payment_method=pix&per_page=1');
+
+    $response->assertOk()
+        ->assertJsonPath('meta.total', 1)
+        ->assertJsonPath('meta.per_page', 1)
+        ->assertJsonPath('data.0.payment_method', 'pix');
+});
+
+it('accepts portuguese transaction type values and maps them to current storage', function () {
+    $user = User::factory()->create();
+    Sanctum::actingAs($user);
+
+    $category = Category::factory()->for($user)->create([
+        'type' => 'expense',
+    ]);
+
+    $response = $this->postJson('/api/v1/transactions', [
+        'category_id' => $category->id,
+        'type' => 'saida',
+        'payment_method' => 'pix',
+        'amount' => 150.50,
+        'transacted_at' => '2026-06-20',
+    ]);
+
+    $response->assertCreated()
+        ->assertJsonPath('data.type', 'expense');
+});
+
+it('allows locale preference update for authenticated user', function () {
+    $user = User::factory()->create(['locale' => 'pt-BR']);
+    Sanctum::actingAs($user);
+
+    $response = $this->patchJson('/api/v1/users/me/preferences', [
+        'locale' => 'en',
+    ]);
+
+    $response->assertOk()
+        ->assertJsonPath('data.locale', 'en');
+});
+
+it('allows profile update for authenticated user', function () {
+    $user = User::factory()->create([
+        'name' => 'Old Name',
+        'email' => 'old@example.com',
+        'locale' => 'pt-BR',
+    ]);
+    Sanctum::actingAs($user);
+
+    $response = $this->patchJson('/api/v1/users/me', [
+        'name' => 'New Name',
+        'email' => 'new@example.com',
+        'locale' => 'en',
+    ]);
+
+    $response->assertOk()
+        ->assertJsonPath('data.name', 'New Name')
+        ->assertJsonPath('data.email', 'new@example.com')
+        ->assertJsonPath('data.locale', 'en');
+});

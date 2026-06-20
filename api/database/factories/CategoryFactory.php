@@ -17,6 +17,8 @@ class CategoryFactory extends Factory
             'user_id' => User::factory(),
             'name' => fake()->unique()->word(),
             'type' => fake()->randomElement(['income', 'expense']),
+            'icon' => null,
+            'parent_id' => null,
         ];
     }
 }

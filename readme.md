@@ -119,3 +119,9 @@ VITE_API_URL=http://localhost:8000/api
 ```env
 VITE_API_URL=https://api.seudominio.com/api
 ```
+
+## Documentação do projeto
+
+- [Guia de implementação](docs/guia-implementacao.md): manual prático para continuar evoluindo o frontend e o backend sem se perder.
+- [Arquitetura do projeto](docs/arquitetura-projeto.md): visão completa de como o sistema está organizado e como as peças se conectam.
+- [Implantação na Oracle Cloud](docs/implantacao-oracle-cloud.md): passo a passo para publicar a API, o frontend e os serviços de produção.
