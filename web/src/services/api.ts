@@ -61,8 +61,11 @@ export const api = {
     return response.data.data
   },
 
-  updateProfile: async (payload: { name?: string; email?: string; password?: string; password_confirmation?: string; locale?: string }) => {
-    const response = await client.patch<{ data: User }>('/v1/users/me', payload)
+  updateProfile: async (payload: { name?: string; email?: string; password?: string; password_confirmation?: string; locale?: string } | FormData) => {
+    const isFormData = payload instanceof FormData
+    const response = await client.patch<{ data: User }>('/v1/users/me', payload, isFormData
+      ? { headers: { 'Content-Type': 'multipart/form-data' } }
+      : undefined)
     return response.data.data
   },
 

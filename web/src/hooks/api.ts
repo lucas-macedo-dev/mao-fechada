@@ -68,6 +68,31 @@ export function useCreateCategory() {
   })
 }
 
+export function useUpdateCategory() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (params: { id: number; payload: Partial<{ name: string; type: string; icon?: string; parent_id?: number }> }) =>
+      api.updateCategory(params.id, params.payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['categories'] })
+      queryClient.invalidateQueries({ queryKey: ['transactions'] })
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] })
+    },
+  })
+}
+
+export function useDeleteCategory() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (id: number) => api.deleteCategory(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['categories'] })
+      queryClient.invalidateQueries({ queryKey: ['transactions'] })
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] })
+    },
+  })
+}
+
 // Transactions
 export function useTransactions(params?: { category_id?: number; type?: string; payment_method?: string; month?: string; per_page?: number; page?: number }) {
   return useQuery({
@@ -82,6 +107,31 @@ export function useCreateTransaction() {
   return useMutation({
     mutationFn: (payload: { category_id: number; type: string; payment_method: string; amount: number; transacted_at: string; notes?: string }) =>
       api.createTransaction(payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['transactions'] })
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] })
+    },
+  })
+}
+
+export function useUpdateTransaction() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (params: {
+      id: number
+      payload: Partial<{ category_id: number; type: string; payment_method: string; amount: number; transacted_at: string; notes?: string }>
+    }) => api.updateTransaction(params.id, params.payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['transactions'] })
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] })
+    },
+  })
+}
+
+export function useDeleteTransaction() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (id: number) => api.deleteTransaction(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['transactions'] })
       queryClient.invalidateQueries({ queryKey: ['dashboard'] })
@@ -118,7 +168,7 @@ export function useUpdateProfile() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (payload: { name?: string; email?: string; password?: string; password_confirmation?: string; locale?: string }) => api.updateProfile(payload),
+    mutationFn: (payload: { name?: string; email?: string; password?: string; password_confirmation?: string; locale?: string } | FormData) => api.updateProfile(payload),
     onSuccess: (user) => {
       queryClient.setQueryData(['auth', 'me'], user)
       queryClient.invalidateQueries({ queryKey: ['subscription'] })

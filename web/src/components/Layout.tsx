@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/api";
+import appLogo from "../assets/icon_mao_fechada.png";
 import "../styles/layout.css";
 
 export function Layout({ children }: { children: React.ReactNode }) {
@@ -25,8 +26,20 @@ export function Layout({ children }: { children: React.ReactNode }) {
       {!isMobile && (
         <aside className="sidebar">
           <div className="sidebar-header">
-            <h1 className="app-title">{t("app.title")}</h1>
-            <p className="user-name">{user?.name}</p>
+            <div className="sidebar-brand">
+              <img src={appLogo} alt={t("app.title")} className="sidebar-logo" />
+              <h1 className="app-title">{t("app.title")}</h1>
+            </div>
+            <div className="user-identity">
+              {user?.profile_photo_url ? (
+                <img src={user.profile_photo_url} alt={user.name} className="user-avatar" />
+              ) : (
+                <span className="user-avatar user-avatar-fallback" aria-hidden="true">
+                  <i className="fa-solid fa-user" />
+                </span>
+              )}
+              <p className="user-name">{user?.name}</p>
+            </div>
           </div>
 
           <nav className="sidebar-nav">

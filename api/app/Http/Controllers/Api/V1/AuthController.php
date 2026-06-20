@@ -10,6 +10,7 @@ use App\Support\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
@@ -79,8 +80,25 @@ class AuthController extends Controller
 
     private function updateAuthenticatedUser(array $validated, Request $request): JsonResponse
     {
-        $request->user()->update($validated);
+        $user = $request->user();
 
-        return ApiResponse::data($request->user()->fresh());
+        if ($request->boolean('remove_profile_photo') && $user->profile_photo_path) {
+            Storage::disk('public')->delete($user->profile_photo_path);
+            $validated['profile_photo_path'] = null;
+        }
+
+        if ($request->hasFile('profile_photo')) {
+            if ($user->profile_photo_path) {
+                Storage::disk('public')->delete($user->profile_photo_path);
+            }
+
+            $validated['profile_photo_path'] = $request->file('profile_photo')->store('profile-photos', 'public');
+        }
+
+        unset($validated['remove_profile_photo']);
+
+        $user->update($validated);
+
+        return ApiResponse::data($user->fresh());
     }
 }

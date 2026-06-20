@@ -25,6 +25,8 @@ class UpdateProfileRequest extends FormRequest
             ],
             'password' => ['sometimes', 'required', 'string', 'min:8', 'confirmed'],
             'locale' => ['sometimes', 'required', Rule::in(['pt-BR', 'en'])],
+            'profile_photo' => ['sometimes', 'nullable', 'image', 'max:2048'],
+            'remove_profile_photo' => ['sometimes', 'boolean'],
         ];
     }
 }

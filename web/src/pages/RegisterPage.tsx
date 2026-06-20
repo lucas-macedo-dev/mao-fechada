@@ -3,6 +3,7 @@ import { useAuth } from '../hooks/api'
 import type { FormEvent } from 'react'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import appLogo from '../assets/icon_mao_fechada.png'
 import '../styles/auth.css'
 
 export function RegisterPage() {
@@ -32,6 +33,9 @@ export function RegisterPage() {
   return (
     <div className="auth-page">
       <div className="auth-card">
+        <div className="auth-brand">
+          <img src={appLogo} alt={t('app.title')} className="auth-logo" />
+        </div>
         <h1>{t('app.title')}</h1>
         <p className="subtitle">{t('app.subtitle')}</p>
 

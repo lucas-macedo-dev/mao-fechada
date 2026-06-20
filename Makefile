@@ -1,4 +1,4 @@
-# pao_duro — atalhos de desenvolvimento
+# mao_fechada — atalhos de desenvolvimento
 # Uso: make <comando>
 
 .PHONY: up down build restart logs shell-api shell-web migrate fresh seed test
@@ -33,7 +33,7 @@ shell-web:
 	docker compose exec web sh
 
 shell-db:
-	docker compose exec db mysql -u pao_duro -psecret pao_duro
+	docker compose exec db mysql -u mao_fechada -psecret mao_fechada
 
 # ─── Laravel ──────────────────────────────────────────────────────
 install:
