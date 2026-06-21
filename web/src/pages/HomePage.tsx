@@ -2,7 +2,6 @@ import { useTranslation } from 'react-i18next'
 import { useDashboardSummary, useDashboardByCategory, useDashboardByDay, useTransactions } from '../hooks/api'
 import { getCategoryIconClass } from '../constants/categoryIcons'
 import { useState } from 'react'
-import appLogo from '../assets/icon_mao_fechada.png'
 import {
   Title,
   Text,
