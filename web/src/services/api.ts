@@ -1,5 +1,5 @@
 import axios from 'axios'
-import type { ApiError, User, Category, Transaction, DashboardSummary, MonthlySummary, SubscriptionStatus, PaginatedResponse, Plan } from '../types/api'
+import type { ApiError, User, Category, Transaction, DashboardSummary, MonthlySummary, SubscriptionStatus, PaginatedResponse, Plan, DashboardCategoryItem, DashboardDayItem } from '../types/api'
 
 const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api'
 
@@ -138,6 +138,20 @@ export const api = {
   getDashboardRecent: async (limit?: number, month?: string) => {
     const response = await client.get<{ data: Transaction[] }>('/v1/dashboard/recent', {
       params: { limit, month },
+    })
+    return response.data.data
+  },
+
+  getDashboardByCategory: async (month?: string) => {
+    const response = await client.get<{ data: DashboardCategoryItem[] }>('/v1/dashboard/by-category', {
+      params: { month },
+    })
+    return response.data.data
+  },
+
+  getDashboardByDay: async (month?: string) => {
+    const response = await client.get<{ data: DashboardDayItem[] }>('/v1/dashboard/by-day', {
+      params: { month },
     })
     return response.data.data
   },

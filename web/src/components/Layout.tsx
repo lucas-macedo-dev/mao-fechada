@@ -3,8 +3,9 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/api";
 import appLogo from "../assets/icon_mao_fechada.png";
 import "../styles/layout.css";
+import { Box, Group, Text, ActionIcon, Menu, Avatar } from "@mantine/core";
 
-export function Layout({ children }: { children: React.ReactNode }) {
+export function Layout({ children }: Readonly<{ children: React.ReactNode }>) {
   const { t } = useTranslation();
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -30,7 +31,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
               <img src={appLogo} alt={t("app.title")} className="sidebar-logo" />
               <h1 className="app-title">{t("app.title")}</h1>
             </div>
-            <div className="user-identity">
+            <Link to="/profile" className="user-identity" aria-label={t("nav.profile")}>
               {user?.profile_photo_url ? (
                 <img src={user.profile_photo_url} alt={user.name} className="user-avatar" />
               ) : (
@@ -39,25 +40,21 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 </span>
               )}
               <p className="user-name">{user?.name}</p>
-            </div>
+            </Link>
           </div>
 
           <nav className="sidebar-nav">
             <Link to="/home" className="nav-link">
-                <i className="fa-solid fa-house" aria-hidden="true"></i>
+              <i className="fa-solid fa-house" aria-hidden="true"></i>
               &nbsp;{t("nav.home")}
             </Link>
             <Link to="/categories" className="nav-link">
-                <i className="fa-solid fa-list" aria-hidden="true"></i>
+              <i className="fa-solid fa-list" aria-hidden="true"></i>
               &nbsp;{t("nav.categories")}
             </Link>
             <Link to="/transactions" className="nav-link">
               <i className="fa-solid fa-receipt" aria-hidden="true"></i>
               &nbsp;{t("nav.transactions")}
-            </Link>
-            <Link to="/profile" className="nav-link">
-              <i className="fa-solid fa-user" aria-hidden="true" />
-              &nbsp;{t("nav.profile")}
             </Link>
             <Link to="/subscription" className="nav-link">
               <i className="fa-solid fa-bell" aria-hidden="true" />
@@ -73,34 +70,83 @@ export function Layout({ children }: { children: React.ReactNode }) {
         </aside>
       )}
 
+      {isMobile && (
+        <Box className="mobile-top-bar">
+          <Group gap="xs" align="center">
+            <img
+              src={appLogo}
+              alt={t("app.title")}
+              style={{ width: 32, height: 32, objectFit: "contain" }}
+            />
+            <Text fw={700} size="md">
+              {t("app.title")}
+            </Text>
+          </Group>
+
+          <Menu shadow="md" width={200} position="bottom-end" withArrow>
+            <Menu.Target>
+              <ActionIcon variant="subtle" size="lg" aria-label={t("nav.profile")}>
+                {user?.profile_photo_url ? (
+                  <Avatar
+                    src={user.profile_photo_url}
+                    alt={user.name}
+                    size={32}
+                    radius="xl"
+                  />
+                ) : (
+                  <Avatar size={32} radius="xl">
+                    <i className="fa-solid fa-user" />
+                  </Avatar>
+                )}
+              </ActionIcon>
+            </Menu.Target>
+
+            <Menu.Dropdown>
+              <Menu.Label>{user?.name}</Menu.Label>
+              <Menu.Item
+                component={Link}
+                to="/profile"
+                leftSection={<i className="fa-solid fa-user" />}
+              >
+                {t("nav.profile")}
+              </Menu.Item>
+              <Menu.Item
+                component={Link}
+                to="/subscription"
+                leftSection={<i className="fa-solid fa-bell" />}
+              >
+                {t("nav.subscription")}
+              </Menu.Item>
+              <Menu.Divider />
+              <Menu.Item
+                color="red"
+                leftSection={<i className="fa-solid fa-right-from-bracket" />}
+                onClick={handleLogout}
+              >
+                {t("nav.logout")}
+              </Menu.Item>
+            </Menu.Dropdown>
+          </Menu>
+        </Box>
+      )}
+
       <main className="main-content">
         {children}
 
         {isMobile && (
           <nav className="bottom-nav">
             <Link to="/home" className="nav-link">
-                <i className="fa-solid fa-house" aria-hidden="true"></i>
-              {t("nav.home")}
+              <i className="fa-solid fa-house" aria-hidden="true"></i>
+              &nbsp;{t("nav.home")}
             </Link>
             <Link to="/categories" className="nav-link">
-                <i className="fa-solid fa-list" aria-hidden="true"></i>
-              {t("nav.categories")}
+              <i className="fa-solid fa-list" aria-hidden="true"></i>
+              &nbsp;{t("nav.categories")}
             </Link>
             <Link to="/transactions" className="nav-link">
               <i className="fa-solid fa-receipt" aria-hidden="true"></i>
               {t("nav.transactions")}
             </Link>
-            <Link to="/profile" className="nav-link">
-              <i className="fa-solid fa-user" aria-hidden="true" />
-              {t("nav.profile")}
-            </Link>
-            <Link to="/subscription" className="nav-link">
-              <i className="fa-solid fa-bell" aria-hidden="true" />
-              {t("nav.subscription")}
-            </Link>
-            <button onClick={handleLogout} className="btn btn-logout nav-link danger">
-              {t("nav.logout")}
-            </button>
           </nav>
         )}
       </main>

@@ -81,6 +81,67 @@ class DashboardController extends Controller
         return ApiResponse::data($recent);
     }
 
+    public function byCategory(Request $request): JsonResponse
+    {
+        $this->ensureOwnership($request, $request->user()->id);
+
+        [$year, $month] = $this->resolveMonth($request);
+
+        $rows = $this->baseQuery($request, $year, $month)
+            ->whereIn('type', TransactionTypeMapper::expenseValues())
+            ->with('category')
+            ->get()
+            ->groupBy('category_id')
+            ->map(function ($transactions) {
+                return [
+                    'name'  => $transactions->first()->category?->name ?? 'Sem categoria',
+                    'value' => (float) $transactions->sum('amount'),
+                ];
+            })
+            ->values()
+            ->sortByDesc('value');
+
+        $top   = $rows->take(8);
+        $other = $rows->skip(8);
+
+        $result = $top->values()->toArray();
+
+        if ($other->isNotEmpty()) {
+            $result[] = [
+                'name'  => 'Outros',
+                'value' => (float) $other->sum('value'),
+            ];
+        }
+
+        return ApiResponse::data($result);
+    }
+
+    public function byDay(Request $request): JsonResponse
+    {
+        $this->ensureOwnership($request, $request->user()->id);
+
+        [$year, $month] = $this->resolveMonth($request);
+
+        $transactions = $this->baseQuery($request, $year, $month)->get();
+        $daysInMonth  = Carbon::createFromDate($year, $month, 1)->daysInMonth;
+
+        $byDay = [];
+        for ($day = 1; $day <= $daysInMonth; $day++) {
+            $byDay[$day] = ['day' => $day, 'income' => 0.0, 'expense' => 0.0];
+        }
+
+        foreach ($transactions as $tx) {
+            $day = (int) Carbon::parse($tx->transacted_at)->format('d');
+            if (in_array($tx->type, TransactionTypeMapper::incomeValues())) {
+                $byDay[$day]['income'] += (float) $tx->amount;
+            } else {
+                $byDay[$day]['expense'] += (float) $tx->amount;
+            }
+        }
+
+        return ApiResponse::data(array_values($byDay));
+    }
+
     private function resolveMonth(Request $request): array
     {
         $validated = $request->validate([
@@ -99,5 +160,12 @@ class DashboardController extends Controller
             ->where('user_id', $request->user()->id)
             ->whereYear('transacted_at', $year)
             ->whereMonth('transacted_at', $month);
+    }
+
+    private function ensureOwnership(Request $request, int $ownerUserId): void
+    {
+        if ((int) $request->user()->id !== $ownerUserId) {
+            abort(403, __('messages.ownership_denied'));
+        }
     }
 }

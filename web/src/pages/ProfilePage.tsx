@@ -5,7 +5,20 @@ import i18n from '../i18n/config'
 import { extractApiError } from '../services/api'
 import { useAuth, useUpdateProfile } from '../hooks/api'
 import appLogo from '../assets/icon_mao_fechada.png'
-import '../styles/pages.css'
+import {
+  Title,
+  Text,
+  TextInput,
+  PasswordInput,
+  Select,
+  Button,
+  Alert,
+  Stack,
+  Group,
+  Avatar,
+} from '@mantine/core'
+import { PageContainer } from '../components/ui/PageContainer'
+import { SectionCard } from '../components/ui/SectionCard'
 
 export function ProfilePage() {
   const { t } = useTranslation()
@@ -115,85 +128,113 @@ export function ProfilePage() {
   }
 
   return (
-    <div className="page profile-page">
-      <div className="page-title-with-logo">
-        <img src={appLogo} alt={t('app.title')} className="page-logo" />
-        <h1>{t('profile.title')}</h1>
-      </div>
+    <PageContainer>
+      <Group align="center" gap="xs" mb="lg">
+        <Title order={1}>{t('profile.title')}</Title>
+      </Group>
 
-      <form className="card form-card" onSubmit={handleSubmit}>
-        <div className="profile-photo-section">
-          <div className="profile-photo-preview">
-            {previewUrl ? (
-              <img src={previewUrl} alt={t('profile.photo')} />
-            ) : (
-              <img src={appLogo} alt={t('app.title')} className="profile-photo-fallback" />
+      <SectionCard>
+        <form onSubmit={handleSubmit}>
+          <Stack gap="md">
+            <Stack align="center" gap="xs" mb="xs">
+              <Avatar
+                src={previewUrl}
+                size={90}
+                radius="xl"
+                style={{ border: '1px solid var(--mantine-color-indigo-2)' }}
+              >
+                <img src={appLogo} alt={t('app.title')} style={{ width: '100%', height: '100%', objectFit: 'contain', padding: '0.75rem' }} />
+              </Avatar>
+
+              <Group gap="xs" justify="center">
+                <Button
+                  component="label"
+                  htmlFor="profile-photo"
+                  variant="light"
+                  size="sm"
+                >
+                  {t('profile.change_photo')}
+                </Button>
+                <input
+                  id="profile-photo"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleProfilePhotoChange}
+                  style={{ display: 'none' }}
+                />
+                {(previewUrl || user?.profile_photo_url) && (
+                  <Button variant="light" color="red" size="sm" onClick={handleRemovePhoto} type="button">
+                    {t('profile.remove_photo')}
+                  </Button>
+                )}
+              </Group>
+
+              <Text size="xs" c="dimmed">{t('profile.photo_hint')}</Text>
+            </Stack>
+
+            <TextInput
+              id="profile-name"
+              label={t('auth.name')}
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+              required
+            />
+
+            <TextInput
+              id="profile-email"
+              label={t('auth.email')}
+              type="email"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              required
+            />
+
+            <Select
+              id="profile-locale"
+              label={t('profile.locale')}
+              value={locale}
+              onChange={(val) => setLocale(val === 'en' ? 'en' : 'pt-BR')}
+              data={[
+                { value: 'pt-BR', label: 'Português (Brasil)' },
+                { value: 'en', label: 'English' },
+              ]}
+            />
+
+            <PasswordInput
+              id="profile-password"
+              label={t('profile.new_password')}
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              minLength={8}
+              placeholder={t('profile.password_placeholder')}
+            />
+
+            <PasswordInput
+              id="profile-password-confirmation"
+              label={t('profile.confirm_password')}
+              value={passwordConfirmation}
+              onChange={(event) => setPasswordConfirmation(event.target.value)}
+              minLength={8}
+              placeholder={t('profile.password_placeholder')}
+            />
+
+            {error && (
+              <Alert color="red" radius="md">
+                {error}
+              </Alert>
             )}
-          </div>
-
-          <div className="profile-photo-actions">
-            <label htmlFor="profile-photo" className="btn btn-secondary">
-              {t('profile.change_photo')}
-            </label>
-            <input id="profile-photo" type="file" accept="image/*" onChange={handleProfilePhotoChange} className="hidden-file-input" />
-            {(previewUrl || user?.profile_photo_url) && (
-              <button type="button" className="btn btn-danger" onClick={handleRemovePhoto}>
-                {t('profile.remove_photo')}
-              </button>
+            {success && (
+              <Alert color="green" radius="md">
+                {success}
+              </Alert>
             )}
-            <p className="profile-photo-hint">{t('profile.photo_hint')}</p>
-          </div>
-        </div>
 
-        <div className="form-group">
-          <label htmlFor="profile-name">{t('auth.name')}</label>
-          <input id="profile-name" type="text" value={name} onChange={(event) => setName(event.target.value)} required />
-        </div>
-
-        <div className="form-group">
-          <label htmlFor="profile-email">{t('auth.email')}</label>
-          <input id="profile-email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} required />
-        </div>
-
-        <div className="form-group">
-          <label htmlFor="profile-locale">{t('profile.locale')}</label>
-          <select id="profile-locale" value={locale} onChange={(event) => setLocale(event.target.value === 'en' ? 'en' : 'pt-BR')}>
-            <option value="pt-BR">Português (Brasil)</option>
-            <option value="en">English</option>
-          </select>
-        </div>
-
-        <div className="form-group">
-          <label htmlFor="profile-password">{t('profile.new_password')}</label>
-          <input
-            id="profile-password"
-            type="password"
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            minLength={8}
-            placeholder={t('profile.password_placeholder')}
-          />
-        </div>
-
-        <div className="form-group">
-          <label htmlFor="profile-password-confirmation">{t('profile.confirm_password')}</label>
-          <input
-            id="profile-password-confirmation"
-            type="password"
-            value={passwordConfirmation}
-            onChange={(event) => setPasswordConfirmation(event.target.value)}
-            minLength={8}
-            placeholder={t('profile.password_placeholder')}
-          />
-        </div>
-
-        {error && <div className="error-message">{error}</div>}
-        {success && <div className="success-message">{success}</div>}
-
-        <button type="submit" className="btn btn-primary" disabled={updateProfile.isPending}>
-          {updateProfile.isPending ? t('common.loading') : t('common.save')}
-        </button>
-      </form>
-    </div>
+            <Button type="submit" loading={updateProfile.isPending}>
+              {t('common.save')}
+            </Button>
+          </Stack>
+        </form>
+      </SectionCard>
+    </PageContainer>
   )
 }

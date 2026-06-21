@@ -54,6 +54,11 @@ artisan:
 cache-clear:
 	docker compose exec api php artisan optimize:clear
 
+# ─── NPM ───────────────────────────────────────────────────────
+
+compile	:
+	docker compose exec web npm run build
+
 # ─── Setup inicial ────────────────────────────────────────────────
 setup:
 	cp api/.env.example api/.env

@@ -1,6 +1,17 @@
 import { useTranslation } from 'react-i18next'
 import { usePlans, useSubscription } from '../hooks/api'
-import '../styles/pages.css'
+import {
+  Title,
+  Text,
+  SimpleGrid,
+  Paper,
+  Group,
+  Badge,
+  Stack,
+  List,
+} from '@mantine/core'
+import { PageContainer } from '../components/ui/PageContainer'
+import { SectionCard } from '../components/ui/SectionCard'
 
 function formatLimit(limit: number | null, t: (key: string) => string): string {
   if (limit === null) {
@@ -16,51 +27,90 @@ export function SubscriptionPage() {
   const { data: plans = [], isLoading: loadingPlans } = usePlans()
 
   if (loadingSubscription || loadingPlans) {
-    return <div className="page">{t('common.loading')}</div>
+    return (
+      <PageContainer>
+        <Text>{t('common.loading')}</Text>
+      </PageContainer>
+    )
   }
 
   return (
-    <div className="page subscription-page">
-      <h1>{t('subscription.title')}</h1>
+    <PageContainer>
+      <Title order={1} mb="lg">
+        {t('subscription.title')}
+      </Title>
 
       {subscription && (
-        <section className="card current-subscription-card">
-          <h2>{t('subscription.current')}</h2>
-          <p>
-            {t('subscription.plan')}: <strong>{t(`subscription.plan_value.${subscription.plan_code}`, { defaultValue: subscription.plan_code })}</strong>
-          </p>
-          <p>
-            {t('subscription.status')}: <strong>{t(`subscription.status_value.${subscription.status}`, { defaultValue: subscription.status })}</strong>
-          </p>
-          <p>
-            {t('subscription.provider')}: <strong>{subscription.provider || t('subscription.none')}</strong>
-          </p>
-        </section>
+        <SectionCard mb="lg">
+          <Title order={2} mb="md">
+            {t('subscription.current')}
+          </Title>
+          <Stack gap="xs">
+            <Text>
+              {t('subscription.plan')}:{' '}
+              <Text component="span" fw={700}>
+                {t(`subscription.plan_value.${subscription.plan_code}`, { defaultValue: subscription.plan_code })}
+              </Text>
+            </Text>
+            <Text>
+              {t('subscription.status')}:{' '}
+              <Text component="span" fw={700}>
+                {t(`subscription.status_value.${subscription.status}`, { defaultValue: subscription.status })}
+              </Text>
+            </Text>
+            <Text>
+              {t('subscription.provider')}:{' '}
+              <Text component="span" fw={700}>
+                {subscription.provider || t('subscription.none')}
+              </Text>
+            </Text>
+          </Stack>
+        </SectionCard>
       )}
 
-      <section className="plans-grid">
+      <SimpleGrid cols={{ base: 1, md: 2 }} spacing="md">
         {plans.map((plan) => {
           const isCurrent = subscription?.plan_code === plan.code
 
           return (
-            <article key={plan.code} className={`card plan-card ${isCurrent ? 'current' : ''}`}>
-              <div className="plan-header">
-                <h2>{plan.name}</h2>
-                {isCurrent && <span className="plan-badge">{t('subscription.current_badge')}</span>}
-              </div>
+            <Paper
+              key={plan.code}
+              shadow="xs"
+              radius="md"
+              p="lg"
+              withBorder
+              style={isCurrent ? { borderColor: 'var(--mantine-color-green-6)' } : undefined}
+            >
+              <Group justify="space-between" align="center" mb="md">
+                <Title order={2}>{plan.name}</Title>
+                {isCurrent && (
+                  <Badge color="green" variant="light">
+                    {t('subscription.current_badge')}
+                  </Badge>
+                )}
+              </Group>
 
-              <ul className="feature-list">
+              <List spacing="sm" listStyleType="none">
                 {Object.entries(plan.features || {}).map(([featureKey, feature]) => (
-                  <li key={featureKey}>
-                    <span>{t(`subscription.feature.${featureKey}`, { defaultValue: featureKey })}</span>
-                    <strong>{formatLimit(feature.limit, t)}</strong>
-                  </li>
+                  <List.Item
+                    key={featureKey}
+                    style={{ borderBottom: '1px dashed var(--mantine-color-gray-3)', paddingBottom: '0.5rem' }}
+                  >
+                    <Group justify="space-between">
+                      <Text size="sm">
+                        {t(`subscription.feature.${featureKey}`, { defaultValue: featureKey })}
+                      </Text>
+                      <Text size="sm" fw={700}>
+                        {formatLimit(feature.limit, t)}
+                      </Text>
+                    </Group>
+                  </List.Item>
                 ))}
-              </ul>
-            </article>
+              </List>
+            </Paper>
           )
         })}
-      </section>
-    </div>
+      </SimpleGrid>
+    </PageContainer>
   )
 }

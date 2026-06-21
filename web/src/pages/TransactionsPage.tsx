@@ -3,7 +3,24 @@ import { useCategories, useCreateTransaction, useDeleteTransaction, useTransacti
 import { getCategoryIconClass } from '../constants/categoryIcons'
 import { extractApiError } from '../services/api'
 import { useMemo, useState, type SyntheticEvent } from 'react'
-import '../styles/pages.css'
+import {
+  Title,
+  Text,
+  Select,
+  TextInput,
+  NumberInput,
+  Button,
+  ActionIcon,
+  Alert,
+  Stack,
+  Group,
+  Box,
+  SimpleGrid,
+  Paper,
+} from '@mantine/core'
+import { PageContainer } from '../components/ui/PageContainer'
+import { SectionCard } from '../components/ui/SectionCard'
+import { ActionBar } from '../components/ui/ActionBar'
 
 const paymentMethods = ['cartao_credito', 'cartao_debito', 'dinheiro', 'pix', 'boleto', 'ted'] as const
 
@@ -35,7 +52,7 @@ export function TransactionsPage() {
   const [createType, setCreateType] = useState<'entrada' | 'saida'>('saida')
   const [categoryId, setCategoryId] = useState('')
   const [paymentMethod, setPaymentMethod] = useState('pix')
-  const [amount, setAmount] = useState('')
+  const [amount, setAmount] = useState<number | string>('')
   const [transactedAt, setTransactedAt] = useState(new Date().toISOString().slice(0, 10))
   const [notes, setNotes] = useState('')
   const [error, setError] = useState('')
@@ -49,7 +66,7 @@ export function TransactionsPage() {
   const [editType, setEditType] = useState<'entrada' | 'saida'>('saida')
   const [editCategoryId, setEditCategoryId] = useState('')
   const [editPaymentMethod, setEditPaymentMethod] = useState('pix')
-  const [editAmount, setEditAmount] = useState('')
+  const [editAmount, setEditAmount] = useState<number | string>('')
   const [editTransactedAt, setEditTransactedAt] = useState('')
   const [editNotes, setEditNotes] = useState('')
 
@@ -92,7 +109,7 @@ export function TransactionsPage() {
     setEditType(normalizeType(transaction.type))
     setEditCategoryId(String(transaction.category_id))
     setEditPaymentMethod(transaction.payment_method)
-    setEditAmount(String(transaction.amount))
+    setEditAmount(Number(transaction.amount))
     setEditTransactedAt(transaction.transacted_at.slice(0, 10))
     setEditNotes(transaction.notes || '')
     setError('')
@@ -187,285 +204,321 @@ export function TransactionsPage() {
   }
 
   if (isLoading) {
-    return <div className="page">{t('common.loading')}</div>
+    return (
+      <PageContainer>
+        <Text>{t('common.loading')}</Text>
+      </PageContainer>
+    )
   }
 
   return (
-    <div className="page transactions-page">
-      <h1>{t('transactions.title')}</h1>
+    <PageContainer>
+      <Title order={1} mb="lg">
+        {t('transactions.title')}
+      </Title>
 
-      <form className="card form-card" onSubmit={handleCreate}>
-        <h2>{t('transactions.new_entry')}</h2>
+      <SectionCard mb="lg">
+        <Title order={2} mb="md">
+          {t('transactions.new_entry')}
+        </Title>
 
-        <div className="form-grid">
-          <div className="form-group">
-            <label htmlFor="category">{t('transactions.category')}</label>
-            <select id="category" value={categoryId} onChange={(event) => setCategoryId(event.target.value)} required>
-              <option value="">{t('transactions.select_category')}</option>
-              {creatableCategories.map((category) => (
-                <option key={category.id} value={category.id}>
-                  {category.name}
-                </option>
-              ))}
-            </select>
-            {selectedCategory && (
-              <p className="selected-category-icon">
-                <span className="category-icon-wrapper" aria-hidden="true">
-                  <i className={getCategoryIconClass(selectedCategory.icon)} />
-                </span>
-                {selectedCategory.name}
-              </p>
-            )}
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="create-type">{t('transactions.type')}</label>
-            <select
-              id="create-type"
+        <form onSubmit={handleCreate}>
+          <SimpleGrid cols={{ base: 1, sm: 2 }} mb="sm">
+            <Select
+              label={t('transactions.type')}
               value={createType}
-              onChange={(event) => {
-                const nextType = event.target.value === 'entrada' ? 'entrada' : 'saida'
+              onChange={(val) => {
+                const nextType = val === 'entrada' ? 'entrada' : 'saida'
                 setCreateType(nextType)
                 setCategoryId('')
               }}
-            >
-              <option value="entrada">{t('categories.type_income')}</option>
-              <option value="saida">{t('categories.type_expense')}</option>
-            </select>
-          </div>
+              data={[
+                { value: 'saida', label: t('categories.type_expense') },
+                { value: 'entrada', label: t('categories.type_income') },
+              ]}
+            />
 
-          <div className="form-group">
-            <label htmlFor="payment-method">{t('transactions.payment_method')}</label>
-            <select id="payment-method" value={paymentMethod} onChange={(event) => setPaymentMethod(event.target.value)}>
-              {paymentMethods.map((method) => (
-                <option key={method} value={method}>
-                  {t(`transactions.payment.${method}`)}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="amount">{t('transactions.amount')}</label>
-            <input
-              id="amount"
-              type="number"
-              min="0.01"
-              step="0.01"
-              value={amount}
-              onChange={(event) => setAmount(event.target.value)}
+            <Select
+              label={t('transactions.category')}
+              value={categoryId}
+              onChange={(val) => setCategoryId(val ?? '')}
+              data={creatableCategories.map((cat) => ({ value: String(cat.id), label: cat.name }))}
+              placeholder={t('transactions.select_category')}
               required
             />
-          </div>
 
-          <div className="form-group">
-            <label htmlFor="transacted-at">{t('transactions.date')}</label>
-            <input id="transacted-at" type="date" value={transactedAt} onChange={(event) => setTransactedAt(event.target.value)} required />
-          </div>
+            {selectedCategory && (
+              <Text size="sm" style={{ display: 'inline-flex', alignItems: 'center' }} c="dimmed">
+                <Box
+                  component="span"
+                  style={{
+                    width: '1.5rem',
+                    height: '1.5rem',
+                    borderRadius: 999,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    background: 'var(--mantine-color-indigo-0)',
+                    color: 'var(--mantine-color-indigo-6)',
+                    marginRight: '0.5rem',
+                    flexShrink: 0,
+                  }}
+                  aria-hidden="true"
+                >
+                  <i className={getCategoryIconClass(selectedCategory.icon)} />
+                </Box>
+                {selectedCategory.name}
+              </Text>
+            )}
 
-          <div className="form-group full-width">
-            <label htmlFor="notes">{t('transactions.notes')}</label>
-            <input id="notes" type="text" value={notes} onChange={(event) => setNotes(event.target.value)} />
-          </div>
-        </div>
+            <Select
+              label={t('transactions.payment_method')}
+              value={paymentMethod}
+              onChange={(val) => setPaymentMethod(val ?? 'pix')}
+              data={paymentMethods.map((method) => ({ value: method, label: t(`transactions.payment.${method}`) }))}
+            />
 
-        {error && <div className="error-message">{error}</div>}
-        {success && <div className="success-message">{success}</div>}
+            <NumberInput
+              label={t('transactions.amount')}
+              value={amount}
+              onChange={setAmount}
+              min={0.01}
+              step={0.01}
+              decimalScale={2}
+              required
+            />
 
-        <button type="submit" className="btn btn-primary" disabled={createTransaction.isPending}>
-          {createTransaction.isPending ? t('common.loading') : t('common.create')}
-        </button>
-      </form>
+            <TextInput
+              label={t('transactions.date')}
+              type="date"
+              value={transactedAt}
+              onChange={(e) => setTransactedAt(e.target.value)}
+              required
+            />
 
-      <div className="filters card">
-        <div className="form-group">
-          <label htmlFor="month">{t('transactions.period')}</label>
-          <input
+            <TextInput
+              label={t('transactions.notes')}
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              style={{ gridColumn: '1 / -1' }}
+            />
+          </SimpleGrid>
+
+          {error && (
+            <Alert color="red" mb="sm" radius="md">
+              {error}
+            </Alert>
+          )}
+          {success && (
+            <Alert color="green" mb="sm" radius="md">
+              {success}
+            </Alert>
+          )}
+
+          <Button type="submit" loading={createTransaction.isPending}>
+            {t('common.create')}
+          </Button>
+        </form>
+      </SectionCard>
+
+      <SectionCard mb="lg">
+        <SimpleGrid cols={{ base: 1, sm: 2 }}>
+          <TextInput
+            label={t('transactions.period')}
             type="month"
-            id="month"
             value={month}
-            onChange={(event) => {
-              setMonth(event.target.value)
+            onChange={(e) => {
+              setMonth(e.target.value)
               setPage(1)
             }}
           />
-        </div>
 
-        <div className="form-group">
-          <label htmlFor="filter-type">{t('transactions.type')}</label>
-          <select
-            id="filter-type"
+          <Select
+            label={t('transactions.type')}
             value={type}
-            onChange={(event) => {
-              setType(event.target.value)
+            onChange={(val) => {
+              setType(val ?? '')
               setPage(1)
             }}
-          >
-            <option value="">{t('transactions.all_types')}</option>
-            <option value="entrada">{t('categories.type_income')}</option>
-            <option value="saida">{t('categories.type_expense')}</option>
-          </select>
-        </div>
-      </div>
+            data={[
+              { value: '', label: t('transactions.all_types') },
+              { value: 'entrada', label: t('categories.type_income') },
+              { value: 'saida', label: t('categories.type_expense') },
+            ]}
+          />
+        </SimpleGrid>
+      </SectionCard>
 
       {transactions.length === 0 ? (
-        <p className="empty-state">{t('transactions.empty')}</p>
+        <Text c="dimmed" ta="center" py="xl" fs="italic">
+          {t('transactions.empty')}
+        </Text>
       ) : (
         <>
-          <div className="transaction-list">
+          <Stack gap="sm" mb="md">
             {transactions.map((tx) => (
-              <div key={tx.id} className="transaction-row card">
+              <Paper key={tx.id} shadow="xs" radius="md" p="md" withBorder>
                 {editingTransactionId === tx.id ? (
-                  <form className="inline-edit-form full-width" onSubmit={(event) => handleUpdate(event, tx.id)}>
-                    <div className="form-grid">
-                      <div className="form-group">
-                        <label htmlFor={`tx-edit-type-${tx.id}`}>{t('transactions.type')}</label>
-                        <select
-                          id={`tx-edit-type-${tx.id}`}
-                          value={editType}
-                          onChange={(event) => {
-                            const nextType = event.target.value === 'entrada' ? 'entrada' : 'saida'
-                            setEditType(nextType)
-                            setEditCategoryId('')
-                          }}
-                        >
-                          <option value="entrada">{t('categories.type_income')}</option>
-                          <option value="saida">{t('categories.type_expense')}</option>
-                        </select>
-                      </div>
+                  <form onSubmit={(event) => handleUpdate(event, tx.id)}>
+                    <SimpleGrid cols={{ base: 1, sm: 2 }} mb="sm">
+                      <Select
+                        label={t('transactions.type')}
+                        value={editType}
+                        onChange={(val) => {
+                          const nextType = val === 'entrada' ? 'entrada' : 'saida'
+                          setEditType(nextType)
+                          setEditCategoryId('')
+                        }}
+                        data={[
+                          { value: 'saida', label: t('categories.type_expense') },
+                          { value: 'entrada', label: t('categories.type_income') },
+                        ]}
+                      />
 
-                      <div className="form-group">
-                        <label htmlFor={`tx-edit-category-${tx.id}`}>{t('transactions.category')}</label>
-                        <select
-                          id={`tx-edit-category-${tx.id}`}
-                          value={editCategoryId}
-                          onChange={(event) => setEditCategoryId(event.target.value)}
-                          required
-                        >
-                          <option value="">{t('transactions.select_category')}</option>
-                          {editableCategories.map((category) => (
-                            <option key={category.id} value={category.id}>
-                              {category.name}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
+                      <Select
+                        label={t('transactions.category')}
+                        value={editCategoryId}
+                        onChange={(val) => setEditCategoryId(val ?? '')}
+                        data={editableCategories.map((cat) => ({ value: String(cat.id), label: cat.name }))}
+                        placeholder={t('transactions.select_category')}
+                        required
+                      />
 
-                      <div className="form-group">
-                        <label htmlFor={`tx-edit-payment-${tx.id}`}>{t('transactions.payment_method')}</label>
-                        <select
-                          id={`tx-edit-payment-${tx.id}`}
-                          value={editPaymentMethod}
-                          onChange={(event) => setEditPaymentMethod(event.target.value)}
-                        >
-                          {paymentMethods.map((method) => (
-                            <option key={method} value={method}>
-                              {t(`transactions.payment.${method}`)}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
+                      <Select
+                        label={t('transactions.payment_method')}
+                        value={editPaymentMethod}
+                        onChange={(val) => setEditPaymentMethod(val ?? 'pix')}
+                        data={paymentMethods.map((method) => ({ value: method, label: t(`transactions.payment.${method}`) }))}
+                      />
 
-                      <div className="form-group">
-                        <label htmlFor={`tx-edit-amount-${tx.id}`}>{t('transactions.amount')}</label>
-                        <input
-                          id={`tx-edit-amount-${tx.id}`}
-                          type="number"
-                          min="0.01"
-                          step="0.01"
-                          value={editAmount}
-                          onChange={(event) => setEditAmount(event.target.value)}
-                          required
-                        />
-                      </div>
+                      <NumberInput
+                        label={t('transactions.amount')}
+                        value={editAmount}
+                        onChange={setEditAmount}
+                        min={0.01}
+                        step={0.01}
+                        decimalScale={2}
+                        required
+                      />
 
-                      <div className="form-group">
-                        <label htmlFor={`tx-edit-date-${tx.id}`}>{t('transactions.date')}</label>
-                        <input
-                          id={`tx-edit-date-${tx.id}`}
-                          type="date"
-                          value={editTransactedAt}
-                          onChange={(event) => setEditTransactedAt(event.target.value)}
-                          required
-                        />
-                      </div>
+                      <TextInput
+                        label={t('transactions.date')}
+                        type="date"
+                        value={editTransactedAt}
+                        onChange={(e) => setEditTransactedAt(e.target.value)}
+                        required
+                      />
 
-                      <div className="form-group full-width">
-                        <label htmlFor={`tx-edit-notes-${tx.id}`}>{t('transactions.notes')}</label>
-                        <input
-                          id={`tx-edit-notes-${tx.id}`}
-                          type="text"
-                          value={editNotes}
-                          onChange={(event) => setEditNotes(event.target.value)}
-                        />
-                      </div>
-                    </div>
+                      <TextInput
+                        label={t('transactions.notes')}
+                        value={editNotes}
+                        onChange={(e) => setEditNotes(e.target.value)}
+                        style={{ gridColumn: '1 / -1' }}
+                      />
+                    </SimpleGrid>
 
-                    <div className="inline-actions">
-                      <button type="submit" className="btn btn-primary" disabled={updateTransaction.isPending}>
-                        {updateTransaction.isPending ? t('common.loading') : t('common.save')}
-                      </button>
-                      <button type="button" className="btn btn-secondary" onClick={handleCancelEdit}>
+                    <ActionBar>
+                      <Button type="submit" size="sm" loading={updateTransaction.isPending}>
+                        {t('common.save')}
+                      </Button>
+                      <Button type="button" size="sm" variant="light" onClick={handleCancelEdit}>
                         {t('common.cancel')}
-                      </button>
-                    </div>
+                      </Button>
+                    </ActionBar>
                   </form>
                 ) : (
-                  <>
-                    <div className="tx-details">
-                      <p className="tx-category">
-                        <span className="category-icon-wrapper" aria-hidden="true">
+                  <Group justify="space-between" align="center">
+                    <Stack gap={2}>
+                      <Text fw={600} style={{ display: 'inline-flex', alignItems: 'center' }}>
+                        <Box
+                          component="span"
+                          style={{
+                            width: '1.5rem',
+                            height: '1.5rem',
+                            borderRadius: 999,
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            background: 'var(--mantine-color-indigo-0)',
+                            color: 'var(--mantine-color-indigo-6)',
+                            marginRight: '0.5rem',
+                            flexShrink: 0,
+                          }}
+                          aria-hidden="true"
+                        >
                           <i className={getCategoryIconClass(tx.category?.icon)} />
-                        </span>
+                        </Box>
                         {tx.category?.name}
-                      </p>
-                      <p className="tx-date">{formatTransactionDate(tx.transacted_at)}</p>
-                      {tx.notes && <p className="tx-notes">{tx.notes}</p>}
-                    </div>
-                    <div className="item-actions row-actions">
-                      <p className={`tx-amount ${normalizeType(tx.type) === 'entrada' ? 'income' : 'expense'}`}>
+                      </Text>
+                      <Text size="xs" c="dimmed">
+                        {formatTransactionDate(tx.transacted_at)}
+                      </Text>
+                      {tx.notes && (
+                        <Text size="sm" c="dimmed">
+                          {tx.notes}
+                        </Text>
+                      )}
+                    </Stack>
+
+                    <Group gap="xs" align="center">
+                      <Text fw={700} size="lg" c={normalizeType(tx.type) === 'entrada' ? 'green' : 'red'}>
                         {normalizeType(tx.type) === 'entrada' ? '+' : '-'} R$ {Number(tx.amount).toFixed(2)}
-                      </p>
-                      <button
-                        type="button"
-                        className="icon-action-btn"
+                      </Text>
+                      <ActionIcon
+                        variant="subtle"
+                        radius="xl"
+                        size="sm"
                         onClick={() => handleStartEdit(tx)}
                         aria-label={t('transactions.edit')}
                         title={t('transactions.edit')}
                       >
-                        <i className="fa-solid fa-pen-to-square" aria-hidden="true" />
-                      </button>
-                      <button
-                        type="button"
-                        className="icon-action-btn danger"
+                        <i className="fa-solid fa-pen-to-square" aria-hidden="true" style={{ fontSize: '0.8rem' }} />
+                      </ActionIcon>
+                      <ActionIcon
+                        variant="subtle"
+                        color="red"
+                        radius="xl"
+                        size="sm"
                         onClick={() => handleDelete(tx.id)}
                         aria-label={t('transactions.delete')}
                         title={t('transactions.delete')}
                       >
-                        <i className="fa-solid fa-trash-can" aria-hidden="true" />
-                      </button>
-                    </div>
-                  </>
+                        <i className="fa-solid fa-trash-can" aria-hidden="true" style={{ fontSize: '0.8rem' }} />
+                      </ActionIcon>
+                    </Group>
+                  </Group>
                 )}
-              </div>
+              </Paper>
             ))}
-          </div>
+          </Stack>
 
           {meta && meta.last_page > 1 && (
-            <div className="pagination">
-              <button disabled={page === 1} onClick={() => setPage(page - 1)}>
-                ← {t('common.previous')}
-              </button>
-              <span>
+            <Group justify="center" gap="md" p="md">
+              <Button
+                variant="filled"
+                size="sm"
+                disabled={page === 1}
+                onClick={() => setPage(page - 1)}
+                leftSection={<span>←</span>}
+              >
+                {t('common.previous')}
+              </Button>
+              <Text c="dimmed" fw={500}>
                 {page} / {meta.last_page}
-              </span>
-              <button disabled={page === meta.last_page} onClick={() => setPage(page + 1)}>
-                {t('common.next')} →
-              </button>
-            </div>
+              </Text>
+              <Button
+                variant="filled"
+                size="sm"
+                disabled={page === meta.last_page}
+                onClick={() => setPage(page + 1)}
+                rightSection={<span>→</span>}
+              >
+                {t('common.next')}
+              </Button>
+            </Group>
           )}
         </>
       )}
-    </div>
+    </PageContainer>
   )
 }

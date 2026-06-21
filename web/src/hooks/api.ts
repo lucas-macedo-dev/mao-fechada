@@ -148,6 +148,22 @@ export function useDashboardSummary(month?: string) {
   })
 }
 
+export function useDashboardByCategory(month?: string) {
+  return useQuery({
+    queryKey: ['dashboard', 'by-category', month],
+    queryFn: () => api.getDashboardByCategory(month),
+    enabled: !!localStorage.getItem('auth_token'),
+  })
+}
+
+export function useDashboardByDay(month?: string) {
+  return useQuery({
+    queryKey: ['dashboard', 'by-day', month],
+    queryFn: () => api.getDashboardByDay(month),
+    enabled: !!localStorage.getItem('auth_token'),
+  })
+}
+
 export function useSubscription() {
   return useQuery({
     queryKey: ['subscription'],
