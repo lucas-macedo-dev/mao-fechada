@@ -3,7 +3,24 @@ import { useCategories, useCreateCategory, useDeleteCategory, useUpdateCategory 
 import { useState, type SyntheticEvent } from 'react'
 import { CATEGORY_ICON_OPTIONS, DEFAULT_CATEGORY_ICON, getCategoryIconClass } from '../constants/categoryIcons'
 import { extractApiError } from '../services/api'
-import '../styles/pages.css'
+import {
+  Title,
+  Text,
+  Select,
+  TextInput,
+  Button,
+  ActionIcon,
+  Badge,
+  Alert,
+  Stack,
+  Group,
+  Box,
+  SimpleGrid,
+  UnstyledButton,
+} from '@mantine/core'
+import { PageContainer } from '../components/ui/PageContainer'
+import { SectionCard } from '../components/ui/SectionCard'
+import { ActionBar } from '../components/ui/ActionBar'
 
 export function CategoriesPage() {
   const { t } = useTranslation()
@@ -94,7 +111,11 @@ export function CategoriesPage() {
   }
 
   if (isLoading) {
-    return <div className="page">{t('common.loading')}</div>
+    return (
+      <PageContainer>
+        <Text>{t('common.loading')}</Text>
+      </PageContainer>
+    )
   }
 
   const rootCategories = categories.filter((c) => !c.parent_id)
@@ -109,188 +130,289 @@ export function CategoriesPage() {
     const isEditing = editingCategoryId === category.id
 
     return (
-      <div key={category.id} className="category-item">
-        <div className="category-header">
-          <p className="category-name">
-            <span className="category-icon-wrapper" aria-hidden="true">
+      <Box
+        key={category.id}
+        style={{
+          background: 'white',
+          borderRadius: 8,
+          padding: '1rem',
+          borderLeft: '4px solid var(--mantine-color-indigo-6)',
+        }}
+      >
+        <Group justify="space-between" align="center" mb={isEditing ? 'xs' : 0}>
+          <Text fw={600} style={{ display: 'inline-flex', alignItems: 'center' }}>
+            <Box
+              component="span"
+              style={{
+                width: '1.5rem',
+                height: '1.5rem',
+                borderRadius: 999,
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                background: 'var(--mantine-color-indigo-0)',
+                color: 'var(--mantine-color-indigo-6)',
+                marginRight: '0.5rem',
+                flexShrink: 0,
+              }}
+              aria-hidden="true"
+            >
               <i className={getCategoryIconClass(category.icon)} />
-            </span>
+            </Box>
             {category.name}
-          </p>
-          <div className="item-actions">
-            <p className="category-type">{t(`categories.type_${category.type}`)}</p>
-            <button
-              type="button"
-              className="icon-action-btn"
+          </Text>
+          <Group gap="xs" align="center">
+            <Badge size="sm" variant="light" color="gray">
+              {t(`categories.type_${category.type}`)}
+            </Badge>
+            <ActionIcon
+              variant="subtle"
+              radius="xl"
+              size="sm"
               onClick={() => handleStartEdit(category)}
               aria-label={t('categories.edit')}
               title={t('categories.edit')}
             >
-              <i className="fa-solid fa-pen-to-square" aria-hidden="true" />
-            </button>
-            <button
-              type="button"
-              className="icon-action-btn danger"
+              <i className="fa-solid fa-pen-to-square" aria-hidden="true" style={{ fontSize: '0.8rem' }} />
+            </ActionIcon>
+            <ActionIcon
+              variant="subtle"
+              color="red"
+              radius="xl"
+              size="sm"
               onClick={() => handleDelete(category.id)}
               aria-label={t('categories.delete')}
               title={t('categories.delete')}
             >
-              <i className="fa-solid fa-trash-can" aria-hidden="true" />
-            </button>
-          </div>
-        </div>
+              <i className="fa-solid fa-trash-can" aria-hidden="true" style={{ fontSize: '0.8rem' }} />
+            </ActionIcon>
+          </Group>
+        </Group>
 
         {isEditing && (
-          <form className="inline-edit-form" onSubmit={(event) => handleSaveEdit(event, category.id)}>
-            <div className="form-grid">
-              <div className="form-group">
-                <label htmlFor={`category-name-${category.id}`}>{t('categories.name')}</label>
-                <input
-                  id={`category-name-${category.id}`}
-                  type="text"
-                  value={editName}
-                  onChange={(event) => setEditName(event.target.value)}
-                  required
-                />
-              </div>
+          <Box
+            component="form"
+            onSubmit={(event: SyntheticEvent<HTMLFormElement>) => handleSaveEdit(event, category.id)}
+            mt="xs"
+            p="md"
+            style={{ border: '1px solid var(--mantine-color-indigo-1)', borderRadius: 8, background: '#fafbff' }}
+          >
+            <SimpleGrid cols={{ base: 1, sm: 2 }} mb="sm">
+              <TextInput
+                id={`category-name-${category.id}`}
+                label={t('categories.name')}
+                value={editName}
+                onChange={(event) => setEditName(event.target.value)}
+                required
+              />
+              <Select
+                id={`category-type-${category.id}`}
+                label={t('categories.type')}
+                value={editType}
+                onChange={(val) => setEditType(val === 'entrada' ? 'entrada' : 'saida')}
+                data={[
+                  { value: 'saida', label: t('categories.type_expense') },
+                  { value: 'entrada', label: t('categories.type_income') },
+                ]}
+              />
+            </SimpleGrid>
 
-              <div className="form-group">
-                <label htmlFor={`category-type-${category.id}`}>{t('categories.type')}</label>
-                <select
-                  id={`category-type-${category.id}`}
-                  value={editType}
-                  onChange={(event) => setEditType(event.target.value === 'entrada' ? 'entrada' : 'saida')}
-                >
-                  <option value="saida">{t('categories.type_expense')}</option>
-                  <option value="entrada">{t('categories.type_income')}</option>
-                </select>
-              </div>
+            <Box mb="sm">
+              <Text size="sm" fw={500} mb="xs">
+                {t('categories.icon')}
+              </Text>
+              <SimpleGrid cols={{ base: 4, xs: 6 }}>
+                {CATEGORY_ICON_OPTIONS.map((option) => {
+                  const selected = option.className === editIcon
 
-              <div className="form-group full-width">
-                <label>{t('categories.icon')}</label>
-                <div className="icon-picker-grid">
-                  {CATEGORY_ICON_OPTIONS.map((option) => {
-                    const selected = option.className === editIcon
+                  return (
+                    <UnstyledButton
+                      key={`${category.id}-${option.className}`}
+                      onClick={() => setEditIcon(option.className)}
+                      aria-label={t(option.key)}
+                      title={t(option.key)}
+                      style={{
+                        border: `1px solid ${selected ? 'var(--mantine-color-indigo-6)' : 'var(--mantine-color-indigo-2)'}`,
+                        background: selected ? 'var(--mantine-color-indigo-6)' : 'var(--mantine-color-indigo-0)',
+                        color: selected ? '#ffffff' : 'var(--mantine-color-dark-4)',
+                        borderRadius: 8,
+                        height: '2.5rem',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        cursor: 'pointer',
+                        transition: 'all 0.15s ease',
+                      }}
+                    >
+                      <i className={option.className} aria-hidden="true" style={{ fontSize: '1rem' }} />
+                    </UnstyledButton>
+                  )
+                })}
+              </SimpleGrid>
+            </Box>
 
-                    return (
-                      <button
-                        key={`${category.id}-${option.className}`}
-                        type="button"
-                        className={`icon-picker-button ${selected ? 'selected' : ''}`}
-                        onClick={() => setEditIcon(option.className)}
-                        aria-label={t(option.key)}
-                        title={t(option.key)}
-                      >
-                        <i className={option.className} aria-hidden="true" />
-                      </button>
-                    )
-                  })}
-                </div>
-              </div>
-            </div>
-
-            <div className="inline-actions">
-              <button type="submit" className="btn btn-primary" disabled={updateMutation.isPending}>
-                {updateMutation.isPending ? t('common.loading') : t('common.save')}
-              </button>
-              <button type="button" className="btn btn-secondary" onClick={handleCancelEdit}>
+            <ActionBar>
+              <Button type="submit" size="sm" loading={updateMutation.isPending}>
+                {t('common.save')}
+              </Button>
+              <Button type="button" size="sm" variant="light" onClick={handleCancelEdit}>
                 {t('common.cancel')}
-              </button>
-            </div>
-          </form>
+              </Button>
+            </ActionBar>
+          </Box>
         )}
 
         {category.children && category.children.length > 0 && (
-          <div className="subcategories">
-            {category.children.map((subcategory) => (
-              <div key={subcategory.id} className="subcategory-item">
-                <p className="subcategory-name">
-                  <span className="category-icon-wrapper" aria-hidden="true">
-                    <i className={getCategoryIconClass(subcategory.icon)} />
-                  </span>
-                  {subcategory.name}
-                </p>
-                <div className="item-actions">
-                  <button
-                    type="button"
-                    className="icon-action-btn"
-                    onClick={() => handleStartEdit(subcategory)}
-                    aria-label={t('categories.edit')}
-                    title={t('categories.edit')}
-                  >
-                    <i className="fa-solid fa-pen-to-square" aria-hidden="true" />
-                  </button>
-                  <button
-                    type="button"
-                    className="icon-action-btn danger"
-                    onClick={() => handleDelete(subcategory.id)}
-                    aria-label={t('categories.delete')}
-                    title={t('categories.delete')}
-                  >
-                    <i className="fa-solid fa-trash-can" aria-hidden="true" />
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
+          <Box mt="xs" pt="xs" style={{ borderTop: '1px solid var(--mantine-color-gray-2)' }}>
+            <Stack gap="xs">
+              {category.children.map((subcategory) => (
+                <Group
+                  key={subcategory.id}
+                  justify="space-between"
+                  align="center"
+                  pl="md"
+                  style={{ borderLeft: '2px solid var(--mantine-color-gray-4)' }}
+                >
+                  <Text size="sm" style={{ display: 'inline-flex', alignItems: 'center' }}>
+                    <Box
+                      component="span"
+                      style={{
+                        width: '1.5rem',
+                        height: '1.5rem',
+                        borderRadius: 999,
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        background: 'var(--mantine-color-indigo-0)',
+                        color: 'var(--mantine-color-indigo-6)',
+                        marginRight: '0.5rem',
+                        flexShrink: 0,
+                      }}
+                      aria-hidden="true"
+                    >
+                      <i className={getCategoryIconClass(subcategory.icon)} />
+                    </Box>
+                    {subcategory.name}
+                  </Text>
+                  <Group gap="xs">
+                    <ActionIcon
+                      variant="subtle"
+                      radius="xl"
+                      size="sm"
+                      onClick={() => handleStartEdit(subcategory)}
+                      aria-label={t('categories.edit')}
+                      title={t('categories.edit')}
+                    >
+                      <i className="fa-solid fa-pen-to-square" aria-hidden="true" style={{ fontSize: '0.8rem' }} />
+                    </ActionIcon>
+                    <ActionIcon
+                      variant="subtle"
+                      color="red"
+                      radius="xl"
+                      size="sm"
+                      onClick={() => handleDelete(subcategory.id)}
+                      aria-label={t('categories.delete')}
+                      title={t('categories.delete')}
+                    >
+                      <i className="fa-solid fa-trash-can" aria-hidden="true" style={{ fontSize: '0.8rem' }} />
+                    </ActionIcon>
+                  </Group>
+                </Group>
+              ))}
+            </Stack>
+          </Box>
         )}
-      </div>
+      </Box>
     )
   }
 
   return (
-    <div className="page categories-page">
-      <h1>{t('categories.title')}</h1>
+    <PageContainer>
+      <Title order={1} mb="lg">
+        {t('categories.title')}
+      </Title>
 
-      <form onSubmit={handleSubmit} className="card form-card">
-        <h2>{t('categories.create')}</h2>
+      <SectionCard mb="lg">
+        <Title order={2} mb="md">
+          {t('categories.create')}
+        </Title>
 
-        <div className="form-group">
-          <label htmlFor="name">{t('categories.name')}</label>
-          <input id="name" type="text" value={name} onChange={(e) => setName(e.target.value)} required />
-        </div>
+        <form onSubmit={handleSubmit}>
+          <Stack gap="sm">
+          <TextInput
+            id="name"
+            label={t('categories.name')}
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            required
+          />
 
-        <div className="form-group">
-          <label htmlFor="type">{t('categories.type')}</label>
-          <select id="type" value={type} onChange={(e) => setType(e.target.value)}>
-            <option value="saida">{t('categories.type_expense')}</option>
-            <option value="entrada">{t('categories.type_income')}</option>
-          </select>
-        </div>
+          <Select
+            id="type"
+            label={t('categories.type')}
+            value={type}
+            onChange={(val) => setType(val ?? 'saida')}
+            data={[
+              { value: 'saida', label: t('categories.type_expense') },
+              { value: 'entrada', label: t('categories.type_income') },
+            ]}
+          />
 
-        <div className="form-group">
-          <label>{t('categories.icon')}</label>
-          <div className="icon-picker-grid">
-            {CATEGORY_ICON_OPTIONS.map((option) => {
-              const selected = option.className === icon
+          <Box>
+            <Text size="sm" fw={500} mb="xs">
+              {t('categories.icon')}
+            </Text>
+            <SimpleGrid cols={{ base: 4, xs: 6 }}>
+              {CATEGORY_ICON_OPTIONS.map((option) => {
+                const selected = option.className === icon
 
-              return (
-                <button
-                  key={option.className}
-                  type="button"
-                  className={`icon-picker-button ${selected ? 'selected' : ''}`}
-                  onClick={() => setIcon(option.className)}
-                  aria-label={t(option.key)}
-                  title={t(option.key)}
-                >
-                  <i className={option.className} aria-hidden="true" />
-                </button>
-              )
-            })}
-          </div>
-        </div>
+                return (
+                  <UnstyledButton
+                    key={option.className}
+                    onClick={() => setIcon(option.className)}
+                    aria-label={t(option.key)}
+                    title={t(option.key)}
+                    style={{
+                      border: `1px solid ${selected ? 'var(--mantine-color-indigo-6)' : 'var(--mantine-color-indigo-2)'}`,
+                      background: selected ? 'var(--mantine-color-indigo-6)' : 'var(--mantine-color-indigo-0)',
+                      color: selected ? '#ffffff' : 'var(--mantine-color-dark-4)',
+                      borderRadius: 8,
+                      height: '2.5rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: 'pointer',
+                      transition: 'all 0.15s ease',
+                    }}
+                  >
+                    <i className={option.className} aria-hidden="true" style={{ fontSize: '1rem' }} />
+                  </UnstyledButton>
+                )
+              })}
+            </SimpleGrid>
+          </Box>
 
-        <button type="submit" disabled={createMutation.isPending} className="btn btn-primary">
-          {createMutation.isPending ? t('common.loading') : t('common.save')}
-        </button>
-      </form>
+          <Button type="submit" loading={createMutation.isPending}>
+            {t('common.save')}
+          </Button>
+          </Stack>
+        </form>
+      </SectionCard>
 
-      {error && <div className="error-message">{error}</div>}
-      {success && <div className="success-message">{success}</div>}
+      {error && (
+        <Alert color="red" mb="md" radius="md">
+          {error}
+        </Alert>
+      )}
+      {success && (
+        <Alert color="green" mb="md" radius="md">
+          {success}
+        </Alert>
+      )}
 
-      <div className="categories-list">
+      <Stack gap="md">
         {rootCategories.map(renderCategory)}
-      </div>
-    </div>
+      </Stack>
+    </PageContainer>
   )
 }
