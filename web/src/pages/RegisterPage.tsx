@@ -1,10 +1,21 @@
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../hooks/api'
-import type { FormEvent } from 'react'
-import { useState } from 'react'
+import { useState, type SyntheticEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import appLogo from '../assets/icon_mao_fechada.png'
-import '../styles/auth.css'
+import {
+  Center,
+  Paper,
+  Title,
+  Text,
+  TextInput,
+  PasswordInput,
+  Button,
+  Alert,
+  Stack,
+  Anchor,
+  Box,
+} from '@mantine/core'
 
 export function RegisterPage() {
   const { t } = useTranslation()
@@ -19,7 +30,7 @@ export function RegisterPage() {
     navigate('/home')
   }
 
-  const handleSubmit = async (e: FormEvent) => {
+  const handleSubmit = async (e: SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault()
     setError('')
     try {
@@ -31,41 +42,75 @@ export function RegisterPage() {
   }
 
   return (
-    <div className="auth-page">
-      <div className="auth-card">
-        <div className="auth-brand">
-          <img src={appLogo} alt={t('app.title')} className="auth-logo" />
-        </div>
-        <h1>{t('app.title')}</h1>
-        <p className="subtitle">{t('app.subtitle')}</p>
+    <Box
+      style={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        padding: '1rem',
+      }}
+    >
+      <Paper radius="md" p="xl" shadow="xl" w="100%" maw={400}>
+        <Center mb="xs">
+          <img src={appLogo} alt={t('app.title')} style={{ width: 72, height: 72, objectFit: 'contain' }} />
+        </Center>
 
-        <form onSubmit={handleSubmit} className="auth-form">
-          <div className="form-group">
-            <label htmlFor="name">{t('auth.name')}</label>
-            <input id="name" type="text" value={name} onChange={(e) => setName(e.target.value)} required />
-          </div>
+        <Title order={1} ta="center" mb="xs">
+          {t('app.title')}
+        </Title>
+        <Text ta="center" size="sm" c="dimmed" mb="xl">
+          {t('app.subtitle')}
+        </Text>
 
-          <div className="form-group">
-            <label htmlFor="email">{t('auth.email')}</label>
-            <input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-          </div>
+        <form onSubmit={handleSubmit}>
+          <Stack gap="md">
+            <TextInput
+              label={t('auth.name')}
+              id="name"
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+            />
 
-          <div className="form-group">
-            <label htmlFor="password">{t('auth.password')}</label>
-            <input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
-          </div>
+            <TextInput
+              label={t('auth.email')}
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
 
-          {error && <div className="error-message">{error}</div>}
+            <PasswordInput
+              label={t('auth.password')}
+              id="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
 
-          <button type="submit" disabled={register.isPending} className="btn btn-primary">
-            {register.isPending ? t('common.loading') : t('auth.register')}
-          </button>
+            {error && (
+              <Alert color="red" radius="md">
+                {error}
+              </Alert>
+            )}
+
+            <Button type="submit" fullWidth loading={register.isPending}>
+              {t('auth.register')}
+            </Button>
+          </Stack>
         </form>
 
-        <p className="auth-link">
-          {t('auth.has_account')} <a href="/login">{t('auth.login')}</a>
-        </p>
-      </div>
-    </div>
+        <Text ta="center" size="sm" c="dimmed" mt="md">
+          {t('auth.has_account')}{' '}
+          <Anchor href="/login" fw={600}>
+            {t('auth.login')}
+          </Anchor>
+        </Text>
+      </Paper>
+    </Box>
   )
 }

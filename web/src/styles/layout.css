@@ -53,6 +53,16 @@
   display: flex;
   align-items: center;
   gap: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  text-decoration: none;
+  color: inherit;
+  transition: background-color 0.2s;
+  cursor: pointer;
+}
+
+.user-identity:hover {
+  background-color: #f0f0f0;
 }
 
 .user-avatar {
@@ -132,11 +142,33 @@
   background-color: #e0e0e0;
 }
 
+/* Mobile Top App Bar */
+.mobile-top-bar {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 56px;
+  background-color: #fff;
+  border-bottom: 1px solid #e0e0e0;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1rem;
+  z-index: 100;
+}
+
+@media (max-width: 767px) {
+  .mobile-top-bar {
+    display: flex;
+  }
+}
+
 /* Main Content */
 .main-content {
   flex: 1;
   overflow-y: auto;
-  padding: 1rem 1rem 5.5rem;
+  padding: 4.5rem 1rem 5.5rem;
   position: relative;
 }
 

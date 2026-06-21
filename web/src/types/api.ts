@@ -89,6 +89,17 @@ export interface PaginatedResponse<T> {
   }
 }
 
+export interface DashboardCategoryItem {
+  name: string
+  value: number
+}
+
+export interface DashboardDayItem {
+  day: number
+  income: number
+  expense: number
+}
+
 export interface ApiError {
   type: string
   message: string

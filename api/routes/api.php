@@ -24,12 +24,14 @@ Route::prefix('v1')->group(function (): void {
         Route::apiResource('categories', CategoryController::class);
         Route::apiResource('transactions', TransactionController::class);
 
-        Route::get('/plans', [BillingController::class, 'plans']); 
+        Route::get('/plans', [BillingController::class, 'plans']);
         Route::get('/subscription', [BillingController::class, 'subscription']);
 
         Route::get('/dashboard/summary', [DashboardController::class, 'summary']);
         Route::get('/dashboard/chart', [DashboardController::class, 'chart']);
         Route::get('/dashboard/recent', [DashboardController::class, 'recent']);
+        Route::get('/dashboard/by-category', [DashboardController::class, 'byCategory']);
+        Route::get('/dashboard/by-day', [DashboardController::class, 'byDay']);
 
         Route::get('/budgets', [BudgetController::class, 'index']);
         Route::post('/budgets', [BudgetController::class, 'store']);
