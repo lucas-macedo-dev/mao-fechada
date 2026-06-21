@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next'
 import { useAuth } from '../hooks/api'
 import { useState, type SyntheticEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useForm } from '@mantine/form'
 import appLogo from '../assets/icon_mao_fechada.png'
 import {
   Center,
@@ -21,22 +22,39 @@ export function LoginPage() {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const { login, isAuthenticated } = useAuth()
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
+  const [generalError, setGeneralError] = useState('')
 
   if (isAuthenticated) {
     navigate('/home')
   }
 
+  const form = useForm({
+    initialValues: { email: '', password: '' },
+    validate: {
+      email: (v) => (!v ? t('auth.field_required') : !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) ? t('auth.email_invalid') : null),
+      password: (v) => (!v ? t('auth.field_required') : v.length < 8 ? t('auth.password_too_short') : null),
+    },
+  })
+
   const handleSubmit = async (e: SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault()
-    setError('')
+    setGeneralError('')
+
+    const validation = form.validate()
+    if (validation.hasErrors) return
+
     try {
-      await login.mutateAsync({ email, password })
+      await login.mutateAsync(form.values)
       navigate('/home')
-    } catch (err: any) {
-      setError(err?.response?.data?.error?.message || t('auth.failed'))
+    } catch (err: unknown) {
+      const data = (err as any)?.response?.data
+      if (data?.errors && typeof data.errors === 'object') {
+        Object.entries(data.errors as Record<string, string[]>).forEach(([field, messages]) => {
+          form.setFieldError(field, messages[0])
+        })
+      } else {
+        setGeneralError(t('auth.failed'))
+      }
     }
   }
 
@@ -69,22 +87,18 @@ export function LoginPage() {
               label={t('auth.email')}
               id="email"
               type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
+              {...form.getInputProps('email')}
             />
 
             <PasswordInput
               label={t('auth.password')}
               id="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
+              {...form.getInputProps('password')}
             />
 
-            {error && (
+            {generalError && (
               <Alert color="red" radius="md">
-                {error}
+                {generalError}
               </Alert>
             )}
 
