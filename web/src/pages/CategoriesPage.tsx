@@ -120,6 +120,9 @@ export function CategoriesPage() {
 
   const rootCategories = categories.filter((c) => !c.parent_id)
 
+  const getCategoryColor = (type: string) =>
+    type === 'entrada' || type === 'income' ? 'green' : 'red'
+
   const renderCategory = (category: {
     id: number
     name: string
@@ -128,6 +131,7 @@ export function CategoriesPage() {
     children?: Array<{ id: number; name: string; type: string; icon?: string }>
   }) => {
     const isEditing = editingCategoryId === category.id
+    const color = getCategoryColor(category.type)
 
     return (
       <Box
@@ -136,7 +140,7 @@ export function CategoriesPage() {
           background: 'white',
           borderRadius: 8,
           padding: '1rem',
-          borderLeft: '4px solid var(--mantine-color-indigo-6)',
+          borderLeft: `4px solid var(--mantine-color-${color}-6)`,
         }}
       >
         <Group justify="space-between" align="center" mb={isEditing ? 'xs' : 0}>
@@ -150,8 +154,8 @@ export function CategoriesPage() {
                 display: 'inline-flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                background: 'var(--mantine-color-indigo-0)',
-                color: 'var(--mantine-color-indigo-6)',
+                background: `var(--mantine-color-${color}-0)`,
+                color: `var(--mantine-color-${color}-6)`,
                 marginRight: '0.5rem',
                 flexShrink: 0,
               }}
@@ -162,7 +166,7 @@ export function CategoriesPage() {
             {category.name}
           </Text>
           <Group gap="xs" align="center">
-            <Badge size="sm" variant="light" color="gray">
+            <Badge size="sm" variant="light" color={color}>
               {t(`categories.type_${category.type}`)}
             </Badge>
             <ActionIcon
@@ -271,7 +275,7 @@ export function CategoriesPage() {
                   justify="space-between"
                   align="center"
                   pl="md"
-                  style={{ borderLeft: '2px solid var(--mantine-color-gray-4)' }}
+                  style={{ borderLeft: `2px solid var(--mantine-color-${getCategoryColor(subcategory.type)}-4)` }}
                 >
                   <Text size="sm" style={{ display: 'inline-flex', alignItems: 'center' }}>
                     <Box
@@ -283,8 +287,8 @@ export function CategoriesPage() {
                         display: 'inline-flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        background: 'var(--mantine-color-indigo-0)',
-                        color: 'var(--mantine-color-indigo-6)',
+                        background: `var(--mantine-color-${getCategoryColor(subcategory.type)}-0)`,
+                        color: `var(--mantine-color-${getCategoryColor(subcategory.type)}-6)`,
                         marginRight: '0.5rem',
                         flexShrink: 0,
                       }}
