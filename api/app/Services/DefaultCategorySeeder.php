@@ -10,26 +10,26 @@ class DefaultCategorySeeder
     {
         if ($locale === 'pt-BR') {
             return [
-                ['name' => 'Veículo', 'type' => 'expense'],
-                ['name' => 'Habitação', 'type' => 'expense'],
-                ['name' => 'Alimentação', 'type' => 'expense'],
-                ['name' => 'Compras', 'type' => 'expense'],
-                ['name' => 'Lazer', 'type' => 'expense'],
-                ['name' => 'Salário', 'type' => 'income'],
+                ['name' => 'Veículo', 'type' => 'expense', 'icon' => 'fa-solid fa-car-side'],
+                ['name' => 'Habitação', 'type' => 'expense', 'icon' => 'fa-solid fa-house'],
+                ['name' => 'Alimentação', 'type' => 'expense', 'icon' => 'fa-solid fa-utensils'],
+                ['name' => 'Compras', 'type' => 'expense', 'icon' => 'fa-solid fa-cart-shopping'],
+                ['name' => 'Lazer', 'type' => 'expense', 'icon' => 'fa-solid fa-film'],
+                ['name' => 'Salário', 'type' => 'income', 'icon' => 'fa-solid fa-hand-holding-dollar'],
                 ['name' => 'Investimentos', 'type' => 'income'],
-                ['name' => 'Ticket Alimentação', 'type' => 'income'],
+                ['name' => 'Ticket Alimentação', 'type' => 'income', 'icon' => 'fa-solid fa-utensils'],
             ];
         }
 
         return [
-            ['name' => 'Vehicle', 'type' => 'expense'],
-            ['name' => 'Housing', 'type' => 'expense'],
-            ['name' => 'Food', 'type' => 'expense'],
-            ['name' => 'Shopping', 'type' => 'expense'],
-            ['name' => 'Leisure', 'type' => 'expense'],
-            ['name' => 'Salary', 'type' => 'income'],
+            ['name' => 'Vehicle', 'type' => 'expense', 'icon' => 'fa-solid fa-car-side'],
+            ['name' => 'Housing', 'type' => 'expense', 'icon' => 'fa-solid fa-house'],
+            ['name' => 'Food', 'type' => 'expense', 'icon' => 'fa-solid fa-utensils'],
+            ['name' => 'Shopping', 'type' => 'expense', 'icon' => 'fa-solid fa-cart-shopping'],
+            ['name' => 'Leisure', 'type' => 'expense', 'icon' => 'fa-solid fa-film'],
+            ['name' => 'Salary', 'type' => 'income', 'icon' => 'fa-solid fa-hand-holding-dollar'],
             ['name' => 'Investments', 'type' => 'income'],
-            ['name' => 'Food Vouchers', 'type' => 'income'],
+            ['name' => 'Food Vouchers', 'type' => 'income', 'icon' => 'fa-solid fa-utensils'],
         ];
     }
 
