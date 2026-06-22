@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\UpdateProfileRequest;
 use App\Http\Requests\Api\V1\UpdateUserPreferencesRequest;
 use App\Models\User;
+use App\Services\DefaultCategorySeeder;
 use App\Support\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -25,6 +26,7 @@ class AuthController extends Controller
         ]);
 
         $user = User::query()->create($validated);
+        (new DefaultCategorySeeder())->seedFor($user);
         $token = $user->createToken('web')->plainTextToken;
 
         return ApiResponse::data([
