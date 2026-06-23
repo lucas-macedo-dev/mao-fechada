@@ -3,6 +3,7 @@ import { QueryClientProvider, QueryClient } from '@tanstack/react-query'
 import { setAuthToken } from './services/api'
 import { Layout } from './components/Layout'
 import { PrivateRoute } from './components/PrivateRoute'
+import { TutorialProvider } from './context/TutorialContext'
 import { LoginPage } from './pages/LoginPage'
 import { RegisterPage } from './pages/RegisterPage'
 import { HomePage } from './pages/HomePage'
@@ -88,7 +89,9 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
-        <AppRoutes />
+        <TutorialProvider>
+          <AppRoutes />
+        </TutorialProvider>
       </BrowserRouter>
     </QueryClientProvider>
   )

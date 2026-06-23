@@ -1,3 +1,8 @@
+export interface TutorialProgress {
+  completed_steps: string[]
+  dismissed: boolean
+}
+
 export interface User {
   id: number
   name: string
@@ -6,6 +11,7 @@ export interface User {
   subscription_status: string
   locale: string
   profile_photo_url?: string | null
+  tutorial_progress?: TutorialProgress | null
 }
 
 export interface Category {

@@ -1,14 +1,17 @@
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/api";
+import { useTutorial } from "../context/TutorialContext";
+import { TutorialChecklist } from "./tutorial/TutorialChecklist";
 import appLogo from "../assets/icon_mao_fechada.png";
 import "../styles/layout.css";
-import { Box, Group, Text, ActionIcon, Menu, Avatar } from "@mantine/core";
+import { Box, Group, Text, ActionIcon, Menu, Avatar, Tooltip } from "@mantine/core";
 
 export function Layout({ children }: Readonly<{ children: React.ReactNode }>) {
   const { t } = useTranslation();
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const { openChecklist } = useTutorial();
   const [isMobile, setIsMobile] = React.useState(window.innerWidth < 768);
 
   React.useEffect(() => {
@@ -24,6 +27,7 @@ export function Layout({ children }: Readonly<{ children: React.ReactNode }>) {
 
   return (
     <div className="layout-container">
+      <TutorialChecklist />
       {!isMobile && (
         <aside className="sidebar">
           <div className="sidebar-header">
@@ -63,6 +67,17 @@ export function Layout({ children }: Readonly<{ children: React.ReactNode }>) {
           </nav>
 
           <div className="sidebar-footer">
+            <Tooltip label={t("tutorial.title")} position="right" withArrow>
+              <ActionIcon
+                variant="subtle"
+                size="lg"
+                onClick={openChecklist}
+                aria-label={t("tutorial.title")}
+                style={{ marginBottom: 8 }}
+              >
+                <i className="fa-solid fa-circle-question" />
+              </ActionIcon>
+            </Tooltip>
             <button onClick={handleLogout} className="btn-logout">
               {t("nav.logout")}
             </button>
@@ -116,6 +131,12 @@ export function Layout({ children }: Readonly<{ children: React.ReactNode }>) {
                 leftSection={<i className="fa-solid fa-bell" />}
               >
                 {t("nav.subscription")}
+              </Menu.Item>
+              <Menu.Item
+                leftSection={<i className="fa-solid fa-circle-question" />}
+                onClick={openChecklist}
+              >
+                {t("tutorial.title")}
               </Menu.Item>
               <Menu.Divider />
               <Menu.Item

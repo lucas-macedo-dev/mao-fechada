@@ -1,7 +1,9 @@
 import { useTranslation } from 'react-i18next'
 import { useDashboardSummary, useDashboardByCategory, useDashboardByDay, useTransactions } from '../hooks/api'
+import { useTutorial } from '../context/TutorialContext'
+import { TutorialHint } from '../components/tutorial/TutorialHint'
 import { getCategoryIconClass } from '../constants/categoryIcons'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   Title,
   Text,
@@ -52,8 +54,13 @@ const summaryCardStyles: Record<string, { borderLeftColor: string }> = {
 
 export function HomePage() {
   const { t } = useTranslation()
+  const { completeStep } = useTutorial()
   const [month, setMonth] = useState(new Date().toISOString().slice(0, 7))
   const { data: summary, isLoading } = useDashboardSummary(month)
+
+  useEffect(() => {
+    if (summary) completeStep('view-summary')
+  }, [summary, completeStep])
   const { data: rawCategoryData = [] } = useDashboardByCategory(month)
   const { data: dayData = [] } = useDashboardByDay(month)
   const { data: transactionsResponse } = useTransactions({ month, per_page: 15 })
@@ -112,38 +119,40 @@ export function HomePage() {
 
       {summary && (
         <>
-          <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} mb="lg">
-            {(['income', 'expense', 'balance'] as const).map((key) => {
-              const labels = {
-                income: t('dashboard.income'),
-                expense: t('dashboard.expense'),
-                balance: t('dashboard.balance'),
-              }
-              const values = {
-                income: summary.totals.entradas.toFixed(2),
-                expense: summary.totals.saidas.toFixed(2),
-                balance: summary.totals.saldo.toFixed(2),
-              }
+          <TutorialHint stepId="view-summary">
+            <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} mb="lg">
+              {(['income', 'expense', 'balance'] as const).map((key) => {
+                const labels = {
+                  income: t('dashboard.income'),
+                  expense: t('dashboard.expense'),
+                  balance: t('dashboard.balance'),
+                }
+                const values = {
+                  income: summary.totals.entradas.toFixed(2),
+                  expense: summary.totals.saidas.toFixed(2),
+                  balance: summary.totals.saldo.toFixed(2),
+                }
 
-              return (
-                <Paper
-                  key={key}
-                  shadow="xs"
-                  radius="md"
-                  p="lg"
-                  withBorder
-                  style={{ borderLeft: `4px solid ${summaryCardStyles[key].borderLeftColor}` }}
-                >
-                  <Text size="sm" c="dimmed" tt="uppercase" fw={500} mb="xs">
-                    {labels[key]}
-                  </Text>
-                  <Text size="xl" fw={700}>
-                    R$ {values[key]}
-                  </Text>
-                </Paper>
-              )
-            })}
-          </SimpleGrid>
+                return (
+                  <Paper
+                    key={key}
+                    shadow="xs"
+                    radius="md"
+                    p="lg"
+                    withBorder
+                    style={{ borderLeft: `4px solid ${summaryCardStyles[key].borderLeftColor}` }}
+                  >
+                    <Text size="sm" c="dimmed" tt="uppercase" fw={500} mb="xs">
+                      {labels[key]}
+                    </Text>
+                    <Text size="xl" fw={700}>
+                      R$ {values[key]}
+                    </Text>
+                  </Paper>
+                )
+              })}
+            </SimpleGrid>
+          </TutorialHint>
 
           <SimpleGrid cols={{ base: 1, md: 2 }} mb="lg">
             <SectionCard>

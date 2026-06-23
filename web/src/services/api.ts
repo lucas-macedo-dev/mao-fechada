@@ -175,6 +175,12 @@ export const api = {
     return response.data.data
   },
 
+  // Tutorial
+  updateTutorialProgress: async (payload: { reset?: boolean; step_id?: string; completed?: boolean; dismissed?: boolean }) => {
+    const response = await client.put<{ data: User }>('/v1/users/me/tutorial', payload)
+    return response.data.data.tutorial_progress ?? null
+  },
+
   // Budgets
   upsertBudget: async (payload: { category_id: number; year: number; month: number; amount: number }) => {
     const response = await client.post('/v1/budgets', payload)
