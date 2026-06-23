@@ -1,9 +1,8 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
-import { useQueryClient } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from '../services/api'
 import { TUTORIAL_STEPS } from '../tutorial/steps'
 import type { TutorialStep, TutorialStepId } from '../tutorial/steps'
-import type { User } from '../types/api'
 
 interface TutorialContextValue {
   steps: Array<TutorialStep & { completed: boolean }>
@@ -22,7 +21,12 @@ const TutorialContext = createContext<TutorialContextValue | null>(null)
 
 export function TutorialProvider({ children }: Readonly<{ children: React.ReactNode }>) {
   const queryClient = useQueryClient()
-  const user = queryClient.getQueryData<User>(['auth', 'me'])
+  const { data: user } = useQuery({
+    queryKey: ['auth', 'me'],
+    queryFn: () => api.me(),
+    retry: false,
+    enabled: !!localStorage.getItem('auth_token'),
+  })
 
   const progress = user?.tutorial_progress
   const completedSteps: string[] = progress?.completed_steps ?? []
@@ -46,10 +50,10 @@ export function TutorialProvider({ children }: Readonly<{ children: React.ReactN
     autoShownRef.current = true
   }, [user, isDismissed, isAllDone])
 
-  const updateProgress = useCallback(
-    async (payload: { step_id?: string; completed?: boolean; dismissed?: boolean }) => {
+  const persistProgress = useCallback(
+    async (payload: Parameters<typeof api.updateTutorialProgress>[0]) => {
       await api.updateTutorialProgress(payload)
-      await queryClient.invalidateQueries({ queryKey: ['auth', 'me'] })
+      void queryClient.invalidateQueries({ queryKey: ['auth', 'me'] })
     },
     [queryClient],
   )
@@ -57,22 +61,21 @@ export function TutorialProvider({ children }: Readonly<{ children: React.ReactN
   const completeStep = useCallback(
     (id: TutorialStepId) => {
       if (completedSteps.includes(id)) return
-      void updateProgress({ step_id: id, completed: true })
+      void persistProgress({ step_id: id, completed: true })
     },
-    [completedSteps, updateProgress],
+    [completedSteps, persistProgress],
   )
 
   const dismiss = useCallback(() => {
     setChecklistOpen(false)
-    void updateProgress({ dismissed: true })
-  }, [updateProgress])
+    void persistProgress({ dismissed: true })
+  }, [persistProgress])
 
-  const restart = useCallback(() => {
+  const restart = useCallback(async () => {
     autoShownRef.current = false
-    void api.updateTutorialProgress({ reset: true }).then(async () => {
-      await queryClient.invalidateQueries({ queryKey: ['auth', 'me'] })
-      setChecklistOpen(true)
-    })
+    await api.updateTutorialProgress({ reset: true })
+    await queryClient.refetchQueries({ queryKey: ['auth', 'me'] })
+    setChecklistOpen(true)
   }, [queryClient])
 
   const value = useMemo<TutorialContextValue>(
