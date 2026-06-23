@@ -1,5 +1,7 @@
 import { useTranslation } from 'react-i18next'
 import { useCategories, useCreateTransaction, useDeleteTransaction, useTransactions, useUpdateTransaction } from '../hooks/api'
+import { useTutorial } from '../context/TutorialContext'
+import { TutorialHint } from '../components/tutorial/TutorialHint'
 import { getCategoryIconClass } from '../constants/categoryIcons'
 import { extractApiError } from '../services/api'
 import { useMemo, useState, type SyntheticEvent } from 'react'
@@ -46,6 +48,7 @@ function formatTransactionDate(value: string): string {
 
 export function TransactionsPage() {
   const { t } = useTranslation()
+  const { completeStep } = useTutorial()
   const [month, setMonth] = useState(new Date().toISOString().slice(0, 7))
   const [type, setType] = useState('')
   const [page, setPage] = useState(1)
@@ -145,6 +148,7 @@ export function TransactionsPage() {
         notes: notes || undefined,
       })
 
+      completeStep('record-transaction')
       setAmount('')
       setNotes('')
       setSuccess(t('transactions.create_success'))
@@ -315,9 +319,11 @@ export function TransactionsPage() {
             </Alert>
           )}
 
-          <Button type="submit" loading={createTransaction.isPending}>
-            {t('common.create')}
-          </Button>
+          <TutorialHint stepId="record-transaction">
+            <Button type="submit" loading={createTransaction.isPending}>
+              {t('common.create')}
+            </Button>
+          </TutorialHint>
         </form>
       </SectionCard>
 

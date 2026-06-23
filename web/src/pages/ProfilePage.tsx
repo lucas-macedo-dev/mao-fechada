@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import i18n from '../i18n/config'
 import { extractApiError } from '../services/api'
 import { useAuth, useUpdateProfile } from '../hooks/api'
+import { useTutorial } from '../context/TutorialContext'
 import appLogo from '../assets/icon_mao_fechada.png'
 import {
   Title,
@@ -24,6 +25,7 @@ export function ProfilePage() {
   const { t } = useTranslation()
   const { user } = useAuth()
   const updateProfile = useUpdateProfile()
+  const { restart } = useTutorial()
 
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
@@ -234,6 +236,16 @@ export function ProfilePage() {
             </Button>
           </Stack>
         </form>
+      </SectionCard>
+
+      <SectionCard mt="md">
+        <Stack gap="xs">
+          <Text fw={600}>{t('tutorial.title')}</Text>
+          <Text size="sm" c="dimmed">{t('tutorial.restart')}</Text>
+          <Button variant="light" onClick={restart} leftSection={<i className="fa-solid fa-rotate-left" />}>
+            {t('tutorial.restart')}
+          </Button>
+        </Stack>
       </SectionCard>
     </PageContainer>
   )

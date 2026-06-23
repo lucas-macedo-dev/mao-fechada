@@ -1,5 +1,7 @@
 import { useTranslation } from 'react-i18next'
 import { useCategories, useCreateCategory, useDeleteCategory, useUpdateCategory } from '../hooks/api'
+import { useTutorial } from '../context/TutorialContext'
+import { TutorialHint } from '../components/tutorial/TutorialHint'
 import { useState, type SyntheticEvent } from 'react'
 import { CATEGORY_ICON_OPTIONS, DEFAULT_CATEGORY_ICON, getCategoryIconClass } from '../constants/categoryIcons'
 import { extractApiError } from '../services/api'
@@ -24,6 +26,7 @@ import { ActionBar } from '../components/ui/ActionBar'
 
 export function CategoriesPage() {
   const { t } = useTranslation()
+  const { completeStep } = useTutorial()
   const { data: categories = [], isLoading } = useCategories(true)
   const createMutation = useCreateCategory()
   const updateMutation = useUpdateCategory()
@@ -44,6 +47,7 @@ export function CategoriesPage() {
     setSuccess('')
     try {
       await createMutation.mutateAsync({ name, type, icon })
+      completeStep('create-category')
       setName('')
       setType('saida')
       setIcon(DEFAULT_CATEGORY_ICON)
@@ -396,9 +400,11 @@ export function CategoriesPage() {
             </SimpleGrid>
           </Box>
 
-          <Button type="submit" loading={createMutation.isPending}>
-            {t('common.save')}
-          </Button>
+          <TutorialHint stepId="create-category">
+            <Button type="submit" loading={createMutation.isPending}>
+              {t('common.save')}
+            </Button>
+          </TutorialHint>
           </Stack>
         </form>
       </SectionCard>

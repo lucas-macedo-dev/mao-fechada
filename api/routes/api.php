@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\V1\CategoryController;
 use App\Http\Controllers\Api\V1\DashboardController;
 use App\Http\Controllers\Api\V1\MonthlySummaryController;
 use App\Http\Controllers\Api\V1\TransactionController;
+use App\Http\Controllers\Api\V1\TutorialController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function (): void {
@@ -20,6 +21,7 @@ Route::prefix('v1')->group(function (): void {
         Route::post('/auth/logout', [AuthController::class, 'logout']);
         Route::patch('/users/me', [AuthController::class, 'updateProfile']);
         Route::patch('/users/me/preferences', [AuthController::class, 'updatePreferences']);
+        Route::put('/users/me/tutorial', [TutorialController::class, 'update']);
 
         Route::apiResource('categories', CategoryController::class);
         Route::apiResource('transactions', TransactionController::class);

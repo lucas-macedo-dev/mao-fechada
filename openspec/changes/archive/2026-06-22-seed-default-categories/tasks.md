@@ -22,4 +22,4 @@
 
 ## 5. Backfill Production
 
-- [ ] 5.1 After deploying, run `php artisan categories:seed-defaults` on production to seed existing users with no categories
+- [x] 5.1 After deploying, run `php artisan categories:seed-defaults` on production to seed existing users with no categories
