@@ -22,7 +22,7 @@ class BillingController extends Controller
         foreach ($limits as $limit) {
             $planCode = (string) $limit->plan_code;
 
-            if (! isset($plans[$planCode])) {
+            if (!isset($plans[$planCode])) {
                 continue;
             }
 

@@ -175,6 +175,31 @@ export const api = {
     return response.data.data
   },
 
+  // Email verification
+  verifyEmail: async (id: string, hash: string, expires: string, signature: string) => {
+    const response = await client.get<{ data: { message: string } }>(
+      `/v1/auth/email/verify/${id}/${hash}`,
+      { params: { expires, signature } }
+    )
+    return response.data.data
+  },
+
+  resendVerificationEmail: async () => {
+    const response = await client.post<{ data: { message: string } }>('/v1/auth/email/resend', {})
+    return response.data.data
+  },
+
+  // Password reset
+  forgotPassword: async (email: string) => {
+    const response = await client.post<{ data: { message: string } }>('/v1/auth/forgot-password', { email })
+    return response.data.data
+  },
+
+  resetPassword: async (payload: { token: string; email: string; password: string; password_confirmation: string }) => {
+    const response = await client.post<{ data: { message: string } }>('/v1/auth/reset-password', payload)
+    return response.data.data
+  },
+
   // Tutorial
   updateTutorialProgress: async (payload: { reset?: boolean; step_id?: string; completed?: boolean; dismissed?: boolean }) => {
     const response = await client.put<{ data: User }>('/v1/users/me/tutorial', payload)

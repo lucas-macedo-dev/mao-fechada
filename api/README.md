@@ -7,6 +7,32 @@
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
 </p>
 
+## Local Dev Setup
+
+### Email verification for existing users
+
+After enabling email verification (`MustVerifyEmail` on the `User` model), any existing user without `email_verified_at` set will be redirected to the verify-email page.
+
+The migration `2026_06_25_000001_verify_existing_users.php` auto-verifies all existing users in non-production environments when you run:
+
+```bash
+php artisan migrate
+```
+
+To manually verify a single user in tinker:
+
+```bash
+php artisan tinker
+>>> \App\Models\User::where('email', 'your@email.com')->first()->update(['email_verified_at' => now()]);
+```
+
+To verify all existing users manually:
+
+```bash
+php artisan tinker
+>>> \App\Models\User::whereNull('email_verified_at')->update(['email_verified_at' => now()]);
+```
+
 ## About Laravel
 
 Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
