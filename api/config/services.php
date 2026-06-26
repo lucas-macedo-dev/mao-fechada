@@ -40,4 +40,6 @@ return [
         'public_key' => env('MERCADOPAGO_PUBLIC_KEY'),
     ],
 
+    'frontend_url' => env('FRONTEND_URL', 'http://localhost:5173'),
+
 ];
