@@ -14,4 +14,22 @@ return [
     'category_type_must_match_parent' => 'O tipo da subcategoria deve ser igual ao da categoria pai.',
     'category_type_must_match_children' => 'O tipo da categoria deve ser compativel com as subcategorias existentes.',
     'transaction_type_must_match_category' => 'O tipo da transacao deve ser igual ao da categoria.',
+
+    // E-mails
+    'email_verify_subject'  => 'Verifique seu endereço de e-mail',
+    'email_verify_heading'  => 'Confirme seu e-mail',
+    'email_verify_greeting' => 'Olá, :name!',
+    'email_verify_body'     => 'Obrigado por se cadastrar. Clique no botão abaixo para verificar seu endereço de e-mail. Este link expira em 60 minutos.',
+    'email_verify_action'   => 'Verificar e-mail',
+    'email_verify_footer'   => 'Se você não criou uma conta, pode ignorar este e-mail com segurança.',
+    'email_verify_fallback' => 'Se o botão acima não funcionar, copie e cole o link abaixo no seu navegador:',
+
+    'email_reset_subject'   => 'Redefina sua senha',
+    'email_reset_heading'   => 'Redefinição de senha',
+    'email_reset_greeting'  => 'Olá, :name!',
+    'email_reset_body'      => 'Recebemos uma solicitação para redefinir a senha da sua conta.',
+    'email_reset_action'    => 'Redefinir senha',
+    'email_reset_expiry'    => 'Este link expira em :minutes minutos.',
+    'email_reset_footer'    => 'Se você não solicitou a redefinição de senha, nenhuma ação é necessária.',
+    'email_reset_fallback'  => 'Se o botão acima não funcionar, copie e cole o link abaixo no seu navegador:',
 ];

@@ -60,12 +60,12 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function sendEmailVerificationNotification(): void
     {
-        $this->notify(new VerifyEmailNotification());
+        $this->notify((new VerifyEmailNotification())->locale($this->locale ?? config('app.locale')));
     }
 
     public function sendPasswordResetNotification($token): void
     {
-        $this->notify(new ResetPasswordNotification($token));
+        $this->notify((new ResetPasswordNotification($token))->locale($this->locale ?? config('app.locale')));
     }
 
     public function getProfilePhotoUrlAttribute(): ?string

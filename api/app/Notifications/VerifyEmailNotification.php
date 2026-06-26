@@ -24,7 +24,7 @@ class VerifyEmailNotification extends VerifyEmail
         $parsed = parse_url($apiSignedUrl);
         parse_str($parsed['query'] ?? '', $queryParams);
 
-        $frontendUrl = rtrim(env('FRONTEND_URL', 'http://localhost:5173'), '/');
+        $frontendUrl = rtrim(config('services.frontend_url', 'http://localhost:5173'), '/');
 
         return $frontendUrl . '/auth/verify-email/' . $id . '/' . $hash
             . '?expires=' . ($queryParams['expires'] ?? '')
@@ -36,9 +36,10 @@ class VerifyEmailNotification extends VerifyEmail
         $verificationUrl = $this->verificationUrl($notifiable);
 
         return (new MailMessage)
-            ->subject('Verify Your Email Address')
-            ->line('Click the button below to verify your email address. This link expires in 60 minutes.')
-            ->action('Verify Email', $verificationUrl)
-            ->line('If you did not create an account, no action is required.');
+            ->subject(__('messages.email_verify_subject'))
+            ->view('emails.verify-email', [
+                'url'  => $verificationUrl,
+                'name' => $notifiable->name,
+            ]);
     }
 }
