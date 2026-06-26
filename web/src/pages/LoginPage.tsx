@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../hooks/api'
 import { useState, type SyntheticEvent } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams, Navigate } from 'react-router-dom'
 import { useForm } from '@mantine/form'
 import appLogo from '../assets/icon_mao_fechada.png'
 import {
@@ -21,11 +21,13 @@ import {
 export function LoginPage() {
   const { t } = useTranslation()
   const navigate = useNavigate()
-  const { login, isAuthenticated } = useAuth()
+  const [searchParams] = useSearchParams()
+  const { login, isAuthenticated, user } = useAuth()
   const [generalError, setGeneralError] = useState('')
+  const passwordReset = searchParams.get('reset') === '1'
 
   if (isAuthenticated) {
-    navigate('/home')
+    return <Navigate to={user?.email_verified_at ? '/home' : '/auth/verify-email'} replace />
   }
 
   const form = useForm({
@@ -81,6 +83,12 @@ export function LoginPage() {
           {t('app.subtitle')}
         </Text>
 
+        {passwordReset && (
+          <Alert color="green" radius="md" mb="md">
+            {t('auth.reset_password_success')}
+          </Alert>
+        )}
+
         <form onSubmit={handleSubmit}>
           <Stack gap="md">
             <TextInput
@@ -90,11 +98,16 @@ export function LoginPage() {
               {...form.getInputProps('email')}
             />
 
-            <PasswordInput
-              label={t('auth.password')}
-              id="password"
-              {...form.getInputProps('password')}
-            />
+            <div>
+              <PasswordInput
+                label={t('auth.password')}
+                id="password"
+                {...form.getInputProps('password')}
+              />
+              <Text ta="right" size="xs" mt={4}>
+                <Anchor href="/auth/forgot-password">{t('auth.forgot_password')}</Anchor>
+              </Text>
+            </div>
 
             {generalError && (
               <Alert color="red" radius="md">

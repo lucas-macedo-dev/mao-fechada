@@ -8,6 +8,7 @@ use App\Http\Requests\Api\V1\UpdateUserPreferencesRequest;
 use App\Models\User;
 use App\Services\DefaultCategorySeeder;
 use App\Support\ApiResponse;
+use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -27,6 +28,7 @@ class AuthController extends Controller
 
         $user = User::query()->create($validated);
         (new DefaultCategorySeeder())->seedFor($user);
+        event(new Registered($user));
         $token = $user->createToken('web')->plainTextToken;
 
         return ApiResponse::data([
@@ -44,7 +46,7 @@ class AuthController extends Controller
 
         $user = User::query()->where('email', $credentials['email'])->first();
 
-        if (! $user || ! Hash::check($credentials['password'], $user->password)) {
+        if (!$user || !Hash::check($credentials['password'], $user->password)) {
             throw ValidationException::withMessages([
                 'email' => [__('auth.failed')],
             ]);

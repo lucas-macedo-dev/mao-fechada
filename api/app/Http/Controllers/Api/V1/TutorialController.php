@@ -27,7 +27,7 @@ class TutorialController extends Controller
 
         $user = $request->user();
 
-        if (! empty($validated['reset'])) {
+        if (!empty($validated['reset'])) {
             $user->update(['tutorial_progress' => ['completed_steps' => [], 'dismissed' => false]]);
             return ApiResponse::data($user->fresh());
         }
@@ -37,9 +37,9 @@ class TutorialController extends Controller
         if (isset($validated['step_id']) && isset($validated['completed'])) {
             $completedSteps = $progress['completed_steps'] ?? [];
 
-            if ($validated['completed'] && ! in_array($validated['step_id'], $completedSteps)) {
+            if ($validated['completed'] && !in_array($validated['step_id'], $completedSteps)) {
                 $completedSteps[] = $validated['step_id'];
-            } elseif (! $validated['completed']) {
+            } elseif (!$validated['completed']) {
                 $completedSteps = array_values(array_filter($completedSteps, fn ($s) => $s !== $validated['step_id']));
             }
 

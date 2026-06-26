@@ -1,8 +1,4 @@
-## Purpose
-
-Defines authentication requirements and account-level access control for finance features, including user data isolation and subscription-readiness fields.
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Users can authenticate and access only their data
 The system SHALL require authentication for protected finance endpoints, MUST enforce user-level data isolation across transactions, budgets, and summaries, and MUST additionally require email verification before granting access to protected routes.
@@ -18,10 +14,3 @@ The system SHALL require authentication for protected finance endpoints, MUST en
 #### Scenario: Accessing protected endpoint without email verification
 - **WHEN** an authenticated but unverified user sends a request to a protected finance endpoint
 - **THEN** the system returns HTTP 403 with error code `email_not_verified`
-
-### Requirement: Accounts support future subscription-based access
-The system SHALL persist account plan and subscription status fields that can be used to gate premium features in future releases.
-
-#### Scenario: Creating account with default plan state
-- **WHEN** a new user account is created
-- **THEN** the system assigns default plan and subscription status values required for future paid feature checks

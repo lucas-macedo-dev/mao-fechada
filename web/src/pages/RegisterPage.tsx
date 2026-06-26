@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../hooks/api'
 import { useState, type SyntheticEvent } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Navigate } from 'react-router-dom'
 import { useForm } from '@mantine/form'
 import appLogo from '../assets/icon_mao_fechada.png'
 import {
@@ -21,11 +21,11 @@ import {
 export function RegisterPage() {
   const { t } = useTranslation()
   const navigate = useNavigate()
-  const { register, isAuthenticated } = useAuth()
+  const { register, isAuthenticated, user } = useAuth()
   const [generalError, setGeneralError] = useState('')
 
   if (isAuthenticated) {
-    navigate('/home')
+    return <Navigate to={user?.email_verified_at ? '/home' : '/auth/verify-email'} replace />
   }
 
   const form = useForm({
@@ -48,7 +48,7 @@ export function RegisterPage() {
     try {
       const { passwordConfirmation: _ignored, ...payload } = form.values
       await register.mutateAsync({ ...payload, locale: localStorage.getItem('app_locale') || 'pt-BR' })
-      navigate('/home')
+      navigate('/auth/verify-email')
     } catch (err: unknown) {
       const data = (err as any)?.response?.data
       if (data?.errors && typeof data.errors === 'object') {

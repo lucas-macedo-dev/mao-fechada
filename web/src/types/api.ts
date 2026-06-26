@@ -7,6 +7,7 @@ export interface User {
   id: number
   name: string
   email: string
+  email_verified_at: string | null
   plan: string
   subscription_status: string
   locale: string

@@ -6,11 +6,16 @@ import { PrivateRoute } from './components/PrivateRoute'
 import { TutorialProvider } from './context/TutorialContext'
 import { LoginPage } from './pages/LoginPage'
 import { RegisterPage } from './pages/RegisterPage'
+import { VerifyEmailPage } from './pages/VerifyEmailPage'
+import { EmailVerificationCallbackPage } from './pages/EmailVerificationCallbackPage'
+import { ForgotPasswordPage } from './pages/ForgotPasswordPage'
+import { ResetPasswordPage } from './pages/ResetPasswordPage'
 import { HomePage } from './pages/HomePage'
 import { CategoriesPage } from './pages/CategoriesPage'
 import { TransactionsPage } from './pages/TransactionsPage'
 import { ProfilePage } from './pages/ProfilePage'
 import { SubscriptionPage } from './pages/SubscriptionPage'
+import { PaymentMethodsPage } from './pages/PaymentMethodsPage'
 import i18n from './i18n/config'
 import './App.css'
 
@@ -26,6 +31,10 @@ function AppRoutes() {
       {/* Public routes */}
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
+      <Route path="/auth/verify-email" element={<VerifyEmailPage />} />
+      <Route path="/auth/verify-email/:id/:hash" element={<EmailVerificationCallbackPage />} />
+      <Route path="/auth/forgot-password" element={<ForgotPasswordPage />} />
+      <Route path="/auth/reset-password" element={<ResetPasswordPage />} />
 
       {/* Protected routes */}
       <Route
@@ -74,6 +83,16 @@ function AppRoutes() {
           <PrivateRoute>
             <Layout>
               <SubscriptionPage />
+            </Layout>
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/payment"
+        element={
+          <PrivateRoute>
+            <Layout>
+              <PaymentMethodsPage />
             </Layout>
           </PrivateRoute>
         }
