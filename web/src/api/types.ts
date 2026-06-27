@@ -27,6 +27,10 @@ export type Category = {
   user_id: number
   name: string
   type: 'income' | 'expense'
+  icon: string | null
+  parent_id: number | null
+  parent?: Category | null
+  children?: Category[]
   created_at: string
   updated_at: string
 }

@@ -15,8 +15,8 @@ it('does not seed categories when user already has at least one category', funct
     $seeder->seedFor($user);
     $countAfterSecond = $user->categories()->count();
 
-    expect($countAfterFirst)->toBe(8);
-    expect($countAfterSecond)->toBe(8);
+    expect($countAfterFirst)->toBe(10);
+    expect($countAfterSecond)->toBe(10);
 });
 
 it('creates 8 default categories after registration', function () {
@@ -31,9 +31,9 @@ it('creates 8 default categories after registration', function () {
 
     $user = User::where('email', 'newuser@example.com')->firstOrFail();
 
-    expect($user->categories()->count())->toBe(8);
-    expect($user->categories()->where('type', 'expense')->count())->toBe(5);
-    expect($user->categories()->where('type', 'income')->count())->toBe(3);
+    expect($user->categories()->count())->toBe(10);
+    expect($user->categories()->where('type', 'expense')->count())->toBe(6);
+    expect($user->categories()->where('type', 'income')->count())->toBe(4);
 });
 
 it('creates pt-BR categories when locale is pt-BR', function () {
@@ -64,8 +64,8 @@ it('backfill command seeds only users with no categories', function () {
     expect($output)->toContain('Seeded 2 users');
     expect($output)->toContain('Skipped 1 users');
 
-    expect($userWithoutCategories1->fresh()->categories()->count())->toBe(8);
-    expect($userWithoutCategories2->fresh()->categories()->count())->toBe(8);
+    expect($userWithoutCategories1->fresh()->categories()->count())->toBe(10);
+    expect($userWithoutCategories2->fresh()->categories()->count())->toBe(10);
     expect($userWithCategories->fresh()->categories()->count())->toBe(1);
 });
 

@@ -14,6 +14,8 @@ return [
     'category_type_must_match_parent' => 'Subcategory type must match parent category type.',
     'category_type_must_match_children' => 'Category type must match existing subcategory types.',
     'transaction_type_must_match_category' => 'Transaction type must match category type.',
+    'category_fallback_name' => 'No Category',
+    'category_delete_with_transactions' => 'This category has linked transactions. Deleting it will move them to "No Category". Continue?',
 
     // Emails
     'email_verify_subject'  => 'Verify your email address',

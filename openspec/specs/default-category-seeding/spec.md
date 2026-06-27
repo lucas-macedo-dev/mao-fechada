@@ -15,6 +15,7 @@ The system SHALL automatically create a predefined set of expense and income cat
 | Alimentação | Food |
 | Compras | Shopping |
 | Lazer | Leisure |
+| Sem Categoria | No Category |
 
 **Default income categories (type = income):**
 | pt-BR | en |
@@ -22,18 +23,19 @@ The system SHALL automatically create a predefined set of expense and income cat
 | Salário | Salary |
 | Investimentos | Investments |
 | Ticket Alimentação | Food Vouchers |
+| Sem Categoria | No Category |
 
 #### Scenario: New user with pt-BR locale gets Portuguese default categories
 - **WHEN** a new user registers with `locale = pt-BR`
-- **THEN** the system SHALL create 5 expense categories named Veículo, Habitação, Alimentação, Compras, Lazer and 3 income categories named Salário, Investimentos, Ticket Alimentação — all owned by that user
+- **THEN** the system SHALL create 6 expense categories named Veículo, Habitação, Alimentação, Compras, Lazer, Sem Categoria and 4 income categories named Salário, Investimentos, Ticket Alimentação, Sem Categoria — all owned by that user
 
 #### Scenario: New user with en locale gets English default categories
 - **WHEN** a new user registers with `locale = en`
-- **THEN** the system SHALL create 5 expense categories named Vehicle, Housing, Food, Shopping, Leisure and 3 income categories named Salary, Investments, Food Vouchers — all owned by that user
+- **THEN** the system SHALL create 6 expense categories named Vehicle, Housing, Food, Shopping, Leisure, No Category and 4 income categories named Salary, Investments, Food Vouchers, No Category — all owned by that user
 
 #### Scenario: New user with no locale defaults to English categories
 - **WHEN** a new user registers without specifying a locale
-- **THEN** the system SHALL create the English default categories
+- **THEN** the system SHALL create the English default categories including the "No Category" fallbacks
 
 ### Requirement: Default categories are user-owned and editable
 Default categories SHALL be stored as regular user-scoped categories (with `user_id` set). Users SHALL be able to rename, delete, or add sub-categories to them freely after creation.

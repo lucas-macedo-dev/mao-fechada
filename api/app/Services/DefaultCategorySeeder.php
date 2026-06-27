@@ -18,6 +18,8 @@ class DefaultCategorySeeder
                 ['name' => 'Salário', 'type' => 'income', 'icon' => 'fa-solid fa-hand-holding-dollar'],
                 ['name' => 'Investimentos', 'type' => 'income'],
                 ['name' => 'Ticket Alimentação', 'type' => 'income', 'icon' => 'fa-solid fa-utensils'],
+                ['name' => 'Sem Categoria', 'type' => 'expense'],
+                ['name' => 'Sem Categoria', 'type' => 'income'],
             ];
         }
 
@@ -30,6 +32,8 @@ class DefaultCategorySeeder
             ['name' => 'Salary', 'type' => 'income', 'icon' => 'fa-solid fa-hand-holding-dollar'],
             ['name' => 'Investments', 'type' => 'income'],
             ['name' => 'Food Vouchers', 'type' => 'income', 'icon' => 'fa-solid fa-utensils'],
+            ['name' => 'No Category', 'type' => 'expense'],
+            ['name' => 'No Category', 'type' => 'income'],
         ];
     }
 

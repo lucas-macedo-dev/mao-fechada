@@ -1,8 +1,4 @@
-## Purpose
-
-Defines requirements for personal financial transaction management, including creation, editing, listing, deletion, and validation rules.
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Users can manage personal financial transactions
 The system SHALL allow authenticated users to create, edit, list, and delete personal income and expense transactions with date, amount, category, and optional notes. When a transaction belongs to an installment group, edit and delete operations SHALL cascade to all transactions in the group. Create and edit interactions SHALL be presented in a modal dialog rather than inline within the page.
@@ -38,14 +34,3 @@ The system SHALL allow authenticated users to create, edit, list, and delete per
 #### Scenario: Installment group edit requires custom confirmation
 - **WHEN** the user attempts to edit or delete a transaction that belongs to an installment group
 - **THEN** a `ConfirmDialog` opens (replacing `window.confirm`) describing the cascade impact before proceeding
-
-### Requirement: Transaction list supports filtering by installment type
-The system SHALL allow filtering the transaction list to return only installment-type expense transactions.
-
-#### Scenario: Filtering to installment transactions
-- **WHEN** an authenticated user calls `GET /transactions?installment=true`
-- **THEN** the system returns only transactions where `installment_group_id` is not null, paginated in the standard format
-
-#### Scenario: Non-installment filter returns all transactions
-- **WHEN** an authenticated user calls `GET /transactions` without the `installment` param
-- **THEN** the system returns all user transactions regardless of installment status
