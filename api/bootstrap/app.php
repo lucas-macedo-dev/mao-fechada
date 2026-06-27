@@ -1,13 +1,14 @@
 <?php
 
-use Illuminate\Foundation\Application;
-use Illuminate\Foundation\Configuration\Exceptions;
-use Illuminate\Foundation\Configuration\Middleware;
 use App\Http\Middleware\EnsureEmailIsVerified;
 use App\Http\Middleware\ResolveApiLocale;
+use App\Services\ActivityLogger;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Foundation\Application;
+use Illuminate\Foundation\Configuration\Exceptions;
+use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
@@ -78,6 +79,14 @@ return Application::configure(basePath: dirname(__DIR__))
                 $statusCode = $exception->getStatusCode();
                 $fallbackMessage = Response::$statusTexts[$statusCode] ?? 'HTTP error.';
 
+                if ($statusCode >= 500) {
+                    app(ActivityLogger::class)->log('system.exception', auth()->id(), [
+                        'exception_class' => get_class($exception),
+                        'message' => mb_substr($exception->getMessage(), 0, 2000),
+                        'path' => $request->path(),
+                    ]);
+                }
+
                 return response()->json([
                     'error' => [
                         'type' => $statusCode === Response::HTTP_FORBIDDEN ? 'authorization_error' : 'http_error',
@@ -85,6 +94,12 @@ return Application::configure(basePath: dirname(__DIR__))
                     ],
                 ], $statusCode);
             }
+
+            app(ActivityLogger::class)->log('system.exception', auth()->id(), [
+                'exception_class' => get_class($exception),
+                'message' => mb_substr($exception->getMessage(), 0, 2000),
+                'path' => $request->path(),
+            ]);
 
             return response()->json([
                 'error' => [

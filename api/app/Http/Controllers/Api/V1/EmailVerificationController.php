@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
+use App\Services\ActivityLogger;
 use App\Support\ApiResponse;
 use Illuminate\Auth\Events\Verified;
 use Illuminate\Http\JsonResponse;
@@ -10,9 +12,11 @@ use Illuminate\Http\Request;
 
 class EmailVerificationController extends Controller
 {
+    public function __construct(private ActivityLogger $activityLogger) {}
+
     public function verify(Request $request, string $id, string $hash): JsonResponse
     {
-        $user = \App\Models\User::findOrFail($id);
+        $user = User::findOrFail($id);
 
         if (!hash_equals($hash, sha1($user->getEmailForVerification()))) {
             return response()->json(['error' => ['type' => 'invalid_verification_link', 'message' => 'Invalid verification link.']], 400);
@@ -28,6 +32,8 @@ class EmailVerificationController extends Controller
 
         $user->markEmailAsVerified();
         event(new Verified($user));
+
+        $this->activityLogger->log('auth.email_verified', $user->id);
 
         return ApiResponse::data(['message' => 'Email verified successfully.']);
     }
