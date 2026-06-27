@@ -6,10 +6,12 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\StoreCategoryRequest;
 use App\Http\Requests\Api\V1\UpdateCategoryRequest;
 use App\Models\Category;
+use App\Services\FallbackCategoryResolver;
 use App\Support\ApiResponse;
 use App\Support\TransactionTypeMapper;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class CategoryController extends Controller
@@ -103,7 +105,13 @@ class CategoryController extends Controller
         $category = Category::query()->findOrFail($id);
         $this->ensureOwnership($request, $category->user_id);
 
-        $category->delete();
+        DB::transaction(function () use ($request, $category): void {
+            if ($category->transactions()->exists()) {
+                $fallback = FallbackCategoryResolver::findOrCreate($request->user(), $category->type);
+                $category->transactions()->update(['category_id' => $fallback->id]);
+            }
+            $category->delete();
+        });
 
         return response()->json([], 204);
     }

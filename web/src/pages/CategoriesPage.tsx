@@ -21,8 +21,13 @@ import {
   UnstyledButton,
 } from '@mantine/core'
 import { PageContainer } from '../components/ui/PageContainer'
-import { SectionCard } from '../components/ui/SectionCard'
 import { ActionBar } from '../components/ui/ActionBar'
+import { FormModal } from '../components/FormModal'
+import { ConfirmDialog } from '../components/ConfirmDialog'
+import type { Category } from '../types/api'
+
+type FormModalState = null | { mode: 'create' } | { mode: 'edit'; item: Category }
+type ConfirmState = null | { title: string; message: string; onConfirm: () => void }
 
 export function CategoriesPage() {
   const { t } = useTranslation()
@@ -31,87 +36,122 @@ export function CategoriesPage() {
   const createMutation = useCreateCategory()
   const updateMutation = useUpdateCategory()
   const deleteMutation = useDeleteCategory()
-  const [name, setName] = useState('')
-  const [type, setType] = useState('saida')
-  const [icon, setIcon] = useState(DEFAULT_CATEGORY_ICON)
+
+  const [formModal, setFormModal] = useState<FormModalState>(null)
+  const [formName, setFormName] = useState('')
+  const [formType, setFormType] = useState<'entrada' | 'saida'>('saida')
+  const [formIcon, setFormIcon] = useState(DEFAULT_CATEGORY_ICON)
+  const [formParentId, setFormParentId] = useState<string | null>(null)
+
+  const [confirmState, setConfirmState] = useState<ConfirmState>(null)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
-  const [editingCategoryId, setEditingCategoryId] = useState<number | null>(null)
-  const [editName, setEditName] = useState('')
-  const [editType, setEditType] = useState<'entrada' | 'saida'>('saida')
-  const [editIcon, setEditIcon] = useState(DEFAULT_CATEGORY_ICON)
 
-  const handleSubmit = async (e: SyntheticEvent<HTMLFormElement>) => {
+  const rootCategories = (categories as Category[]).filter((c) => c.parent_id == null)
+
+  const formTypeNorm = formType === 'entrada' ? 'income' : 'expense'
+  const formParentOptions = rootCategories
+    .filter((c) => {
+      if (formModal?.mode === 'edit' && c.id === formModal.item.id) return false
+      const cType = c.type === 'entrada' || c.type === 'income' ? 'income' : 'expense'
+      return cType === formTypeNorm
+    })
+    .map((c) => ({ value: String(c.id), label: c.name }))
+
+  const handleOpenCreate = () => {
+    setFormName('')
+    setFormType('saida')
+    setFormIcon(DEFAULT_CATEGORY_ICON)
+    setFormParentId(null)
+    setError('')
+    setFormModal({ mode: 'create' })
+  }
+
+  const handleOpenEdit = (category: Category) => {
+    setFormName(category.name)
+    setFormType(category.type === 'entrada' || category.type === 'income' ? 'entrada' : 'saida')
+    setFormIcon(getCategoryIconClass(category.icon ?? undefined))
+    setFormParentId(category.parent_id ? String(category.parent_id) : null)
+    setError('')
+    setFormModal({ mode: 'edit', item: category })
+  }
+
+  const handleCloseModal = () => {
+    setFormModal(null)
+    setError('')
+  }
+
+  const handleFormTypeChange = (val: string | null) => {
+    setFormType(val === 'entrada' ? 'entrada' : 'saida')
+    setFormParentId(null)
+  }
+
+  const handleFormParentChange = (val: string | null) => {
+    setFormParentId(val)
+    if (val) {
+      const parent = rootCategories.find((c) => String(c.id) === val)
+      if (parent) {
+        const parentDbType = parent.type === 'income' || parent.type === 'entrada' ? 'entrada' : 'saida'
+        setFormType(parentDbType)
+      }
+    }
+  }
+
+  const handleFormSubmit = async (e: SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault()
+    if (!formModal) return
     setError('')
-    setSuccess('')
+
     try {
-      await createMutation.mutateAsync({ name, type, icon })
-      completeStep('create-category')
-      setName('')
-      setType('saida')
-      setIcon(DEFAULT_CATEGORY_ICON)
-      setSuccess(t('categories.create_success'))
+      if (formModal.mode === 'create') {
+        await createMutation.mutateAsync({
+          name: formName,
+          type: formType,
+          icon: formIcon,
+          parent_id: formParentId ? Number(formParentId) : undefined,
+        })
+        completeStep('create-category')
+        setSuccess(t('categories.create_success'))
+      } else {
+        await updateMutation.mutateAsync({
+          id: formModal.item.id,
+          payload: {
+            name: formName,
+            type: formType,
+            icon: formIcon,
+            parent_id: formParentId ? Number(formParentId) : null,
+          },
+        })
+        setSuccess(t('categories.update_success'))
+      }
+      setFormModal(null)
     } catch (err) {
       setError(extractApiError(err).message)
     }
   }
 
-  const handleStartEdit = (category: { id: number; name: string; type: string; icon?: string }) => {
-    setEditingCategoryId(category.id)
-    setEditName(category.name)
-    setEditType(category.type === 'entrada' || category.type === 'income' ? 'entrada' : 'saida')
-    setEditIcon(getCategoryIconClass(category.icon))
+  const executeDelete = async (id: number) => {
     setError('')
     setSuccess('')
-  }
-
-  const handleCancelEdit = () => {
-    setEditingCategoryId(null)
-    setEditName('')
-    setEditType('saida')
-    setEditIcon(DEFAULT_CATEGORY_ICON)
-  }
-
-  const handleSaveEdit = async (event: SyntheticEvent<HTMLFormElement>, id: number) => {
-    event.preventDefault()
-    setError('')
-    setSuccess('')
-
-    try {
-      await updateMutation.mutateAsync({
-        id,
-        payload: {
-          name: editName,
-          type: editType,
-          icon: editIcon,
-        },
-      })
-
-      handleCancelEdit()
-      setSuccess(t('categories.update_success'))
-    } catch (err) {
-      setError(extractApiError(err).message)
-    }
-  }
-
-  const handleDelete = async (id: number) => {
-    if (!window.confirm(t('categories.delete_confirm'))) {
-      return
-    }
-
-    setError('')
-    setSuccess('')
-
     try {
       await deleteMutation.mutateAsync(id)
-      if (editingCategoryId === id) {
-        handleCancelEdit()
+      if (formModal?.mode === 'edit' && formModal.item.id === id) {
+        setFormModal(null)
       }
       setSuccess(t('categories.delete_success'))
     } catch (err) {
       setError(extractApiError(err).message)
+    } finally {
+      setConfirmState(null)
     }
+  }
+
+  const handleDelete = (id: number) => {
+    setConfirmState({
+      title: t('categories.delete_confirm_title'),
+      message: t('categories.delete_confirm'),
+      onConfirm: () => executeDelete(id),
+    })
   }
 
   if (isLoading) {
@@ -122,19 +162,10 @@ export function CategoriesPage() {
     )
   }
 
-  const rootCategories = categories.filter((c) => !c.parent_id)
-
   const getCategoryColor = (type: string) =>
     type === 'entrada' || type === 'income' ? 'green' : 'red'
 
-  const renderCategory = (category: {
-    id: number
-    name: string
-    type: string
-    icon?: string
-    children?: Array<{ id: number; name: string; type: string; icon?: string }>
-  }) => {
-    const isEditing = editingCategoryId === category.id
+  const renderCategory = (category: Category) => {
     const color = getCategoryColor(category.type)
 
     return (
@@ -147,7 +178,7 @@ export function CategoriesPage() {
           borderLeft: `4px solid var(--mantine-color-${color}-6)`,
         }}
       >
-        <Group justify="space-between" align="center" mb={isEditing ? 'xs' : 0}>
+        <Group justify="space-between" align="center">
           <Text fw={600} style={{ display: 'inline-flex', alignItems: 'center' }}>
             <Box
               component="span"
@@ -165,7 +196,7 @@ export function CategoriesPage() {
               }}
               aria-hidden="true"
             >
-              <i className={getCategoryIconClass(category.icon)} />
+              <i className={getCategoryIconClass(category.icon ?? undefined)} />
             </Box>
             {category.name}
           </Text>
@@ -177,7 +208,7 @@ export function CategoriesPage() {
               variant="subtle"
               radius="xl"
               size="sm"
-              onClick={() => handleStartEdit(category)}
+              onClick={() => handleOpenEdit(category)}
               aria-label={t('categories.edit')}
               title={t('categories.edit')}
             >
@@ -197,136 +228,63 @@ export function CategoriesPage() {
           </Group>
         </Group>
 
-        {isEditing && (
-          <Box
-            component="form"
-            onSubmit={(event: SyntheticEvent<HTMLFormElement>) => handleSaveEdit(event, category.id)}
-            mt="xs"
-            p="md"
-            style={{ border: '1px solid var(--mantine-color-indigo-1)', borderRadius: 8, background: '#fafbff' }}
-          >
-            <SimpleGrid cols={{ base: 1, sm: 2 }} mb="sm">
-              <TextInput
-                id={`category-name-${category.id}`}
-                label={t('categories.name')}
-                value={editName}
-                onChange={(event) => setEditName(event.target.value)}
-                required
-              />
-              <Select
-                id={`category-type-${category.id}`}
-                label={t('categories.type')}
-                value={editType}
-                onChange={(val) => setEditType(val === 'entrada' ? 'entrada' : 'saida')}
-                data={[
-                  { value: 'saida', label: t('categories.type_expense') },
-                  { value: 'entrada', label: t('categories.type_income') },
-                ]}
-              />
-            </SimpleGrid>
-
-            <Box mb="sm">
-              <Text size="sm" fw={500} mb="xs">
-                {t('categories.icon')}
-              </Text>
-              <SimpleGrid cols={{ base: 4, xs: 6 }}>
-                {CATEGORY_ICON_OPTIONS.map((option) => {
-                  const selected = option.className === editIcon
-
-                  return (
-                    <UnstyledButton
-                      key={`${category.id}-${option.className}`}
-                      onClick={() => setEditIcon(option.className)}
-                      aria-label={t(option.key)}
-                      title={t(option.key)}
-                      style={{
-                        border: `1px solid ${selected ? 'var(--mantine-color-indigo-6)' : 'var(--mantine-color-indigo-2)'}`,
-                        background: selected ? 'var(--mantine-color-indigo-6)' : 'var(--mantine-color-indigo-0)',
-                        color: selected ? '#ffffff' : 'var(--mantine-color-dark-4)',
-                        borderRadius: 8,
-                        height: '2.5rem',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        cursor: 'pointer',
-                        transition: 'all 0.15s ease',
-                      }}
-                    >
-                      <i className={option.className} aria-hidden="true" style={{ fontSize: '1rem' }} />
-                    </UnstyledButton>
-                  )
-                })}
-              </SimpleGrid>
-            </Box>
-
-            <ActionBar>
-              <Button type="submit" size="sm" loading={updateMutation.isPending}>
-                {t('common.save')}
-              </Button>
-              <Button type="button" size="sm" variant="light" onClick={handleCancelEdit}>
-                {t('common.cancel')}
-              </Button>
-            </ActionBar>
-          </Box>
-        )}
-
         {category.children && category.children.length > 0 && (
           <Box mt="xs" pt="xs" style={{ borderTop: '1px solid var(--mantine-color-gray-2)' }}>
             <Stack gap="xs">
-              {category.children.map((subcategory) => (
-                <Group
-                  key={subcategory.id}
-                  justify="space-between"
-                  align="center"
-                  pl="md"
-                  style={{ borderLeft: `2px solid var(--mantine-color-${getCategoryColor(subcategory.type)}-4)` }}
-                >
-                  <Text size="sm" style={{ display: 'inline-flex', alignItems: 'center' }}>
-                    <Box
-                      component="span"
-                      style={{
-                        width: '1.5rem',
-                        height: '1.5rem',
-                        borderRadius: 999,
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        background: `var(--mantine-color-${getCategoryColor(subcategory.type)}-0)`,
-                        color: `var(--mantine-color-${getCategoryColor(subcategory.type)}-6)`,
-                        marginRight: '0.5rem',
-                        flexShrink: 0,
-                      }}
-                      aria-hidden="true"
-                    >
-                      <i className={getCategoryIconClass(subcategory.icon)} />
-                    </Box>
-                    {subcategory.name}
-                  </Text>
-                  <Group gap="xs">
-                    <ActionIcon
-                      variant="subtle"
-                      radius="xl"
-                      size="sm"
-                      onClick={() => handleStartEdit(subcategory)}
-                      aria-label={t('categories.edit')}
-                      title={t('categories.edit')}
-                    >
-                      <i className="fa-solid fa-pen-to-square" aria-hidden="true" style={{ fontSize: '0.8rem' }} />
-                    </ActionIcon>
-                    <ActionIcon
-                      variant="subtle"
-                      color="red"
-                      radius="xl"
-                      size="sm"
-                      onClick={() => handleDelete(subcategory.id)}
-                      aria-label={t('categories.delete')}
-                      title={t('categories.delete')}
-                    >
-                      <i className="fa-solid fa-trash-can" aria-hidden="true" style={{ fontSize: '0.8rem' }} />
-                    </ActionIcon>
-                  </Group>
-                </Group>
-              ))}
+              {category.children.map((subcategory) => {
+                const subColor = getCategoryColor(subcategory.type)
+
+                return (
+                  <Box key={subcategory.id} pl="md" style={{ borderLeft: `2px solid var(--mantine-color-${subColor}-4)` }}>
+                    <Group justify="space-between" align="center">
+                      <Text size="sm" style={{ display: 'inline-flex', alignItems: 'center' }}>
+                        <Box
+                          component="span"
+                          style={{
+                            width: '1.5rem',
+                            height: '1.5rem',
+                            borderRadius: 999,
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            background: `var(--mantine-color-${subColor}-0)`,
+                            color: `var(--mantine-color-${subColor}-6)`,
+                            marginRight: '0.5rem',
+                            flexShrink: 0,
+                          }}
+                          aria-hidden="true"
+                        >
+                          <i className={getCategoryIconClass(subcategory.icon ?? undefined)} />
+                        </Box>
+                        {subcategory.name}
+                      </Text>
+                      <Group gap="xs">
+                        <ActionIcon
+                          variant="subtle"
+                          radius="xl"
+                          size="sm"
+                          onClick={() => handleOpenEdit(subcategory)}
+                          aria-label={t('categories.edit')}
+                          title={t('categories.edit')}
+                        >
+                          <i className="fa-solid fa-pen-to-square" aria-hidden="true" style={{ fontSize: '0.8rem' }} />
+                        </ActionIcon>
+                        <ActionIcon
+                          variant="subtle"
+                          color="red"
+                          radius="xl"
+                          size="sm"
+                          onClick={() => handleDelete(subcategory.id)}
+                          aria-label={t('categories.delete')}
+                          title={t('categories.delete')}
+                        >
+                          <i className="fa-solid fa-trash-can" aria-hidden="true" style={{ fontSize: '0.8rem' }} />
+                        </ActionIcon>
+                      </Group>
+                    </Group>
+                  </Box>
+                )
+              })}
             </Stack>
           </Box>
         )}
@@ -334,80 +292,19 @@ export function CategoriesPage() {
     )
   }
 
+  const isSubmitting = formModal?.mode === 'create' ? createMutation.isPending : updateMutation.isPending
+  const isEditingSubcategory = formModal?.mode === 'edit' && formModal.item.parent_id != null
+
   return (
     <PageContainer>
-      <Title order={1} mb="lg">
-        {t('categories.title')}
-      </Title>
-
-      <SectionCard mb="lg">
-        <Title order={2} mb="md">
-          {t('categories.create')}
-        </Title>
-
-        <form onSubmit={handleSubmit}>
-          <Stack gap="sm">
-          <TextInput
-            id="name"
-            label={t('categories.name')}
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-          />
-
-          <Select
-            id="type"
-            label={t('categories.type')}
-            value={type}
-            onChange={(val) => setType(val ?? 'saida')}
-            data={[
-              { value: 'saida', label: t('categories.type_expense') },
-              { value: 'entrada', label: t('categories.type_income') },
-            ]}
-          />
-
-          <Box>
-            <Text size="sm" fw={500} mb="xs">
-              {t('categories.icon')}
-            </Text>
-            <SimpleGrid cols={{ base: 4, xs: 6 }}>
-              {CATEGORY_ICON_OPTIONS.map((option) => {
-                const selected = option.className === icon
-
-                return (
-                  <UnstyledButton
-                    key={option.className}
-                    onClick={() => setIcon(option.className)}
-                    aria-label={t(option.key)}
-                    title={t(option.key)}
-                    style={{
-                      border: `1px solid ${selected ? 'var(--mantine-color-indigo-6)' : 'var(--mantine-color-indigo-2)'}`,
-                      background: selected ? 'var(--mantine-color-indigo-6)' : 'var(--mantine-color-indigo-0)',
-                      color: selected ? '#ffffff' : 'var(--mantine-color-dark-4)',
-                      borderRadius: 8,
-                      height: '2.5rem',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      cursor: 'pointer',
-                      transition: 'all 0.15s ease',
-                    }}
-                  >
-                    <i className={option.className} aria-hidden="true" style={{ fontSize: '1rem' }} />
-                  </UnstyledButton>
-                )
-              })}
-            </SimpleGrid>
-          </Box>
-
-          <TutorialHint stepId="create-category">
-            <Button type="submit" loading={createMutation.isPending}>
-              {t('common.save')}
-            </Button>
-          </TutorialHint>
-          </Stack>
-        </form>
-      </SectionCard>
+      <Group justify="space-between" align="center" mb="lg">
+        <Title order={1}>{t('categories.title')}</Title>
+        <TutorialHint stepId="create-category">
+          <Button onClick={handleOpenCreate} leftSection={<i className="fa-solid fa-plus" aria-hidden="true" />}>
+            {t('categories.create')}
+          </Button>
+        </TutorialHint>
+      </Group>
 
       {error && (
         <Alert color="red" mb="md" radius="md">
@@ -423,6 +320,106 @@ export function CategoriesPage() {
       <Stack gap="md">
         {rootCategories.map(renderCategory)}
       </Stack>
+
+      <FormModal
+        opened={formModal !== null}
+        onClose={handleCloseModal}
+        title={formModal?.mode === 'create' ? t('categories.create') : t('categories.modal_edit_title')}
+      >
+        <Box component="form" onSubmit={handleFormSubmit}>
+          <Stack gap="sm">
+              <SimpleGrid cols={{ base: 1, sm: 2 }}>
+                <TextInput
+                  label={t('categories.name')}
+                  value={formName}
+                  onChange={(e) => setFormName(e.target.value)}
+                  required
+                />
+                <Select
+                  label={t('categories.type')}
+                  value={formType}
+                  onChange={handleFormTypeChange}
+                  disabled={!!formParentId}
+                  data={[
+                    { value: 'saida', label: t('categories.type_expense') },
+                    { value: 'entrada', label: t('categories.type_income') },
+                  ]}
+                />
+              </SimpleGrid>
+
+              {!isEditingSubcategory && (
+                <Select
+                  label={t('categories.parent')}
+                  value={formParentId}
+                  onChange={handleFormParentChange}
+                  data={[
+                    { value: '', label: t('categories.parent_none') },
+                    ...formParentOptions,
+                  ]}
+                  clearable
+                  placeholder={t('categories.parent_none')}
+                />
+              )}
+
+              <Box>
+                <Text size="sm" fw={500} mb="xs">
+                  {t('categories.icon')}
+                </Text>
+                <SimpleGrid cols={{ base: 4, xs: 6 }}>
+                  {CATEGORY_ICON_OPTIONS.map((option) => {
+                    const selected = option.className === formIcon
+                    return (
+                      <UnstyledButton
+                        key={option.className}
+                        onClick={() => setFormIcon(option.className)}
+                        aria-label={t(option.key)}
+                        title={t(option.key)}
+                        style={{
+                          border: `1px solid ${selected ? 'var(--mantine-color-indigo-6)' : 'var(--mantine-color-indigo-2)'}`,
+                          background: selected ? 'var(--mantine-color-indigo-6)' : 'var(--mantine-color-indigo-0)',
+                          color: selected ? '#ffffff' : 'var(--mantine-color-dark-4)',
+                          borderRadius: 8,
+                          height: '2.5rem',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          cursor: 'pointer',
+                          transition: 'all 0.15s ease',
+                        }}
+                      >
+                        <i className={option.className} aria-hidden="true" style={{ fontSize: '1rem' }} />
+                      </UnstyledButton>
+                    )
+                  })}
+                </SimpleGrid>
+              </Box>
+
+              {error && (
+                <Alert color="red" radius="md">
+                  {error}
+                </Alert>
+              )}
+
+              <ActionBar>
+                <Button type="submit" loading={isSubmitting}>
+                  {t('common.save')}
+                </Button>
+                <Button type="button" variant="light" onClick={handleCloseModal}>
+                  {t('common.cancel')}
+                </Button>
+              </ActionBar>
+          </Stack>
+        </Box>
+      </FormModal>
+
+      <ConfirmDialog
+        opened={confirmState !== null}
+        title={confirmState?.title ?? ''}
+        message={confirmState?.message ?? ''}
+        onConfirm={confirmState?.onConfirm ?? (() => {})}
+        onCancel={() => setConfirmState(null)}
+        loading={deleteMutation.isPending}
+      />
     </PageContainer>
   )
 }

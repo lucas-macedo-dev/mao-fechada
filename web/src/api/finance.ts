@@ -17,7 +17,7 @@ export const financeApi = {
   listCategories() {
     return get<Category[]>('/v1/categories')
   },
-  createCategory(payload: { name: string; type: 'income' | 'expense' }) {
+  createCategory(payload: { name: string; type: 'income' | 'expense'; icon?: string; parent_id?: number | null }) {
     return post<Category>('/v1/categories', payload)
   },
   listTransactions() {

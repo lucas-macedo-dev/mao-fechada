@@ -14,6 +14,8 @@ return [
     'category_type_must_match_parent' => 'O tipo da subcategoria deve ser igual ao da categoria pai.',
     'category_type_must_match_children' => 'O tipo da categoria deve ser compativel com as subcategorias existentes.',
     'transaction_type_must_match_category' => 'O tipo da transacao deve ser igual ao da categoria.',
+    'category_fallback_name' => 'Sem Categoria',
+    'category_delete_with_transactions' => 'Esta categoria possui transações vinculadas. Ao deletar, elas serão movidas para "Sem Categoria". Deseja continuar?',
 
     // E-mails
     'email_verify_subject'  => 'Verifique seu endereço de e-mail',
