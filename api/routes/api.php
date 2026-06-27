@@ -46,6 +46,7 @@ Route::prefix('v1')->group(function (): void {
             Route::get('/dashboard/recent', [DashboardController::class, 'recent']);
             Route::get('/dashboard/by-category', [DashboardController::class, 'byCategory']);
             Route::get('/dashboard/by-day', [DashboardController::class, 'byDay']);
+            Route::get('/dashboard/installments-total', [DashboardController::class, 'installmentsTotal']);
 
             Route::get('/budgets', [BudgetController::class, 'index']);
             Route::post('/budgets', [BudgetController::class, 'store']);

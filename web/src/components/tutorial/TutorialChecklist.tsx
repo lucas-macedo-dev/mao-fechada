@@ -100,13 +100,6 @@ export function TutorialChecklist() {
                         {t('tutorial.go_to_page', { page: activeStep.page })}
                       </Button>
                     )}
-
-                    {isOnActivePage && (
-                      <Text size="xs" c="indigo" mt={4} fw={500}>
-                        <i className="fa-solid fa-arrow-down" style={{ marginRight: 4 }} />
-                        {t('tutorial.hint')} ↓
-                      </Text>
-                    )}
                   </Stack>
                 )}
 

@@ -36,6 +36,9 @@ export interface Transaction {
   amount: string | number
   transacted_at: string
   notes?: string
+  installment_group_id?: string | null
+  installment_number?: number | null
+  installment_total?: number | null
   category?: Category
   created_at: string
   updated_at: string

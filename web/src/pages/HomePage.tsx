@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { useDashboardSummary, useDashboardByCategory, useDashboardByDay, useTransactions } from '../hooks/api'
+import { useDashboardSummary, useDashboardByCategory, useDashboardByDay, useTransactions, useInstallmentsTotal } from '../hooks/api'
 import { useTutorial } from '../context/TutorialContext'
 import { TutorialHint } from '../components/tutorial/TutorialHint'
 import { getCategoryIconClass } from '../constants/categoryIcons'
@@ -57,6 +57,7 @@ export function HomePage() {
   const { completeStep } = useTutorial()
   const [month, setMonth] = useState(new Date().toISOString().slice(0, 7))
   const { data: summary, isLoading } = useDashboardSummary(month)
+  const { data: installmentsData } = useInstallmentsTotal(month)
 
   useEffect(() => {
     if (summary) completeStep('view-summary')
@@ -120,7 +121,7 @@ export function HomePage() {
       {summary && (
         <>
           <TutorialHint stepId="view-summary">
-            <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} mb="lg">
+            <SimpleGrid cols={{ base: 1, sm: 2, md: 4 }} mb="lg">
               {(['income', 'expense', 'balance'] as const).map((key) => {
                 const labels = {
                   income: t('dashboard.income'),
@@ -151,6 +152,21 @@ export function HomePage() {
                   </Paper>
                 )
               })}
+
+              <Paper
+                shadow="xs"
+                radius="md"
+                p="lg"
+                withBorder
+                style={{ borderLeft: '4px solid #9c27b0' }}
+              >
+                <Text size="sm" c="dimmed" tt="uppercase" fw={500} mb="xs">
+                  {t('dashboard.installments')}
+                </Text>
+                <Text size="xl" fw={700}>
+                  R$ {(installmentsData?.total ?? 0).toFixed(2)}
+                </Text>
+              </Paper>
             </SimpleGrid>
           </TutorialHint>
 

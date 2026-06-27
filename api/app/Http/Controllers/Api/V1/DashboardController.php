@@ -116,6 +116,21 @@ class DashboardController extends Controller
         return ApiResponse::data($result);
     }
 
+    public function installmentsTotal(Request $request): JsonResponse
+    {
+        [$year, $month] = $this->resolveMonth($request);
+
+        $total = (float) $this->baseQuery($request, $year, $month)
+            ->whereIn('type', TransactionTypeMapper::expenseValues())
+            ->whereNotNull('installment_group_id')
+            ->sum('amount');
+
+        return ApiResponse::data([
+            'month' => sprintf('%04d-%02d', $year, $month),
+            'total' => $total,
+        ]);
+    }
+
     public function byDay(Request $request): JsonResponse
     {
         $this->ensureOwnership($request, $request->user()->id);

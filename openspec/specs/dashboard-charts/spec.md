@@ -68,3 +68,26 @@ The frontend SHALL fetch chart data from two dedicated endpoints: one for catego
 #### Scenario: API response for by-day
 - **WHEN** `GET /dashboard/by-day?month=YYYY-MM` is called
 - **THEN** the API returns an array of objects each with a `day` (day of month integer), `income` (total income for that day), and `expense` (total expense for that day), covering all calendar days in the month
+
+### Requirement: HomePage SHALL display an installment purchases summary card
+The HomePage SHALL render a summary card showing the total expense amount from installment transactions for the currently selected month.
+
+#### Scenario: Month has installment transactions
+- **WHEN** the user views the HomePage for a month that contains at least one transaction with an `installment_group_id`
+- **THEN** the installment summary card displays the sum of amounts for all installment-type expense transactions in that month
+
+#### Scenario: Month has no installment transactions
+- **WHEN** the selected month has no installment transactions
+- **THEN** the installment summary card displays R$ 0,00 or an appropriate zero-state message
+
+#### Scenario: Card updates when month changes
+- **WHEN** the user changes the month selector on the HomePage
+- **THEN** the installment summary card refreshes to reflect the installment total for the newly selected month
+
+#### Scenario: Frontend fetches installment total from dedicated endpoint
+- **WHEN** the HomePage mounts or the month changes
+- **THEN** the frontend calls `GET /dashboard/installments-total?month=YYYY-MM` and uses the `total` field in the response to populate the installment card
+
+#### Scenario: API response for installments-total
+- **WHEN** `GET /dashboard/installments-total?month=YYYY-MM` is called by an authenticated user
+- **THEN** the API returns an object with `month` (string YYYY-MM) and `total` (decimal, the sum of amounts of all installment expense transactions for that user in that month)

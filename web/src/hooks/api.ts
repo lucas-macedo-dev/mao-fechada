@@ -94,7 +94,7 @@ export function useDeleteCategory() {
 }
 
 // Transactions
-export function useTransactions(params?: { category_id?: number; type?: string; payment_method?: string; month?: string; per_page?: number; page?: number }) {
+export function useTransactions(params?: { category_id?: number; type?: string; payment_method?: string; month?: string; per_page?: number; page?: number; installment?: boolean }) {
   return useQuery({
     queryKey: ['transactions', params],
     queryFn: () => api.listTransactions(params),
@@ -105,7 +105,7 @@ export function useTransactions(params?: { category_id?: number; type?: string; 
 export function useCreateTransaction() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (payload: { category_id: number; type: string; payment_method: string; amount: number; transacted_at: string; notes?: string }) =>
+    mutationFn: (payload: { category_id: number; type: string; payment_method: string; amount: number; transacted_at: string; notes?: string; installment_number?: number; installment_total?: number }) =>
       api.createTransaction(payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['transactions'] })
@@ -160,6 +160,14 @@ export function useDashboardByDay(month?: string) {
   return useQuery({
     queryKey: ['dashboard', 'by-day', month],
     queryFn: () => api.getDashboardByDay(month),
+    enabled: !!localStorage.getItem('auth_token'),
+  })
+}
+
+export function useInstallmentsTotal(month?: string) {
+  return useQuery({
+    queryKey: ['dashboard', 'installments-total', month],
+    queryFn: () => api.getDashboardInstallmentsTotal(month),
     enabled: !!localStorage.getItem('auth_token'),
   })
 }

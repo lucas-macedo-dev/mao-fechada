@@ -11,6 +11,7 @@ import {
   Select,
   TextInput,
   NumberInput,
+  Switch,
   Button,
   ActionIcon,
   Alert,
@@ -58,6 +59,10 @@ export function TransactionsPage() {
   const [amount, setAmount] = useState<number | string>('')
   const [transactedAt, setTransactedAt] = useState(new Date().toISOString().slice(0, 10))
   const [notes, setNotes] = useState('')
+  const [installmentEnabled, setInstallmentEnabled] = useState(false)
+  const [installmentCurrent, setInstallmentCurrent] = useState<number | string>(1)
+  const [installmentTotal, setInstallmentTotal] = useState<number | string>(2)
+  const [showInstallmentsOnly, setShowInstallmentsOnly] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
 
@@ -78,6 +83,7 @@ export function TransactionsPage() {
     type: type || undefined,
     per_page: 20,
     page,
+    installment: showInstallmentsOnly ? true : undefined,
   }
 
   const { data: transactionsResponse, isLoading } = useTransactions(params)
@@ -107,7 +113,14 @@ export function TransactionsPage() {
     amount: string | number
     transacted_at: string
     notes?: string
+    installment_group_id?: string | null
+    installment_total?: number | null
   }) => {
+    if (transaction.installment_group_id) {
+      const total = transaction.installment_total ?? '?'
+      if (!window.confirm(t('transactions.installment_edit_confirm', { total }))) return
+    }
+
     setEditingTransactionId(transaction.id)
     setEditType(normalizeType(transaction.type))
     setEditCategoryId(String(transaction.category_id))
@@ -138,6 +151,8 @@ export function TransactionsPage() {
       return
     }
 
+    const isInstallment = installmentEnabled && paymentMethod === 'cartao_credito' && createType === 'saida'
+
     try {
       await createTransaction.mutateAsync({
         category_id: Number(categoryId),
@@ -146,11 +161,18 @@ export function TransactionsPage() {
         amount: Number(amount),
         transacted_at: transactedAt,
         notes: notes || undefined,
+        ...(isInstallment && {
+          installment_number: Number(installmentCurrent),
+          installment_total: Number(installmentTotal),
+        }),
       })
 
       completeStep('record-transaction')
       setAmount('')
       setNotes('')
+      setInstallmentEnabled(false)
+      setInstallmentCurrent(1)
+      setInstallmentTotal(2)
       setSuccess(t('transactions.create_success'))
       setPage(1)
     } catch (err) {
@@ -188,8 +210,12 @@ export function TransactionsPage() {
     }
   }
 
-  const handleDelete = async (id: number) => {
-    if (!window.confirm(t('transactions.delete_confirm'))) {
+  const handleDelete = async (id: number, installmentGroupId?: string | null, installmentTotal?: number | null) => {
+    const confirmMsg = installmentGroupId
+      ? t('transactions.installment_delete_confirm', { total: installmentTotal ?? '?' })
+      : t('transactions.delete_confirm')
+
+    if (!window.confirm(confirmMsg)) {
       return
     }
 
@@ -235,6 +261,7 @@ export function TransactionsPage() {
                 const nextType = val === 'entrada' ? 'entrada' : 'saida'
                 setCreateType(nextType)
                 setCategoryId('')
+                if (nextType === 'entrada') setInstallmentEnabled(false)
               }}
               data={[
                 { value: 'saida', label: t('categories.type_expense') },
@@ -278,7 +305,11 @@ export function TransactionsPage() {
             <Select
               label={t('transactions.payment_method')}
               value={paymentMethod}
-              onChange={(val) => setPaymentMethod(val ?? 'pix')}
+              onChange={(val) => {
+                const next = val ?? 'pix'
+                setPaymentMethod(next)
+                if (next !== 'cartao_credito') setInstallmentEnabled(false)
+              }}
               data={paymentMethods.map((method) => ({ value: method, label: t(`transactions.payment.${method}`) }))}
             />
 
@@ -308,6 +339,37 @@ export function TransactionsPage() {
             />
           </SimpleGrid>
 
+          {paymentMethod === 'cartao_credito' && createType === 'saida' && (
+            <Box mb="sm">
+              <Switch
+                label={t('transactions.installment_toggle')}
+                checked={installmentEnabled}
+                onChange={(e) => setInstallmentEnabled(e.currentTarget.checked)}
+                mb="sm"
+              />
+              {installmentEnabled && (
+                <SimpleGrid cols={{ base: 1, sm: 2 }}>
+                  <NumberInput
+                    label={t('transactions.installment_current')}
+                    value={installmentCurrent}
+                    onChange={setInstallmentCurrent}
+                    min={1}
+                    max={60}
+                    required
+                  />
+                  <NumberInput
+                    label={t('transactions.installment_total')}
+                    value={installmentTotal}
+                    onChange={setInstallmentTotal}
+                    min={1}
+                    max={60}
+                    required
+                  />
+                </SimpleGrid>
+              )}
+            </Box>
+          )}
+
           {error && (
             <Alert color="red" mb="sm" radius="md">
               {error}
@@ -328,7 +390,7 @@ export function TransactionsPage() {
       </SectionCard>
 
       <SectionCard mb="lg">
-        <SimpleGrid cols={{ base: 1, sm: 2 }}>
+        <SimpleGrid cols={{ base: 1, sm: 2 }} mb="sm">
           <TextInput
             label={t('transactions.period')}
             type="month"
@@ -353,6 +415,15 @@ export function TransactionsPage() {
             ]}
           />
         </SimpleGrid>
+
+        <Switch
+          label={t('transactions.filter_installments_only')}
+          checked={showInstallmentsOnly}
+          onChange={(e) => {
+            setShowInstallmentsOnly(e.currentTarget.checked)
+            setPage(1)
+          }}
+        />
       </SectionCard>
 
       {transactions.length === 0 ? (
@@ -464,6 +535,11 @@ export function TransactionsPage() {
                           {tx.notes}
                         </Text>
                       )}
+                      {tx.installment_number != null && tx.installment_total != null && (
+                        <Text size="xs" c="indigo" fw={500}>
+                          {t('transactions.installment_badge', { current: tx.installment_number, total: tx.installment_total })}
+                        </Text>
+                      )}
                     </Stack>
 
                     <Group gap="xs" align="center">
@@ -485,7 +561,7 @@ export function TransactionsPage() {
                         color="red"
                         radius="xl"
                         size="sm"
-                        onClick={() => handleDelete(tx.id)}
+                        onClick={() => handleDelete(tx.id, tx.installment_group_id, tx.installment_number != null ? tx.installment_total : null)}
                         aria-label={t('transactions.delete')}
                         title={t('transactions.delete')}
                       >
