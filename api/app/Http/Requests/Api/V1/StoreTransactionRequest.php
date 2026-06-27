@@ -28,6 +28,8 @@ class StoreTransactionRequest extends FormRequest
             'amount' => ['required', 'numeric', 'gt:0'],
             'transacted_at' => ['required', 'date'],
             'notes' => ['nullable', 'string', 'max:2000'],
+            'installment_number' => ['nullable', 'integer', 'min:1', 'max:60', 'lte:installment_total'],
+            'installment_total' => ['nullable', 'integer', 'min:1', 'max:60'],
         ];
     }
 }

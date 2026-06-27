@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
+use App\Services\ActivityLogger;
 use App\Support\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -12,11 +14,16 @@ use Illuminate\Validation\Rules;
 
 class PasswordResetController extends Controller
 {
+    public function __construct(private ActivityLogger $activityLogger) {}
+
     public function forgotPassword(Request $request): JsonResponse
     {
         $request->validate(['email' => ['required', 'email']]);
 
         Password::sendResetLink($request->only('email'));
+
+        $user = User::query()->where('email', $request->input('email'))->first();
+        $this->activityLogger->log('auth.password_reset_requested', $user?->id ?? null);
 
         return ApiResponse::data(['message' => 'If that email is registered, a reset link has been sent.']);
     }

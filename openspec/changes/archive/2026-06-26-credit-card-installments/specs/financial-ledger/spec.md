@@ -1,8 +1,4 @@
-## Purpose
-
-Defines requirements for personal financial transaction management, including creation, editing, listing, deletion, and validation rules.
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Users can manage personal financial transactions
 The system SHALL allow authenticated users to create, edit, list, and delete personal income and expense transactions with date, amount, category, and optional notes. When a transaction belongs to an installment group, edit and delete operations SHALL cascade to all transactions in the group.
@@ -26,6 +22,8 @@ The system SHALL allow authenticated users to create, edit, list, and delete per
 #### Scenario: Deleting a transaction in an installment group cascades
 - **WHEN** an authenticated user deletes a transaction that has an `installment_group_id`
 - **THEN** the system deletes all transactions sharing that `installment_group_id` in a single operation
+
+## ADDED Requirements
 
 ### Requirement: Transaction list supports filtering by installment type
 The system SHALL allow filtering the transaction list to return only installment-type expense transactions.

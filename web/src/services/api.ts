@@ -101,13 +101,23 @@ export const api = {
     date_to?: string
     per_page?: number
     page?: number
+    installment?: boolean
   }) => {
     const response = await client.get<PaginatedResponse<Transaction>>('/v1/transactions', { params })
     return response.data
   },
 
-  createTransaction: async (payload: { category_id: number; type: string; payment_method: string; amount: number; transacted_at: string; notes?: string }) => {
-    const response = await client.post<{ data: Transaction }>('/v1/transactions', payload)
+  createTransaction: async (payload: {
+    category_id: number
+    type: string
+    payment_method: string
+    amount: number
+    transacted_at: string
+    notes?: string
+    installment_number?: number
+    installment_total?: number
+  }) => {
+    const response = await client.post<{ data: Transaction | Transaction[] }>('/v1/transactions', payload)
     return response.data.data
   },
 
@@ -151,6 +161,13 @@ export const api = {
 
   getDashboardByDay: async (month?: string) => {
     const response = await client.get<{ data: DashboardDayItem[] }>('/v1/dashboard/by-day', {
+      params: { month },
+    })
+    return response.data.data
+  },
+
+  getDashboardInstallmentsTotal: async (month?: string) => {
+    const response = await client.get<{ data: { month: string; total: number } }>('/v1/dashboard/installments-total', {
       params: { month },
     })
     return response.data.data
