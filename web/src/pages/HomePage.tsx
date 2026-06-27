@@ -180,15 +180,39 @@ export function HomePage() {
                   {t('dashboard.no_expenses')}
                 </Text>
               ) : (
-                <Group justify="center">
-                  <DonutChart
-                    data={categoryData}
-                    size={200}
-                    thickness={36}
-                    withTooltip
-                    tooltipDataSource="segment"
-                  />
-                </Group>
+                <>
+                  <Group justify="center">
+                    <DonutChart
+                      data={categoryData}
+                      size={200}
+                      thickness={36}
+                      withTooltip
+                      tooltipDataSource="segment"
+                      paddingAngle={2}
+                    />
+                  </Group>
+                  <Box mt="md">
+                    {categoryData.map((item) => {
+                      const [colorName, shade] = item.color.split('.')
+                      const cssColor = `var(--mantine-color-${colorName}-${shade ?? '6'})`
+                      return (
+                        <Group key={item.name} gap="xs" mb={4} align="center">
+                          <Box
+                            style={{
+                              width: 12,
+                              height: 12,
+                              borderRadius: 3,
+                              background: cssColor,
+                              flexShrink: 0,
+                            }}
+                          />
+                          <Text size="sm" style={{ flex: 1 }}>{item.name}</Text>
+                          <Text size="sm" fw={600} c="dimmed">R$ {item.value.toFixed(2)}</Text>
+                        </Group>
+                      )
+                    })}
+                  </Box>
+                </>
               )}
             </SectionCard>
 
