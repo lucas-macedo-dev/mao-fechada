@@ -53,7 +53,7 @@ export function CategoriesPage() {
   const formParentOptions = rootCategories
     .filter((c) => {
       if (formModal?.mode === 'edit' && c.id === formModal.item.id) return false
-      const cType = c.type === 'entrada' || c.type === 'income' ? 'income' : 'expense'
+      const cType = c.type === 'entrada' ? 'income' : 'expense'
       return cType === formTypeNorm
     })
     .map((c) => ({ value: String(c.id), label: c.name }))
@@ -69,7 +69,7 @@ export function CategoriesPage() {
 
   const handleOpenEdit = (category: Category) => {
     setFormName(category.name)
-    setFormType(category.type === 'entrada' || category.type === 'income' ? 'entrada' : 'saida')
+    setFormType(category.type === 'entrada' ? 'entrada' : 'saida')
     setFormIcon(getCategoryIconClass(category.icon ?? undefined))
     setFormParentId(category.parent_id ? String(category.parent_id) : null)
     setError('')
@@ -91,7 +91,7 @@ export function CategoriesPage() {
     if (val) {
       const parent = rootCategories.find((c) => String(c.id) === val)
       if (parent) {
-        const parentDbType = parent.type === 'income' || parent.type === 'entrada' ? 'entrada' : 'saida'
+        const parentDbType = parent.type === 'entrada' ? 'entrada' : 'saida'
         setFormType(parentDbType)
       }
     }
@@ -119,7 +119,7 @@ export function CategoriesPage() {
             name: formName,
             type: formType,
             icon: formIcon,
-            parent_id: formParentId ? Number(formParentId) : null,
+            parent_id: formParentId ? Number(formParentId) : undefined,
           },
         })
         setSuccess(t('categories.update_success'))
