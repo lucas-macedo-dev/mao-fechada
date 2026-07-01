@@ -19,7 +19,7 @@ export interface Category {
   id: number
   user_id: number
   name: string
-  type: 'entrada' | 'saida'
+  type: 'income' | 'expense'
   icon?: string
   parent_id?: number | null
   children?: Category[]
@@ -31,7 +31,7 @@ export interface Transaction {
   id: number
   user_id: number
   category_id: number
-  type: 'entrada' | 'saida'
+  type: 'income' | 'expense'
   payment_method: string
   amount: string | number
   transacted_at: string
