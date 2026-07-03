@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\Api\V1\UserResource;
 use App\Support\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -29,7 +30,7 @@ class TutorialController extends Controller
 
         if (!empty($validated['reset'])) {
             $user->update(['tutorial_progress' => ['completed_steps' => [], 'dismissed' => false]]);
-            return ApiResponse::data($user->fresh());
+            return ApiResponse::data(new UserResource($user->fresh()));
         }
 
         $progress = $user->tutorial_progress ?? [];
@@ -52,6 +53,6 @@ class TutorialController extends Controller
 
         $user->update(['tutorial_progress' => $progress]);
 
-        return ApiResponse::data($user->fresh());
+        return ApiResponse::data(new UserResource($user->fresh()));
     }
 }

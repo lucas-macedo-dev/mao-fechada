@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\UpdateProfileRequest;
 use App\Http\Requests\Api\V1\UpdateUserPreferencesRequest;
+use App\Http\Resources\Api\V1\UserResource;
 use App\Models\User;
 use App\Services\ActivityLogger;
 use App\Services\DefaultCategorySeeder;
@@ -40,7 +41,7 @@ class AuthController extends Controller
 
         return ApiResponse::data([
             'token' => $token,
-            'user' => $user,
+            'user' => new UserResource($user),
         ], 201);
     }
 
@@ -65,13 +66,13 @@ class AuthController extends Controller
 
         return ApiResponse::data([
             'token' => $user->createToken('web')->plainTextToken,
-            'user' => $user,
+            'user' => new UserResource($user),
         ]);
     }
 
     public function me(Request $request): JsonResponse
     {
-        return ApiResponse::data($request->user());
+        return ApiResponse::data(new UserResource($request->user()));
     }
 
     public function logout(Request $request): JsonResponse
@@ -117,6 +118,6 @@ class AuthController extends Controller
 
         $user->update($validated);
 
-        return ApiResponse::data($user->fresh());
+        return ApiResponse::data(new UserResource($user->fresh()));
     }
 }

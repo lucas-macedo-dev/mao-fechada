@@ -25,7 +25,7 @@ export function RegisterPage() {
   const [generalError, setGeneralError] = useState('')
 
   if (isAuthenticated) {
-    return <Navigate to={user?.email_verified_at ? '/home' : '/auth/verify-email'} replace />
+    return <Navigate to={user?.email_verified ? '/home' : '/auth/verify-email'} replace />
   }
 
   const form = useForm({

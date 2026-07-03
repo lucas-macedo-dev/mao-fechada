@@ -210,7 +210,7 @@ it('allows profile photo upload for authenticated user', function () {
     ]);
 
     $response->assertOk()
-        ->assertJsonPath('data.id', $user->id);
+        ->assertJsonPath('data.id', $user->uuid);
 
     $user->refresh();
 

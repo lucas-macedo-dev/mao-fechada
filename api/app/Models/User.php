@@ -13,16 +13,24 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Laravel\Sanctum\HasApiTokens;
 
 #[Fillable(['name', 'email', 'password', 'plan', 'subscription_status', 'locale', 'profile_photo_path', 'tutorial_progress', 'email_verified_at'])]
-#[Hidden(['password', 'remember_token', 'profile_photo_path'])]
+#[Hidden(['id', 'password', 'remember_token', 'profile_photo_path'])]
 class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<UserFactory> */
     use HasApiTokens, HasFactory, Notifiable;
 
     protected $appends = ['profile_photo_url'];
+
+    protected static function booted(): void
+    {
+        static::creating(function (User $user): void {
+            $user->uuid ??= (string) Str::uuid();
+        });
+    }
 
     /**
      * Get the attributes that should be cast.
