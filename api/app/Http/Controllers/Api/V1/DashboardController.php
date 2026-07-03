@@ -87,14 +87,18 @@ class DashboardController extends Controller
 
         [$year, $month] = $this->resolveMonth($request);
 
+
         $rows = $this->baseQuery($request, $year, $month)
             ->whereIn('type', TransactionTypeMapper::expenseValues())
-            ->with('category')
+            ->with('category.parent')
             ->get()
-            ->groupBy('category_id')
+            ->groupBy(fn ($transaction) => $transaction->category?->parent_id ?? $transaction->category_id)
             ->map(function ($transactions) {
+                $category = $transactions->first()->category;
+                $mainCategory = $category?->parent ?? $category;
+
                 return [
-                    'name'  => $transactions->first()->category?->name ?? 'Sem categoria',
+                    'name'  => $mainCategory?->name ?? 'Sem categoria',
                     'value' => (float) $transactions->sum('amount'),
                 ];
             })

@@ -4,12 +4,10 @@ export interface TutorialProgress {
 }
 
 export interface User {
-  id: number
+  id: string
   name: string
   email: string
-  email_verified_at: string | null
-  plan: string
-  subscription_status: string
+  email_verified: boolean
   locale: string
   profile_photo_url?: string | null
   tutorial_progress?: TutorialProgress | null
@@ -17,7 +15,6 @@ export interface User {
 
 export interface Category {
   id: number
-  user_id: number
   name: string
   type: 'income' | 'expense'
   icon?: string
@@ -29,7 +26,6 @@ export interface Category {
 
 export interface Transaction {
   id: number
-  user_id: number
   category_id: number
   type: 'income' | 'expense'
   payment_method: string

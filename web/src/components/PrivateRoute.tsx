@@ -12,7 +12,7 @@ export function PrivateRoute({ children }: { children: React.ReactNode }) {
     return <Navigate to="/login" replace />
   }
 
-  if (user && !user.email_verified_at) {
+  if (user && !user.email_verified) {
     return <Navigate to="/auth/verify-email" replace />
   }
 

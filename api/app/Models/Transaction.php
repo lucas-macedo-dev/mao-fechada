@@ -3,11 +3,13 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 #[Fillable(['user_id', 'category_id', 'type', 'payment_method', 'amount', 'transacted_at', 'notes', 'installment_group_id', 'installment_number', 'installment_total'])]
+#[Hidden(['user_id'])]
 class Transaction extends Model
 {
     use HasFactory;

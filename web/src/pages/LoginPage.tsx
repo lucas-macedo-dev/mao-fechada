@@ -27,7 +27,7 @@ export function LoginPage() {
   const passwordReset = searchParams.get('reset') === '1'
 
   if (isAuthenticated) {
-    return <Navigate to={user?.email_verified_at ? '/home' : '/auth/verify-email'} replace />
+    return <Navigate to={user?.email_verified ? '/home' : '/auth/verify-email'} replace />
   }
 
   const form = useForm({
