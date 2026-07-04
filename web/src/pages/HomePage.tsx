@@ -13,8 +13,7 @@ import {
   Box,
   TextInput,
   ActionIcon,
-  Table,
-  ScrollArea,
+  Stack,
 } from '@mantine/core'
 import { DonutChart, BarChart } from '@mantine/charts'
 import { PageContainer } from '../components/ui/PageContainer'
@@ -250,56 +249,45 @@ export function HomePage() {
                 {t('transactions.empty')}
               </Text>
             ) : (
-              <ScrollArea>
-                <Table striped withTableBorder highlightOnHover>
-                  <Table.Thead>
-                    <Table.Tr>
-                      <Table.Th>{t('transactions.date')}</Table.Th>
-                      <Table.Th>{t('transactions.category')}</Table.Th>
-                      <Table.Th>{t('transactions.amount')}</Table.Th>
-                    </Table.Tr>
-                  </Table.Thead>
-                  <Table.Tbody>
-                    {transactions.map((tx) => (
-                      <Table.Tr key={tx.id}>
-                        <Table.Td style={{ whiteSpace: 'nowrap' }}>
-                          {formatTransactionDate(tx.transacted_at)}
-                        </Table.Td>
-                        <Table.Td>
-                          <Group gap="xs" align="center" wrap="nowrap">
-                            <Box
-                              component="span"
-                              style={{
-                                width: '1.5rem',
-                                height: '1.5rem',
-                                borderRadius: 999,
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                background: 'var(--mantine-color-indigo-0)',
-                                color: 'var(--mantine-color-indigo-6)',
-                                flexShrink: 0,
-                              }}
-                              aria-hidden="true"
-                            >
-                              <i className={getCategoryIconClass(tx.category?.icon)} />
-                            </Box>
-                            {tx.category?.name}
-                          </Group>
-                        </Table.Td>
-                        <Table.Td style={{ whiteSpace: 'nowrap' }}>
-                          <Text
-                            fw={700}
-                            c={normalizeType(tx.type) === 'entrada' ? 'green' : 'red'}
-                          >
-                            {normalizeType(tx.type) === 'entrada' ? '+' : '−'} R$ {Number(tx.amount).toFixed(2)}
+              <Stack gap="sm">
+                {transactions.map((tx) => (
+                  <Paper key={tx.id} shadow="xs" radius="md" p="md" withBorder>
+                    <Group justify="space-between" align="center" wrap="wrap">
+                      <Group gap="xs" align="center" wrap="nowrap">
+                        <Box
+                          component="span"
+                          style={{
+                            width: '1.5rem',
+                            height: '1.5rem',
+                            borderRadius: 999,
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            background: 'var(--mantine-color-indigo-0)',
+                            color: 'var(--mantine-color-indigo-6)',
+                            flexShrink: 0,
+                          }}
+                          aria-hidden="true"
+                        >
+                          <i className={getCategoryIconClass(tx.category?.icon)} />
+                        </Box>
+                        <Stack gap={2}>
+                          <Text fw={600}>{tx.category?.name}</Text>
+                          <Text size="xs" c="dimmed">
+                            {formatTransactionDate(tx.transacted_at)}
                           </Text>
-                        </Table.Td>
-                      </Table.Tr>
-                    ))}
-                  </Table.Tbody>
-                </Table>
-              </ScrollArea>
+                        </Stack>
+                      </Group>
+                      <Text
+                        fw={700}
+                        c={normalizeType(tx.type) === 'entrada' ? 'green' : 'red'}
+                      >
+                        {normalizeType(tx.type) === 'entrada' ? '+' : '−'} R$ {Number(tx.amount).toFixed(2)}
+                      </Text>
+                    </Group>
+                  </Paper>
+                ))}
+              </Stack>
             )}
           </SectionCard>
         </>
