@@ -63,7 +63,7 @@ export function HomePage() {
   }, [summary, completeStep])
   const { data: rawCategoryData = [] } = useDashboardByCategory(month)
   const { data: dayData = [] } = useDashboardByDay(month)
-  const { data: transactionsResponse } = useTransactions({ month, per_page: 15 })
+  const { data: transactionsResponse } = useTransactions({ month, per_page: 5 })
 
   const CHART_COLORS = ['indigo.6', 'orange.5', 'teal.6', 'pink.5', 'yellow.5', 'cyan.6', 'grape.5', 'green.6', 'red.5']
   const categoryData = rawCategoryData.map((item, i) => ({
