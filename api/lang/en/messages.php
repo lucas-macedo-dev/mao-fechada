@@ -17,6 +17,7 @@ return [
     'category_fallback_name' => 'No Category',
     'category_delete_with_transactions' => 'This category has linked transactions. Deleting it will move them to "No Category". Continue?',
     'report_not_ready' => 'This report is not ready for download yet.',
+    'report_generation_failed' => 'We could not generate this report. Please try again or contact support.',
 
     // Emails
     'email_verify_subject'  => 'Verify your email address',

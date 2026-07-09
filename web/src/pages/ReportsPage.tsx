@@ -173,9 +173,9 @@ export const ReportsPage = () => {
                   <Text size="xs" c="dimmed">
                     {t("reports.created_at")}: {formatReportDate(report.created_at)}
                   </Text>
-                  {report.status === "failed" && report.failure_reason && (
+                  {report.status === "failed" && report.failure_message && (
                     <Text size="xs" c="red">
-                      {t("reports.failure_reason")}: {report.failure_reason}
+                      {report.failure_message}
                     </Text>
                   )}
                 </Stack>
