@@ -197,7 +197,6 @@ const resources = {
       'reports.status_failed': 'Falhou',
       'reports.download': 'Baixar',
       'reports.created_at': 'Gerado em',
-      'reports.failure_reason': 'Motivo da falha',
     },
   },
   en: {
@@ -393,7 +392,6 @@ const resources = {
       'reports.status_failed': 'Failed',
       'reports.download': 'Download',
       'reports.created_at': 'Generated at',
-      'reports.failure_reason': 'Failure reason',
     },
   },
 }

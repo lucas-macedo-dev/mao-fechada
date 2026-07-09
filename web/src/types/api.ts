@@ -117,7 +117,7 @@ export interface Report {
   format: 'csv' | 'pdf'
   status: 'pending' | 'processing' | 'completed' | 'failed'
   filters: Record<string, unknown> | null
-  failure_reason?: string | null
+  failure_message?: string | null
   expires_at?: string | null
   completed_at?: string | null
   created_at: string
