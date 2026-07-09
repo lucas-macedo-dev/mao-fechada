@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useMemo, useState, FormEvent } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import type { FormEvent } from 'react'
 import './App.css'
 import { extractApiError, setAuthToken } from './api/client'
 import { financeApi } from './api/finance'
