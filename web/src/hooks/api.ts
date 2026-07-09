@@ -199,3 +199,42 @@ export function useUpdateProfile() {
     },
   })
 }
+
+
+// Reports
+export function useReports(params?: { status?: string; per_page?: number; page?: number }) {
+  return useQuery({
+    queryKey: ['reports', params],
+    queryFn: () => api.listReports(params),
+    enabled: !!localStorage.getItem('auth_token'),
+    refetchInterval: (query) => {
+      const items = query.state.data?.data ?? []
+      return items.some((r) => r.status === 'pending' || r.status === 'processing') ? 5000 : false
+    },
+  })
+}
+
+export function useCreateReport() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (payload: {
+      format: 'csv' | 'pdf'
+      category_id?: number
+      type?: string
+      payment_method?: string
+      month?: string
+      date_from?: string
+      date_to?: string
+      installment?: boolean
+    }) => api.createReport(payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['reports'] })
+    },
+  })
+}
+
+export function useDownloadReport() {
+  return useMutation({
+    mutationFn: (params: { id: number; filename: string }) => api.downloadReport(params.id, params.filename),
+  })
+}

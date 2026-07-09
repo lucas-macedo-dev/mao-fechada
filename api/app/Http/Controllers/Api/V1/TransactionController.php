@@ -9,6 +9,7 @@ use App\Http\Requests\Api\V1\UpdateTransactionRequest;
 use App\Models\Category;
 use App\Models\Transaction;
 use App\Support\ApiResponse;
+use App\Support\TransactionFilterQuery;
 use App\Support\TransactionTypeMapper;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -29,36 +30,7 @@ class TransactionController extends Controller
             ->orderByDesc('transacted_at')
             ->orderByDesc('id');
 
-        if (isset($validated['category_id'])) {
-            $query->where('category_id', $validated['category_id']);
-        }
-
-        if (isset($validated['type'])) {
-            $query->where('type', TransactionTypeMapper::toDatabase($validated['type']));
-        }
-
-        if (isset($validated['payment_method'])) {
-            $query->where('payment_method', $validated['payment_method']);
-        }
-
-        if (isset($validated['month'])) {
-            $monthDate = Carbon::createFromFormat('Y-m', $validated['month']);
-            $query
-                ->whereYear('transacted_at', $monthDate->year)
-                ->whereMonth('transacted_at', $monthDate->month);
-        }
-
-        if (isset($validated['date_from'])) {
-            $query->whereDate('transacted_at', '>=', $validated['date_from']);
-        }
-
-        if (isset($validated['date_to'])) {
-            $query->whereDate('transacted_at', '<=', $validated['date_to']);
-        }
-
-        if ($request->has('installment') && $request->boolean('installment')) {
-            $query->whereNotNull('installment_group_id');
-        }
+        TransactionFilterQuery::apply($query, $validated);
 
         $perPage = (int) ($validated['per_page'] ?? 20);
         $paginator = $query->paginate($perPage)->appends($request->query());

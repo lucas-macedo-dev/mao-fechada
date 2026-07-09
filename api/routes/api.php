@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\V1\EmailVerificationController;
 use App\Http\Controllers\Api\V1\MercadoPagoWebhookController;
 use App\Http\Controllers\Api\V1\MonthlySummaryController;
 use App\Http\Controllers\Api\V1\PasswordResetController;
+use App\Http\Controllers\Api\V1\ReportController;
 use App\Http\Controllers\Api\V1\TransactionController;
 use App\Http\Controllers\Api\V1\TutorialController;
 use Illuminate\Support\Facades\Route;
@@ -52,6 +53,11 @@ Route::prefix('v1')->group(function (): void {
             Route::post('/budgets', [BudgetController::class, 'store']);
 
             Route::get('/summaries/monthly', [MonthlySummaryController::class, 'show']);
+
+            Route::get('/reports', [ReportController::class, 'index']);
+            Route::post('/reports', [ReportController::class, 'store']);
+            Route::get('/reports/{id}', [ReportController::class, 'show']);
+            Route::get('/reports/{id}/download', [ReportController::class, 'download']);
         });
     });
 });

@@ -111,3 +111,15 @@ export interface ApiError {
   message: string
   details?: Record<string, string[]>
 }
+
+export interface Report {
+  id: number
+  format: 'csv' | 'pdf'
+  status: 'pending' | 'processing' | 'completed' | 'failed'
+  filters: Record<string, unknown> | null
+  failure_reason?: string | null
+  expires_at?: string | null
+  completed_at?: string | null
+  created_at: string
+  updated_at: string
+}

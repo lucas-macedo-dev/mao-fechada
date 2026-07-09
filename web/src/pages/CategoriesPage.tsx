@@ -19,6 +19,7 @@ import {
   Box,
   SimpleGrid,
   UnstyledButton,
+  LoadingOverlay
 } from '@mantine/core'
 import { PageContainer } from '../components/ui/PageContainer'
 import { ActionBar } from '../components/ui/ActionBar'
@@ -157,7 +158,10 @@ export function CategoriesPage() {
   if (isLoading) {
     return (
       <PageContainer>
-        <Text>{t('common.loading')}</Text>
+        <LoadingOverlay
+          visible={isLoading}
+          overlayProps={{ radius: "sm", blur: 2 }}
+        />
       </PageContainer>
     )
   }
