@@ -1,10 +1,16 @@
-import { useTranslation } from 'react-i18next'
-import { useCategories, useCreateTransaction, useDeleteTransaction, useTransactions, useUpdateTransaction } from '../hooks/api'
-import { useTutorial } from '../context/TutorialContext'
-import { TutorialHint } from '../components/tutorial/TutorialHint'
-import { getCategoryIconClass } from '../constants/categoryIcons'
-import { extractApiError } from '../services/api'
-import { useMemo, useState, type SyntheticEvent } from 'react'
+import { useTranslation } from "react-i18next";
+import {
+  useCategories,
+  useCreateTransaction,
+  useDeleteTransaction,
+  useTransactions,
+  useUpdateTransaction,
+} from "../hooks/api";
+import { useTutorial } from "../context/TutorialContext";
+import { TutorialHint } from "../components/tutorial/TutorialHint";
+import { getCategoryIconClass } from "../constants/categoryIcons";
+import { extractApiError } from "../services/api";
+import { useMemo, useState, type SyntheticEvent } from "react";
 import {
   Title,
   Text,
@@ -20,71 +26,90 @@ import {
   Box,
   SimpleGrid,
   Paper,
-} from '@mantine/core'
-import { PageContainer } from '../components/ui/PageContainer'
-import { SectionCard } from '../components/ui/SectionCard'
-import { ActionBar } from '../components/ui/ActionBar'
-import { FormModal } from '../components/FormModal'
-import { ConfirmDialog } from '../components/ConfirmDialog'
-import type { Transaction } from '../types/api'
+  LoadingOverlay
+} from "@mantine/core";
+import { PageContainer } from "../components/ui/PageContainer";
+import { SectionCard } from "../components/ui/SectionCard";
+import { ActionBar } from "../components/ui/ActionBar";
+import { FormModal } from "../components/FormModal";
+import { ConfirmDialog } from "../components/ConfirmDialog";
+import type { Transaction } from "../types/api";
 
-const paymentMethods = ['cartao_credito', 'cartao_debito', 'dinheiro', 'pix', 'boleto', 'ted'] as const
+const paymentMethods = [
+  "cartao_credito",
+  "cartao_debito",
+  "dinheiro",
+  "pix",
+  "boleto",
+  "ted",
+] as const;
 
-type FormModalState = null | { mode: 'create' } | { mode: 'edit'; item: Transaction }
-type ConfirmState = null | { title: string; message: string; onConfirm: () => void }
+type FormModalState =
+  | null
+  | { mode: "create" }
+  | { mode: "edit"; item: Transaction };
+type ConfirmState = null | {
+  title: string;
+  message: string;
+  onConfirm: () => void;
+};
 
-function normalizeType(type: string | undefined): 'entrada' | 'saida' {
-  if (type === 'income' || type === 'entrada') {
-    return 'entrada'
+function normalizeType(type: string | undefined): "entrada" | "saida" {
+  if (type === "income" || type === "entrada") {
+    return "entrada";
   }
 
-  return 'saida'
+  return "saida";
 }
 
 function formatTransactionDate(value: string): string {
-  const datePart = value.slice(0, 10)
+  const datePart = value.slice(0, 10);
 
   if (/^\d{4}-\d{2}-\d{2}$/.test(datePart)) {
-    const [year, month, day] = datePart.split('-').map(Number)
-    return new Date(year, month - 1, day).toLocaleDateString()
+    const [year, month, day] = datePart.split("-").map(Number);
+    return new Date(year, month - 1, day).toLocaleDateString();
   }
 
-  const parsed = new Date(value)
-  return Number.isNaN(parsed.getTime()) ? value : parsed.toLocaleDateString()
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? value : parsed.toLocaleDateString();
 }
 
 export function TransactionsPage() {
-  const { t } = useTranslation()
-  const { completeStep } = useTutorial()
-  const [month, setMonth] = useState(new Date().toISOString().slice(0, 7))
-  const [type, setType] = useState('')
-  const [page, setPage] = useState(1)
-  const [showInstallmentsOnly, setShowInstallmentsOnly] = useState(false)
-  const [error, setError] = useState('')
-  const [success, setSuccess] = useState('')
+  const { t } = useTranslation();
+  const { completeStep } = useTutorial();
+  const [month, setMonth] = useState(new Date().toISOString().slice(0, 7));
+  const [type, setType] = useState("");
+  const [page, setPage] = useState(1);
+  const [showInstallmentsOnly, setShowInstallmentsOnly] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
   // Form modal state
-  const [formModal, setFormModal] = useState<FormModalState>(null)
-  const [formType, setFormType] = useState<'entrada' | 'saida'>('saida')
-  const [formParentCategoryId, setFormParentCategoryId] = useState('')
-  const [formSubcategoryId, setFormSubcategoryId] = useState('')
-  const [formPaymentMethod, setFormPaymentMethod] = useState('pix')
-  const [formAmount, setFormAmount] = useState<number | string>('')
-  const [formTransactedAt, setFormTransactedAt] = useState(new Date().toISOString().slice(0, 10))
-  const [formNotes, setFormNotes] = useState('')
+  const [formModal, setFormModal] = useState<FormModalState>(null);
+  const [formType, setFormType] = useState<"entrada" | "saida">("saida");
+  const [formParentCategoryId, setFormParentCategoryId] = useState("");
+  const [formSubcategoryId, setFormSubcategoryId] = useState("");
+  const [formPaymentMethod, setFormPaymentMethod] = useState("pix");
+  const [formAmount, setFormAmount] = useState<number | string>("");
+  const [formTransactedAt, setFormTransactedAt] = useState(
+    new Date().toISOString().slice(0, 10),
+  );
+  const [formNotes, setFormNotes] = useState("");
 
   // Installment fields (create only)
-  const [installmentEnabled, setInstallmentEnabled] = useState(false)
-  const [installmentCurrent, setInstallmentCurrent] = useState<number | string>(1)
-  const [installmentTotal, setInstallmentTotal] = useState<number | string>(2)
+  const [installmentEnabled, setInstallmentEnabled] = useState(false);
+  const [installmentCurrent, setInstallmentCurrent] = useState<number | string>(
+    1,
+  );
+  const [installmentTotal, setInstallmentTotal] = useState<number | string>(2);
 
   // Confirm dialog state
-  const [confirmState, setConfirmState] = useState<ConfirmState>(null)
+  const [confirmState, setConfirmState] = useState<ConfirmState>(null);
 
-  const createTransaction = useCreateTransaction()
-  const updateTransaction = useUpdateTransaction()
-  const deleteTransaction = useDeleteTransaction()
-  const { data: categories = [] } = useCategories()
+  const createTransaction = useCreateTransaction();
+  const updateTransaction = useUpdateTransaction();
+  const deleteTransaction = useDeleteTransaction();
+  const { data: categories = [] } = useCategories();
 
   const params = {
     month,
@@ -92,96 +117,107 @@ export function TransactionsPage() {
     per_page: 20,
     page,
     installment: showInstallmentsOnly ? true : undefined,
-  }
+  };
 
-  const { data: transactionsResponse, isLoading } = useTransactions(params)
-  const transactions = transactionsResponse?.data || []
-  const meta = transactionsResponse?.meta
+  const { data: transactionsResponse, isLoading } = useTransactions(params);
+  const transactions = transactionsResponse?.data || [];
+  const meta = transactionsResponse?.meta;
 
   const parentFormCategories = useMemo(
-    () => categories.filter((cat) => normalizeType(cat.type) === formType && !cat.parent_id),
+    () =>
+      categories.filter(
+        (cat) => normalizeType(cat.type) === formType && !cat.parent_id,
+      ),
     [categories, formType],
-  )
+  );
 
   const subcategoryOptions = useMemo(
-    () => categories.filter((cat) => formParentCategoryId && String(cat.parent_id) === formParentCategoryId),
+    () =>
+      categories.filter(
+        (cat) =>
+          formParentCategoryId &&
+          String(cat.parent_id) === formParentCategoryId,
+      ),
     [categories, formParentCategoryId],
-  )
+  );
 
-  const effectiveCategoryId = formSubcategoryId || formParentCategoryId
+  const effectiveCategoryId = formSubcategoryId || formParentCategoryId;
 
   const selectedFormCategory = useMemo(
     () => categories.find((cat) => String(cat.id) === effectiveCategoryId),
     [categories, effectiveCategoryId],
-  )
+  );
 
   const handleOpenCreate = () => {
-    setFormType('saida')
-    setFormParentCategoryId('')
-    setFormSubcategoryId('')
-    setFormPaymentMethod('pix')
-    setFormAmount('')
-    setFormTransactedAt(new Date().toISOString().slice(0, 10))
-    setFormNotes('')
-    setInstallmentEnabled(false)
-    setInstallmentCurrent(1)
-    setInstallmentTotal(2)
-    setError('')
-    setFormModal({ mode: 'create' })
-  }
+    setFormType("saida");
+    setFormParentCategoryId("");
+    setFormSubcategoryId("");
+    setFormPaymentMethod("pix");
+    setFormAmount("");
+    setFormTransactedAt(new Date().toISOString().slice(0, 10));
+    setFormNotes("");
+    setInstallmentEnabled(false);
+    setInstallmentCurrent(1);
+    setInstallmentTotal(2);
+    setError("");
+    setFormModal({ mode: "create" });
+  };
 
   const openEditModal = (tx: Transaction) => {
-    setFormType(normalizeType(tx.type))
+    setFormType(normalizeType(tx.type));
     if (tx.category?.parent_id) {
-      setFormParentCategoryId(String(tx.category.parent_id))
-      setFormSubcategoryId(String(tx.category_id))
+      setFormParentCategoryId(String(tx.category.parent_id));
+      setFormSubcategoryId(String(tx.category_id));
     } else {
-      setFormParentCategoryId(String(tx.category_id))
-      setFormSubcategoryId('')
+      setFormParentCategoryId(String(tx.category_id));
+      setFormSubcategoryId("");
     }
-    setFormPaymentMethod(tx.payment_method)
-    setFormAmount(Number(tx.amount))
-    setFormTransactedAt(tx.transacted_at.slice(0, 10))
-    setFormNotes(tx.notes || '')
-    setError('')
-    setFormModal({ mode: 'edit', item: tx })
-  }
+    setFormPaymentMethod(tx.payment_method);
+    setFormAmount(Number(tx.amount));
+    setFormTransactedAt(tx.transacted_at.slice(0, 10));
+    setFormNotes(tx.notes || "");
+    setError("");
+    setFormModal({ mode: "edit", item: tx });
+  };
 
   const handleStartEdit = (tx: Transaction) => {
     if (tx.installment_group_id) {
-      const total = tx.installment_total ?? '?'
+      const total = tx.installment_total ?? "?";
       setConfirmState({
-        title: t('transactions.installment_edit_confirm_title'),
-        message: t('transactions.installment_edit_confirm', { total }),
+        title: t("transactions.installment_edit_confirm_title"),
+        message: t("transactions.installment_edit_confirm", { total }),
         onConfirm: () => {
-          setConfirmState(null)
-          openEditModal(tx)
+          setConfirmState(null);
+          openEditModal(tx);
         },
-      })
-      return
+      });
+      return;
     }
-    openEditModal(tx)
-  }
+    openEditModal(tx);
+  };
 
   const handleCloseModal = () => {
-    setFormModal(null)
-    setError('')
-  }
+    setFormModal(null);
+    setError("");
+  };
 
   const handleFormSubmit = async (event: SyntheticEvent<HTMLFormElement>) => {
-    event.preventDefault()
-    if (!formModal) return
-    setError('')
-    setSuccess('')
+    event.preventDefault();
+    if (!formModal) return;
+    setError("");
+    setSuccess("");
 
     if (!effectiveCategoryId) {
-      setError(t('transactions.select_category'))
-      return
+      setError(t("transactions.select_category"));
+      return;
     }
 
     try {
-      if (formModal.mode === 'create') {
-        const isInstallment = installmentEnabled && formPaymentMethod === 'cartao_credito' && formType === 'saida'
+      if (formModal.mode === "create") {
+        const isInstallment =
+          installmentEnabled &&
+          formPaymentMethod === "cartao_credito" &&
+          formType === "saida";
 
         await createTransaction.mutateAsync({
           category_id: Number(effectiveCategoryId),
@@ -194,11 +230,11 @@ export function TransactionsPage() {
             installment_number: Number(installmentCurrent),
             installment_total: Number(installmentTotal),
           }),
-        })
+        });
 
-        completeStep('record-transaction')
-        setSuccess(t('transactions.create_success'))
-        setPage(1)
+        completeStep("record-transaction");
+        setSuccess(t("transactions.create_success"));
+        setPage(1);
       } else {
         await updateTransaction.mutateAsync({
           id: formModal.item.id,
@@ -210,60 +246,75 @@ export function TransactionsPage() {
             transacted_at: formTransactedAt,
             notes: formNotes || undefined,
           },
-        })
-        setSuccess(t('transactions.update_success'))
+        });
+        setSuccess(t("transactions.update_success"));
       }
-      setFormModal(null)
+      setFormModal(null);
     } catch (err) {
-      setError(extractApiError(err).message)
+      setError(extractApiError(err).message);
     }
-  }
+  };
 
   const executeDelete = async (id: number) => {
-    setError('')
-    setSuccess('')
+    setError("");
+    setSuccess("");
     try {
-      await deleteTransaction.mutateAsync(id)
-      if (formModal?.mode === 'edit' && formModal.item.id === id) {
-        setFormModal(null)
+      await deleteTransaction.mutateAsync(id);
+      if (formModal?.mode === "edit" && formModal.item.id === id) {
+        setFormModal(null);
       }
-      setSuccess(t('transactions.delete_success'))
+      setSuccess(t("transactions.delete_success"));
     } catch (err) {
-      setError(extractApiError(err).message)
+      setError(extractApiError(err).message);
     } finally {
-      setConfirmState(null)
+      setConfirmState(null);
     }
-  }
+  };
 
-  const handleDelete = (id: number, installmentGroupId?: string | null, installmentTotalCount?: number | null) => {
+  const handleDelete = (
+    id: number,
+    installmentGroupId?: string | null,
+    installmentTotalCount?: number | null,
+  ) => {
     const message = installmentGroupId
-      ? t('transactions.installment_delete_confirm', { total: installmentTotalCount ?? '?' })
-      : t('transactions.delete_confirm')
+      ? t("transactions.installment_delete_confirm", {
+          total: installmentTotalCount ?? "?",
+        })
+      : t("transactions.delete_confirm");
 
     setConfirmState({
-      title: t('transactions.delete_confirm_title'),
+      title: t("transactions.delete_confirm_title"),
       message,
       onConfirm: () => executeDelete(id),
-    })
-  }
+    });
+  };
 
   if (isLoading) {
     return (
       <PageContainer>
-        <Text>{t('common.loading')}</Text>
+        <LoadingOverlay
+          visible={isLoading}
+          overlayProps={{ radius: "sm", blur: 2 }}
+        />
       </PageContainer>
-    )
+    );
   }
 
-  const isSubmitting = formModal?.mode === 'create' ? createTransaction.isPending : updateTransaction.isPending
+  const isSubmitting =
+    formModal?.mode === "create"
+      ? createTransaction.isPending
+      : updateTransaction.isPending;
 
   return (
     <PageContainer>
       <Group justify="space-between" align="center" mb="lg">
-        <Title order={1}>{t('transactions.title')}</Title>
+        <Title order={1}>{t("transactions.title")}</Title>
         <TutorialHint stepId="record-transaction">
-          <Button onClick={handleOpenCreate} leftSection={<i className="fa-solid fa-plus" aria-hidden="true" />}>
-            {t('transactions.new_entry')}
+          <Button
+            onClick={handleOpenCreate}
+            leftSection={<i className="fa-solid fa-plus" aria-hidden="true" />}
+          >
+            {t("transactions.new_entry")}
           </Button>
         </TutorialHint>
       </Group>
@@ -271,36 +322,36 @@ export function TransactionsPage() {
       <SectionCard mb="lg">
         <SimpleGrid cols={{ base: 1, sm: 2 }} mb="sm">
           <TextInput
-            label={t('transactions.period')}
+            label={t("transactions.period")}
             type="month"
             value={month}
             onChange={(e) => {
-              setMonth(e.target.value)
-              setPage(1)
+              setMonth(e.target.value);
+              setPage(1);
             }}
           />
 
           <Select
-            label={t('transactions.type')}
+            label={t("transactions.type")}
             value={type}
             onChange={(val) => {
-              setType(val ?? '')
-              setPage(1)
+              setType(val ?? "");
+              setPage(1);
             }}
             data={[
-              { value: '', label: t('transactions.all_types') },
-              { value: 'entrada', label: t('categories.type_income') },
-              { value: 'saida', label: t('categories.type_expense') },
+              { value: "", label: t("transactions.all_types") },
+              { value: "entrada", label: t("categories.type_income") },
+              { value: "saida", label: t("categories.type_expense") },
             ]}
           />
         </SimpleGrid>
 
         <Switch
-          label={t('transactions.filter_installments_only')}
+          label={t("transactions.filter_installments_only")}
           checked={showInstallmentsOnly}
           onChange={(e) => {
-            setShowInstallmentsOnly(e.currentTarget.checked)
-            setPage(1)
+            setShowInstallmentsOnly(e.currentTarget.checked);
+            setPage(1);
           }}
         />
       </SectionCard>
@@ -318,7 +369,7 @@ export function TransactionsPage() {
 
       {transactions.length === 0 ? (
         <Text c="dimmed" ta="center" py="xl" fs="italic">
-          {t('transactions.empty')}
+          {t("transactions.empty")}
         </Text>
       ) : (
         <>
@@ -327,24 +378,29 @@ export function TransactionsPage() {
               <Paper key={tx.id} shadow="xs" radius="md" p="md" withBorder>
                 <Group justify="space-between" align="center">
                   <Stack gap={2}>
-                    <Text fw={600} style={{ display: 'inline-flex', alignItems: 'center' }}>
+                    <Text
+                      fw={600}
+                      style={{ display: "inline-flex", alignItems: "center" }}
+                    >
                       <Box
                         component="span"
                         style={{
-                          width: '1.5rem',
-                          height: '1.5rem',
+                          width: "1.5rem",
+                          height: "1.5rem",
                           borderRadius: 999,
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          background: 'var(--mantine-color-indigo-0)',
-                          color: 'var(--mantine-color-indigo-6)',
-                          marginRight: '0.5rem',
+                          display: "inline-flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          background: "var(--mantine-color-indigo-0)",
+                          color: "var(--mantine-color-indigo-6)",
+                          marginRight: "0.5rem",
                           flexShrink: 0,
                         }}
                         aria-hidden="true"
                       >
-                        <i className={getCategoryIconClass(tx.category?.icon)} />
+                        <i
+                          className={getCategoryIconClass(tx.category?.icon)}
+                        />
                       </Box>
                       {tx.category?.parent_id
                         ? `${categories.find((c) => c.id === tx.category!.parent_id)?.name} > ${tx.category.name}`
@@ -358,37 +414,62 @@ export function TransactionsPage() {
                         {tx.notes}
                       </Text>
                     )}
-                    {tx.installment_number != null && tx.installment_total != null && (
-                      <Text size="xs" c="indigo" fw={500}>
-                        {t('transactions.installment_badge', { current: tx.installment_number, total: tx.installment_total })}
-                      </Text>
-                    )}
+                    {tx.installment_number != null &&
+                      tx.installment_total != null && (
+                        <Text size="xs" c="indigo" fw={500}>
+                          {t("transactions.installment_badge", {
+                            current: tx.installment_number,
+                            total: tx.installment_total,
+                          })}
+                        </Text>
+                      )}
                   </Stack>
 
                   <Group gap="xs" align="center">
-                    <Text fw={700} size="lg" c={normalizeType(tx.type) === 'entrada' ? 'green' : 'red'}>
-                      {normalizeType(tx.type) === 'entrada' ? '+' : '-'} R$ {Number(tx.amount).toFixed(2)}
+                    <Text
+                      fw={700}
+                      size="lg"
+                      c={normalizeType(tx.type) === "entrada" ? "green" : "red"}
+                    >
+                      {normalizeType(tx.type) === "entrada" ? "+" : "-"} R${" "}
+                      {Number(tx.amount).toFixed(2)}
                     </Text>
                     <ActionIcon
                       variant="subtle"
                       radius="xl"
                       size="sm"
                       onClick={() => handleStartEdit(tx)}
-                      aria-label={t('transactions.edit')}
-                      title={t('transactions.edit')}
+                      aria-label={t("transactions.edit")}
+                      title={t("transactions.edit")}
                     >
-                      <i className="fa-solid fa-pen-to-square" aria-hidden="true" style={{ fontSize: '0.8rem' }} />
+                      <i
+                        className="fa-solid fa-pen-to-square"
+                        aria-hidden="true"
+                        style={{ fontSize: "0.8rem" }}
+                      />
                     </ActionIcon>
                     <ActionIcon
                       variant="subtle"
                       color="red"
                       radius="xl"
                       size="sm"
-                      onClick={() => handleDelete(tx.id, tx.installment_group_id, tx.installment_number != null ? tx.installment_total : null)}
-                      aria-label={t('transactions.delete')}
-                      title={t('transactions.delete')}
+                      onClick={() =>
+                        handleDelete(
+                          tx.id,
+                          tx.installment_group_id,
+                          tx.installment_number != null
+                            ? tx.installment_total
+                            : null,
+                        )
+                      }
+                      aria-label={t("transactions.delete")}
+                      title={t("transactions.delete")}
                     >
-                      <i className="fa-solid fa-trash-can" aria-hidden="true" style={{ fontSize: '0.8rem' }} />
+                      <i
+                        className="fa-solid fa-trash-can"
+                        aria-hidden="true"
+                        style={{ fontSize: "0.8rem" }}
+                      />
                     </ActionIcon>
                   </Group>
                 </Group>
@@ -405,7 +486,7 @@ export function TransactionsPage() {
                 onClick={() => setPage(page - 1)}
                 leftSection={<span>←</span>}
               >
-                {t('common.previous')}
+                {t("common.previous")}
               </Button>
               <Text c="dimmed" fw={500}>
                 {page} / {meta.last_page}
@@ -417,7 +498,7 @@ export function TransactionsPage() {
                 onClick={() => setPage(page + 1)}
                 rightSection={<span>→</span>}
               >
-                {t('common.next')}
+                {t("common.next")}
               </Button>
             </Group>
           )}
@@ -427,122 +508,145 @@ export function TransactionsPage() {
       <FormModal
         opened={formModal !== null}
         onClose={handleCloseModal}
-        title={formModal?.mode === 'create' ? t('transactions.new_entry') : t('transactions.modal_edit_title')}
+        title={
+          formModal?.mode === "create"
+            ? t("transactions.new_entry")
+            : t("transactions.modal_edit_title")
+        }
       >
         <Box component="form" onSubmit={handleFormSubmit}>
-            <SimpleGrid cols={{ base: 1, sm: 2 }} mb="sm">
+          <SimpleGrid cols={{ base: 1, sm: 2 }} mb="sm">
+            <Select
+              label={t("transactions.type")}
+              value={formType}
+              onChange={(val) => {
+                const nextType = val === "entrada" ? "entrada" : "saida";
+                setFormType(nextType);
+                setFormParentCategoryId("");
+                setFormSubcategoryId("");
+                if (nextType === "entrada") setInstallmentEnabled(false);
+              }}
+              data={[
+                { value: "saida", label: t("categories.type_expense") },
+                { value: "entrada", label: t("categories.type_income") },
+              ]}
+            />
+
+            <Select
+              label={t("transactions.parent_category")}
+              value={formParentCategoryId}
+              onChange={(val) => {
+                setFormParentCategoryId(val ?? "");
+                setFormSubcategoryId("");
+              }}
+              data={parentFormCategories.map((cat) => ({
+                value: String(cat.id),
+                label: cat.name,
+              }))}
+              placeholder={t("transactions.select_category")}
+              required
+            />
+
+            {subcategoryOptions.length > 0 && (
               <Select
-                label={t('transactions.type')}
-                value={formType}
-                onChange={(val) => {
-                  const nextType = val === 'entrada' ? 'entrada' : 'saida'
-                  setFormType(nextType)
-                  setFormParentCategoryId('')
-                  setFormSubcategoryId('')
-                  if (nextType === 'entrada') setInstallmentEnabled(false)
-                }}
-                data={[
-                  { value: 'saida', label: t('categories.type_expense') },
-                  { value: 'entrada', label: t('categories.type_income') },
-                ]}
+                label={t("transactions.subcategory")}
+                value={formSubcategoryId}
+                onChange={(val) => setFormSubcategoryId(val ?? "")}
+                data={subcategoryOptions.map((cat) => ({
+                  value: String(cat.id),
+                  label: cat.name,
+                }))}
+                placeholder={t("transactions.select_subcategory")}
+                clearable
               />
+            )}
 
-              <Select
-                label={t('transactions.parent_category')}
-                value={formParentCategoryId}
-                onChange={(val) => {
-                  setFormParentCategoryId(val ?? '')
-                  setFormSubcategoryId('')
-                }}
-                data={parentFormCategories.map((cat) => ({ value: String(cat.id), label: cat.name }))}
-                placeholder={t('transactions.select_category')}
-                required
-              />
+            {selectedFormCategory && (
+              <Text
+                size="sm"
+                style={{ display: "inline-flex", alignItems: "center" }}
+                c="dimmed"
+              >
+                <Box
+                  component="span"
+                  style={{
+                    width: "1.5rem",
+                    height: "1.5rem",
+                    borderRadius: 999,
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    background: "var(--mantine-color-indigo-0)",
+                    color: "var(--mantine-color-indigo-6)",
+                    marginRight: "0.5rem",
+                    flexShrink: 0,
+                  }}
+                  aria-hidden="true"
+                >
+                  <i
+                    className={getCategoryIconClass(selectedFormCategory.icon)}
+                  />
+                </Box>
+                {selectedFormCategory.name}
+              </Text>
+            )}
 
-              {subcategoryOptions.length > 0 && (
-                <Select
-                  label={t('transactions.subcategory')}
-                  value={formSubcategoryId}
-                  onChange={(val) => setFormSubcategoryId(val ?? '')}
-                  data={subcategoryOptions.map((cat) => ({ value: String(cat.id), label: cat.name }))}
-                  placeholder={t('transactions.select_subcategory')}
-                  clearable
-                />
-              )}
+            <Select
+              label={t("transactions.payment_method")}
+              value={formPaymentMethod}
+              onChange={(val) => {
+                const next = val ?? "pix";
+                setFormPaymentMethod(next);
+                if (next !== "cartao_credito") setInstallmentEnabled(false);
+              }}
+              data={paymentMethods.map((method) => ({
+                value: method,
+                label: t(`transactions.payment.${method}`),
+              }))}
+            />
 
-              {selectedFormCategory && (
-                <Text size="sm" style={{ display: 'inline-flex', alignItems: 'center' }} c="dimmed">
-                  <Box
-                    component="span"
-                    style={{
-                      width: '1.5rem',
-                      height: '1.5rem',
-                      borderRadius: 999,
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      background: 'var(--mantine-color-indigo-0)',
-                      color: 'var(--mantine-color-indigo-6)',
-                      marginRight: '0.5rem',
-                      flexShrink: 0,
-                    }}
-                    aria-hidden="true"
-                  >
-                    <i className={getCategoryIconClass(selectedFormCategory.icon)} />
-                  </Box>
-                  {selectedFormCategory.name}
-                </Text>
-              )}
+            <NumberInput
+              label={t("transactions.amount")}
+              value={formAmount}
+              onChange={setFormAmount}
+              min={0.01}
+              step={0.01}
+              decimalScale={2}
+              required
+            />
 
-              <Select
-                label={t('transactions.payment_method')}
-                value={formPaymentMethod}
-                onChange={(val) => {
-                  const next = val ?? 'pix'
-                  setFormPaymentMethod(next)
-                  if (next !== 'cartao_credito') setInstallmentEnabled(false)
-                }}
-                data={paymentMethods.map((method) => ({ value: method, label: t(`transactions.payment.${method}`) }))}
-              />
+            <TextInput
+              label={t("transactions.date")}
+              type="date"
+              value={formTransactedAt}
+              onChange={(e) => setFormTransactedAt(e.target.value)}
+              required
+            />
 
-              <NumberInput
-                label={t('transactions.amount')}
-                value={formAmount}
-                onChange={setFormAmount}
-                min={0.01}
-                step={0.01}
-                decimalScale={2}
-                required
-              />
+            <TextInput
+              label={t("transactions.notes")}
+              value={formNotes}
+              onChange={(e) => setFormNotes(e.target.value)}
+              style={{ gridColumn: "1 / -1" }}
+            />
+          </SimpleGrid>
 
-              <TextInput
-                label={t('transactions.date')}
-                type="date"
-                value={formTransactedAt}
-                onChange={(e) => setFormTransactedAt(e.target.value)}
-                required
-              />
-
-              <TextInput
-                label={t('transactions.notes')}
-                value={formNotes}
-                onChange={(e) => setFormNotes(e.target.value)}
-                style={{ gridColumn: '1 / -1' }}
-              />
-            </SimpleGrid>
-
-            {formModal?.mode === 'create' && formPaymentMethod === 'cartao_credito' && formType === 'saida' && (
+          {formModal?.mode === "create" &&
+            formPaymentMethod === "cartao_credito" &&
+            formType === "saida" && (
               <Box mb="sm">
                 <Switch
-                  label={t('transactions.installment_toggle')}
+                  label={t("transactions.installment_toggle")}
                   checked={installmentEnabled}
-                  onChange={(e) => setInstallmentEnabled(e.currentTarget.checked)}
+                  onChange={(e) =>
+                    setInstallmentEnabled(e.currentTarget.checked)
+                  }
                   mb="sm"
                 />
                 {installmentEnabled && (
                   <SimpleGrid cols={{ base: 1, sm: 2 }}>
                     <NumberInput
-                      label={t('transactions.installment_current')}
+                      label={t("transactions.installment_current")}
                       value={installmentCurrent}
                       onChange={setInstallmentCurrent}
                       min={1}
@@ -550,7 +654,7 @@ export function TransactionsPage() {
                       required
                     />
                     <NumberInput
-                      label={t('transactions.installment_total')}
+                      label={t("transactions.installment_total")}
                       value={installmentTotal}
                       onChange={setInstallmentTotal}
                       min={1}
@@ -562,31 +666,33 @@ export function TransactionsPage() {
               </Box>
             )}
 
-            {error && (
-              <Alert color="red" mb="sm" radius="md">
-                {error}
-              </Alert>
-            )}
+          {error && (
+            <Alert color="red" mb="sm" radius="md">
+              {error}
+            </Alert>
+          )}
 
-            <ActionBar>
-              <Button type="submit" loading={isSubmitting}>
-                {formModal?.mode === 'create' ? t('common.create') : t('common.save')}
-              </Button>
-              <Button type="button" variant="light" onClick={handleCloseModal}>
-                {t('common.cancel')}
-              </Button>
-            </ActionBar>
+          <ActionBar>
+            <Button type="submit" loading={isSubmitting}>
+              {formModal?.mode === "create"
+                ? t("common.create")
+                : t("common.save")}
+            </Button>
+            <Button type="button" variant="light" onClick={handleCloseModal}>
+              {t("common.cancel")}
+            </Button>
+          </ActionBar>
         </Box>
       </FormModal>
 
       <ConfirmDialog
         opened={confirmState !== null}
-        title={confirmState?.title ?? ''}
-        message={confirmState?.message ?? ''}
+        title={confirmState?.title ?? ""}
+        message={confirmState?.message ?? ""}
         onConfirm={confirmState?.onConfirm ?? (() => {})}
         onCancel={() => setConfirmState(null)}
         loading={deleteTransaction.isPending}
       />
     </PageContainer>
-  )
+  );
 }

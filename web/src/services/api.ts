@@ -1,5 +1,5 @@
 import axios from 'axios'
-import type { ApiError, User, Category, Transaction, DashboardSummary, MonthlySummary, SubscriptionStatus, PaginatedResponse, Plan, DashboardCategoryItem, DashboardDayItem } from '../types/api'
+import type { ApiError, User, Category, Transaction, DashboardSummary, MonthlySummary, SubscriptionStatus, PaginatedResponse, Plan, DashboardCategoryItem, DashboardDayItem, Report } from '../types/api'
 
 const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api'
 
@@ -227,5 +227,42 @@ export const api = {
   upsertBudget: async (payload: { category_id: number; year: number; month: number; amount: number }) => {
     const response = await client.post('/v1/budgets', payload)
     return response.data
+  },
+
+  // Reports
+  listReports: async (params?: { status?: string; per_page?: number; page?: number }) => {
+    const response = await client.get<PaginatedResponse<Report>>('/v1/reports', { params })
+    return response.data
+  },
+
+  createReport: async (payload: {
+    format: 'csv' | 'pdf'
+    category_id?: number
+    type?: string
+    payment_method?: string
+    month?: string
+    date_from?: string
+    date_to?: string
+    installment?: boolean
+  }) => {
+    const response = await client.post<{ data: Report }>('/v1/reports', payload)
+    return response.data.data
+  },
+
+  getReport: async (id: number) => {
+    const response = await client.get<{ data: Report }>(`/v1/reports/${id}`)
+    return response.data.data
+  },
+
+  downloadReport: async (id: number, filename: string) => {
+    const response = await client.get(`/v1/reports/${id}/download`, { responseType: 'blob' })
+    const url = window.URL.createObjectURL(new Blob([response.data]))
+    const link = document.createElement('a')
+    link.href = url
+    link.download = filename
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+    window.URL.revokeObjectURL(url)
   },
 }

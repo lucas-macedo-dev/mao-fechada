@@ -18,6 +18,7 @@ import { SubscriptionPage } from './pages/SubscriptionPage'
 import { PaymentMethodsPage } from './pages/PaymentMethodsPage'
 import i18n from './i18n/config'
 import './App.css'
+import { ReportsPage } from './pages/ReportsPage'
 
 // Initialize i18n and auth
 i18n.changeLanguage(localStorage.getItem('app_locale') || 'pt-BR')
@@ -93,6 +94,16 @@ function AppRoutes() {
           <PrivateRoute>
             <Layout>
               <PaymentMethodsPage />
+            </Layout>
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/Reports"
+        element={
+          <PrivateRoute>
+            <Layout>
+              <ReportsPage />
             </Layout>
           </PrivateRoute>
         }

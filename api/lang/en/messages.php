@@ -16,6 +16,7 @@ return [
     'transaction_type_must_match_category' => 'Transaction type must match category type.',
     'category_fallback_name' => 'No Category',
     'category_delete_with_transactions' => 'This category has linked transactions. Deleting it will move them to "No Category". Continue?',
+    'report_not_ready' => 'This report is not ready for download yet.',
 
     // Emails
     'email_verify_subject'  => 'Verify your email address',

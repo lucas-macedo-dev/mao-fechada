@@ -16,6 +16,7 @@ return [
     'transaction_type_must_match_category' => 'O tipo da transacao deve ser igual ao da categoria.',
     'category_fallback_name' => 'Sem Categoria',
     'category_delete_with_transactions' => 'Esta categoria possui transações vinculadas. Ao deletar, elas serão movidas para "Sem Categoria". Deseja continuar?',
+    'report_not_ready' => 'Este relatório ainda não está pronto para download.',
 
     // E-mails
     'email_verify_subject'  => 'Verifique seu endereço de e-mail',

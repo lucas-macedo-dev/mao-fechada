@@ -68,6 +68,10 @@ export function Layout({ children }: Readonly<{ children: React.ReactNode }>) {
               <i className="fa-solid fa-credit-card" aria-hidden="true" />
               &nbsp;{t("nav.payment")}
             </Link>
+            <Link to="/Reports" className="nav-link">
+              <i className="fa-solid fa-file-pdf" aria-hidden="true"></i>
+              &nbsp;{t("nav.reports")}
+            </Link>
           </nav>
 
           <div className="sidebar-footer">
@@ -169,15 +173,19 @@ export function Layout({ children }: Readonly<{ children: React.ReactNode }>) {
           <nav className="bottom-nav">
             <Link to="/home" className="nav-link">
               <i className="fa-solid fa-house" aria-hidden="true"></i>
-              &nbsp;{t("nav.home")}
+              <span>{t("nav.home")}</span>
             </Link>
             <Link to="/categories" className="nav-link">
               <i className="fa-solid fa-list" aria-hidden="true"></i>
-              &nbsp;{t("nav.categories")}
+              <span>{t("nav.categories")}</span>
             </Link>
             <Link to="/transactions" className="nav-link">
               <i className="fa-solid fa-receipt" aria-hidden="true"></i>
-              {t("nav.transactions")}
+              <span>{t("nav.transactions")}</span>
+            </Link>
+            <Link to="/Reports" className="nav-link">
+              <i className="fa-solid fa-file-pdf" aria-hidden="true"></i>
+              <span>{t("nav.reports")}</span>
             </Link>
           </nav>
         )}
