@@ -9,6 +9,7 @@ import {
   Badge,
   Stack,
   List,
+  LoadingOverlay
 } from '@mantine/core'
 import { PageContainer } from '../components/ui/PageContainer'
 import { SectionCard } from '../components/ui/SectionCard'
@@ -29,9 +30,12 @@ export function SubscriptionPage() {
   if (loadingSubscription || loadingPlans) {
     return (
       <PageContainer>
-        <Text>{t('common.loading')}</Text>
+        <LoadingOverlay
+          visible={loadingSubscription || loadingPlans}
+          overlayProps={{ radius: "sm", blur: 2 }}
+        />
       </PageContainer>
-    )
+    );
   }
 
   return (
