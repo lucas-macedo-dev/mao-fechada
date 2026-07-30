@@ -36,12 +36,12 @@ import { ConfirmDialog } from "../components/ConfirmDialog";
 import type { Transaction } from "../types/api";
 
 const paymentMethods = [
-  "cartao_credito",
-  "cartao_debito",
-  "dinheiro",
+  "credit_card",
+  "debit_card",
+  "cash",
   "pix",
-  "boleto",
-  "ted",
+  "bank_slip",
+  "bank_transfer",
 ] as const;
 
 type FormModalState =
@@ -53,14 +53,6 @@ type ConfirmState = null | {
   message: string;
   onConfirm: () => void;
 };
-
-function normalizeType(type: string | undefined): "entrada" | "saida" {
-  if (type === "income" || type === "entrada") {
-    return "entrada";
-  }
-
-  return "saida";
-}
 
 function formatTransactionDate(value: string): string {
   const datePart = value.slice(0, 10);
@@ -86,7 +78,7 @@ export function TransactionsPage() {
 
   // Form modal state
   const [formModal, setFormModal] = useState<FormModalState>(null);
-  const [formType, setFormType] = useState<"entrada" | "saida">("saida");
+  const [formType, setFormType] = useState<"income" | "expense">("expense");
   const [formParentCategoryId, setFormParentCategoryId] = useState("");
   const [formSubcategoryId, setFormSubcategoryId] = useState("");
   const [formPaymentMethod, setFormPaymentMethod] = useState("pix");
@@ -126,7 +118,7 @@ export function TransactionsPage() {
   const parentFormCategories = useMemo(
     () =>
       categories.filter(
-        (cat) => normalizeType(cat.type) === formType && !cat.parent_id,
+        (cat) => cat.type === formType && !cat.parent_id,
       ),
     [categories, formType],
   );
@@ -149,7 +141,7 @@ export function TransactionsPage() {
   );
 
   const handleOpenCreate = () => {
-    setFormType("saida");
+    setFormType("expense");
     setFormParentCategoryId("");
     setFormSubcategoryId("");
     setFormPaymentMethod("pix");
@@ -164,7 +156,7 @@ export function TransactionsPage() {
   };
 
   const openEditModal = (tx: Transaction) => {
-    setFormType(normalizeType(tx.type));
+    setFormType(tx.type);
     if (tx.category?.parent_id) {
       setFormParentCategoryId(String(tx.category.parent_id));
       setFormSubcategoryId(String(tx.category_id));
@@ -216,8 +208,8 @@ export function TransactionsPage() {
       if (formModal.mode === "create") {
         const isInstallment =
           installmentEnabled &&
-          formPaymentMethod === "cartao_credito" &&
-          formType === "saida";
+          formPaymentMethod === "credit_card" &&
+          formType === "expense";
 
         await createTransaction.mutateAsync({
           category_id: Number(effectiveCategoryId),
@@ -340,8 +332,8 @@ export function TransactionsPage() {
             }}
             data={[
               { value: "", label: t("transactions.all_types") },
-              { value: "entrada", label: t("categories.type_income") },
-              { value: "saida", label: t("categories.type_expense") },
+              { value: "income", label: t("categories.type_income") },
+              { value: "expense", label: t("categories.type_expense") },
             ]}
           />
         </SimpleGrid>
@@ -429,9 +421,9 @@ export function TransactionsPage() {
                     <Text
                       fw={700}
                       size="lg"
-                      c={normalizeType(tx.type) === "entrada" ? "green" : "red"}
+                      c={tx.type === "income" ? "green" : "red"}
                     >
-                      {normalizeType(tx.type) === "entrada" ? "+" : "-"} R${" "}
+                      {tx.type === "income" ? "+" : "-"} R${" "}
                       {Number(tx.amount).toFixed(2)}
                     </Text>
                     <ActionIcon
@@ -520,15 +512,15 @@ export function TransactionsPage() {
               label={t("transactions.type")}
               value={formType}
               onChange={(val) => {
-                const nextType = val === "entrada" ? "entrada" : "saida";
+                const nextType = val === "income" ? "income" : "expense";
                 setFormType(nextType);
                 setFormParentCategoryId("");
                 setFormSubcategoryId("");
-                if (nextType === "entrada") setInstallmentEnabled(false);
+                if (nextType === "income") setInstallmentEnabled(false);
               }}
               data={[
-                { value: "saida", label: t("categories.type_expense") },
-                { value: "entrada", label: t("categories.type_income") },
+                { value: "expense", label: t("categories.type_expense") },
+                { value: "income", label: t("categories.type_income") },
               ]}
             />
 
@@ -597,7 +589,7 @@ export function TransactionsPage() {
               onChange={(val) => {
                 const next = val ?? "pix";
                 setFormPaymentMethod(next);
-                if (next !== "cartao_credito") setInstallmentEnabled(false);
+                if (next !== "credit_card") setInstallmentEnabled(false);
               }}
               data={paymentMethods.map((method) => ({
                 value: method,
@@ -632,8 +624,8 @@ export function TransactionsPage() {
           </SimpleGrid>
 
           {formModal?.mode === "create" &&
-            formPaymentMethod === "cartao_credito" &&
-            formType === "saida" && (
+            formPaymentMethod === "credit_card" &&
+            formType === "expense" && (
               <Box mb="sm">
                 <Switch
                   label={t("transactions.installment_toggle")}

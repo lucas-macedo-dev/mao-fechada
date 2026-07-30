@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Models\Transaction;
 use App\Support\ApiResponse;
-use App\Support\TransactionTypeMapper;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -18,10 +17,10 @@ class DashboardController extends Controller
 
         $transactions = $this->baseQuery($request, $year, $month)->get();
         $income = (float) $transactions
-            ->whereIn('type', TransactionTypeMapper::incomeValues())
+            ->where('type', 'income')
             ->sum('amount');
         $expense = (float) $transactions
-            ->whereIn('type', TransactionTypeMapper::expenseValues())
+            ->where('type', 'expense')
             ->sum('amount');
 
         return ApiResponse::data([
@@ -49,10 +48,10 @@ class DashboardController extends Controller
         [$year, $month] = $this->resolveMonth($request);
 
         $income = (float) $this->baseQuery($request, $year, $month)
-            ->whereIn('type', TransactionTypeMapper::incomeValues())
+            ->where('type', 'income')
             ->sum('amount');
         $expense = (float) $this->baseQuery($request, $year, $month)
-            ->whereIn('type', TransactionTypeMapper::expenseValues())
+            ->where('type', 'expense')
             ->sum('amount');
 
         return ApiResponse::data([
@@ -89,7 +88,7 @@ class DashboardController extends Controller
 
 
         $rows = $this->baseQuery($request, $year, $month)
-            ->whereIn('type', TransactionTypeMapper::expenseValues())
+            ->where('type', 'expense')
             ->with('category.parent')
             ->get()
             ->groupBy(fn ($transaction) => $transaction->category?->parent_id ?? $transaction->category_id)
@@ -125,7 +124,7 @@ class DashboardController extends Controller
         [$year, $month] = $this->resolveMonth($request);
 
         $total = (float) $this->baseQuery($request, $year, $month)
-            ->whereIn('type', TransactionTypeMapper::expenseValues())
+            ->where('type', 'expense')
             ->whereNotNull('installment_group_id')
             ->sum('amount');
 
@@ -151,7 +150,7 @@ class DashboardController extends Controller
 
         foreach ($transactions as $tx) {
             $day = (int) Carbon::parse($tx->transacted_at)->format('d');
-            if (in_array($tx->type, TransactionTypeMapper::incomeValues())) {
+            if ($tx->type === 'income') {
                 $byDay[$day]['income'] += (float) $tx->amount;
             } else {
                 $byDay[$day]['expense'] += (float) $tx->amount;

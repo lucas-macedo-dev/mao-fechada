@@ -133,7 +133,7 @@ it('returns paginated transactions with filters', function () {
     Transaction::factory()->for($user)->create([
         'category_id' => $expenseCategory->id,
         'type' => 'expense',
-        'payment_method' => 'dinheiro',
+        'payment_method' => 'cash',
         'transacted_at' => '2026-05-15',
     ]);
 
@@ -145,7 +145,7 @@ it('returns paginated transactions with filters', function () {
         ->assertJsonPath('data.0.payment_method', 'pix');
 });
 
-it('accepts portuguese transaction type values and maps them to current storage', function () {
+it('rejects legacy portuguese transaction type and payment method values', function () {
     $user = User::factory()->create();
     Sanctum::actingAs($user);
 
@@ -156,13 +156,15 @@ it('accepts portuguese transaction type values and maps them to current storage'
     $response = $this->postJson('/api/v1/transactions', [
         'category_id' => $category->id,
         'type' => 'saida',
-        'payment_method' => 'pix',
+        'payment_method' => 'dinheiro',
         'amount' => 150.50,
         'transacted_at' => '2026-06-20',
     ]);
 
-    $response->assertCreated()
-        ->assertJsonPath('data.type', 'expense');
+    $response->assertStatus(422)
+        ->assertJsonPath('error.type', 'validation_error')
+        ->assertJsonPath('error.details.type.0', 'The selected type is invalid.')
+        ->assertJsonPath('error.details.payment_method.0', 'The selected payment method is invalid.');
 });
 
 it('allows locale preference update for authenticated user', function () {

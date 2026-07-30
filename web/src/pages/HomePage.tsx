@@ -32,14 +32,6 @@ function formatTransactionDate(value: string): string {
   return Number.isNaN(parsed.getTime()) ? value : parsed.toLocaleDateString()
 }
 
-function normalizeType(type: string | undefined): 'entrada' | 'saida' {
-  if (type === 'income' || type === 'entrada') {
-    return 'entrada'
-  }
-
-  return 'saida'
-}
-
 function shiftMonth(value: string, delta: number): string {
   const [year, mon] = value.split('-').map(Number)
   const d = new Date(year, mon - 1 + delta)
@@ -284,9 +276,9 @@ export function HomePage() {
                       </Group>
                       <Text
                         fw={700}
-                        c={normalizeType(tx.type) === 'entrada' ? 'green' : 'red'}
+                        c={tx.type === 'income' ? 'green' : 'red'}
                       >
-                        {normalizeType(tx.type) === 'entrada' ? '+' : '−'} R$ {Number(tx.amount).toFixed(2)}
+                        {tx.type === 'income' ? '+' : '−'} R$ {Number(tx.amount).toFixed(2)}
                       </Text>
                     </Group>
                   </Paper>

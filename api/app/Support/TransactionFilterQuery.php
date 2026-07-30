@@ -14,7 +14,7 @@ class TransactionFilterQuery
         }
 
         if (isset($filters['type'])) {
-            $query->where('type', TransactionTypeMapper::toDatabase($filters['type']));
+            $query->where('type', $filters['type']);
         }
 
         if (isset($filters['payment_method'])) {

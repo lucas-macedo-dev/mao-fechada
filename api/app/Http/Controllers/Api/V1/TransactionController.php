@@ -10,7 +10,6 @@ use App\Models\Category;
 use App\Models\Transaction;
 use App\Support\ApiResponse;
 use App\Support\TransactionFilterQuery;
-use App\Support\TransactionTypeMapper;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -46,7 +45,6 @@ class TransactionController extends Controller
     public function store(StoreTransactionRequest $request): JsonResponse
     {
         $validated = $request->validated();
-        $validated['type'] = TransactionTypeMapper::toDatabase($validated['type']);
 
         $category = Category::query()->findOrFail($validated['category_id']);
         $this->ensureOwnership($request, $category->user_id);
@@ -110,10 +108,6 @@ class TransactionController extends Controller
         $this->ensureOwnership($request, $transaction->user_id);
 
         $validated = $request->validated();
-
-        if (isset($validated['type'])) {
-            $validated['type'] = TransactionTypeMapper::toDatabase($validated['type']);
-        }
 
         if (isset($validated['category_id'])) {
             $category = Category::query()->findOrFail($validated['category_id']);

@@ -2,7 +2,6 @@
 
 namespace App\Support\Reports;
 
-use App\Support\TransactionTypeMapper;
 use Illuminate\Contracts\Database\Eloquent\Builder;
 
 class CsvReportWriter
@@ -21,7 +20,7 @@ class CsvReportWriter
                     fputcsv($stream, [
                         $transaction->transacted_at->format('Y-m-d'),
                         $transaction->category?->name,
-                        TransactionTypeMapper::toApi($transaction->type),
+                        $transaction->type,
                         $transaction->payment_method,
                         $transaction->amount,
                         $transaction->notes,

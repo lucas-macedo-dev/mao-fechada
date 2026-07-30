@@ -16,7 +16,7 @@ class StoreCategoryRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:100'],
-            'type' => ['required', Rule::in(['entrada', 'saida', 'income', 'expense'])],
+            'type' => ['required', Rule::in(['income', 'expense'])],
             'icon' => ['nullable', 'string', 'max:100'],
             'parent_id' => ['nullable', 'integer', 'exists:categories,id'],
         ];

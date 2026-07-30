@@ -107,8 +107,8 @@ export const ReportsPage = () => {
             onChange={(val) => setType(val ?? "")}
             data={[
               { value: "", label: t("transactions.all_types") },
-              { value: "entrada", label: t("categories.type_income") },
-              { value: "saida", label: t("categories.type_expense") },
+              { value: "income", label: t("categories.type_income") },
+              { value: "expense", label: t("categories.type_expense") },
             ]}
           />
 

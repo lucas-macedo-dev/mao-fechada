@@ -16,14 +16,14 @@ class ListTransactionsRequest extends FormRequest
     {
         return [
             'category_id' => ['nullable', 'integer', 'exists:categories,id'],
-            'type' => ['nullable', Rule::in(['entrada', 'saida', 'income', 'expense'])],
+            'type' => ['nullable', Rule::in(['income', 'expense'])],
             'payment_method' => ['nullable', Rule::in([
-                'cartao_credito',
-                'cartao_debito',
-                'dinheiro',
+                'credit_card',
+                'debit_card',
+                'cash',
                 'pix',
-                'boleto',
-                'ted',
+                'bank_slip',
+                'bank_transfer',
             ])],
             'date_from' => ['nullable', 'date'],
             'date_to' => ['nullable', 'date'],

@@ -28,7 +28,7 @@ export interface Transaction {
   id: number
   category_id: number
   type: 'income' | 'expense'
-  payment_method: string
+  payment_method: 'credit_card' | 'debit_card' | 'cash' | 'pix' | 'bank_slip' | 'bank_transfer'
   amount: string | number
   transacted_at: string
   notes?: string

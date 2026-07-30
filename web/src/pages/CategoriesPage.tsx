@@ -40,7 +40,7 @@ export function CategoriesPage() {
 
   const [formModal, setFormModal] = useState<FormModalState>(null)
   const [formName, setFormName] = useState('')
-  const [formType, setFormType] = useState<'entrada' | 'saida'>('saida')
+  const [formType, setFormType] = useState<'income' | 'expense'>('expense')
   const [formIcon, setFormIcon] = useState(DEFAULT_CATEGORY_ICON)
   const [formParentId, setFormParentId] = useState<string | null>(null)
 
@@ -50,18 +50,17 @@ export function CategoriesPage() {
 
   const rootCategories = (categories as Category[]).filter((c) => c.parent_id == null)
 
-  const formTypeNorm = formType === 'entrada' ? 'income' : 'expense'
   const formParentOptions = rootCategories
     .filter((c) => {
       if (formModal?.mode === 'edit' && c.id === formModal.item.id) return false
       const cType = c.type
-      return cType === formTypeNorm
+      return cType === formType
     })
     .map((c) => ({ value: String(c.id), label: c.name }))
 
   const handleOpenCreate = () => {
     setFormName('')
-    setFormType('saida')
+    setFormType('expense')
     setFormIcon(DEFAULT_CATEGORY_ICON)
     setFormParentId(null)
     setError('')
@@ -70,7 +69,7 @@ export function CategoriesPage() {
 
   const handleOpenEdit = (category: Category) => {
     setFormName(category.name)
-    setFormType(category.type === 'income' ? 'entrada' : 'saida')
+    setFormType(category.type)
     setFormIcon(getCategoryIconClass(category.icon ?? undefined))
     setFormParentId(category.parent_id ? String(category.parent_id) : null)
     setError('')
@@ -83,7 +82,7 @@ export function CategoriesPage() {
   }
 
   const handleFormTypeChange = (val: string | null) => {
-    setFormType(val === 'entrada' ? 'entrada' : 'saida')
+    setFormType(val === 'income' ? 'income' : 'expense')
     setFormParentId(null)
   }
 
@@ -92,8 +91,7 @@ export function CategoriesPage() {
     if (val) {
       const parent = rootCategories.find((c) => String(c.id) === val)
       if (parent) {
-        const parentDbType = parent.type === 'income' ? 'entrada' : 'saida'
-        setFormType(parentDbType)
+        setFormType(parent.type)
       }
     }
   }
@@ -167,7 +165,7 @@ export function CategoriesPage() {
   }
 
   const getCategoryColor = (type: string) =>
-    type === 'entrada' || type === 'income' ? 'green' : 'red'
+    type === 'income' ? 'green' : 'red'
 
   const renderCategory = (category: Category) => {
     const color = getCategoryColor(category.type)
@@ -345,8 +343,8 @@ export function CategoriesPage() {
                   onChange={handleFormTypeChange}
                   disabled={!!formParentId}
                   data={[
-                    { value: 'saida', label: t('categories.type_expense') },
-                    { value: 'entrada', label: t('categories.type_income') },
+                    { value: 'expense', label: t('categories.type_expense') },
+                    { value: 'income', label: t('categories.type_income') },
                   ]}
                 />
               </SimpleGrid>
