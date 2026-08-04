@@ -16,14 +16,14 @@ class StoreTransactionRequest extends FormRequest
     {
         return [
             'category_id' => ['required', 'integer', 'exists:categories,id'],
-            'type' => ['required', Rule::in(['entrada', 'saida', 'income', 'expense'])],
+            'type' => ['required', Rule::in(['income', 'expense'])],
             'payment_method' => ['required', Rule::in([
-                'cartao_credito',
-                'cartao_debito',
-                'dinheiro',
+                'credit_card',
+                'debit_card',
+                'cash',
                 'pix',
-                'boleto',
-                'ted',
+                'bank_slip',
+                'bank_transfer',
             ])],
             'amount' => ['required', 'numeric', 'gt:0'],
             'transacted_at' => ['required', 'date'],

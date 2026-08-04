@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Models\Transaction;
 use App\Support\ApiResponse;
-use App\Support\TransactionTypeMapper;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -18,10 +17,10 @@ class DashboardController extends Controller
 
         $transactions = $this->baseQuery($request, $year, $month)->get();
         $income = (float) $transactions
-            ->whereIn('type', TransactionTypeMapper::incomeValues())
+            ->where('type', 'income')
             ->sum('amount');
         $expense = (float) $transactions
-            ->whereIn('type', TransactionTypeMapper::expenseValues())
+            ->where('type', 'expense')
             ->sum('amount');
 
         return ApiResponse::data([
@@ -49,10 +48,10 @@ class DashboardController extends Controller
         [$year, $month] = $this->resolveMonth($request);
 
         $income = (float) $this->baseQuery($request, $year, $month)
-            ->whereIn('type', TransactionTypeMapper::incomeValues())
+            ->where('type', 'income')
             ->sum('amount');
         $expense = (float) $this->baseQuery($request, $year, $month)
-            ->whereIn('type', TransactionTypeMapper::expenseValues())
+            ->where('type', 'expense')
             ->sum('amount');
 
         return ApiResponse::data([
@@ -89,7 +88,7 @@ class DashboardController extends Controller
 
 
         $rows = $this->baseQuery($request, $year, $month)
-            ->whereIn('type', TransactionTypeMapper::expenseValues())
+            ->where('type', 'expense')
             ->with('category.parent')
             ->get()
             ->groupBy(fn ($transaction) => $transaction->category?->parent_id ?? $transaction->category_id)
@@ -125,7 +124,7 @@ class DashboardController extends Controller
         [$year, $month] = $this->resolveMonth($request);
 
         $total = (float) $this->baseQuery($request, $year, $month)
-            ->whereIn('type', TransactionTypeMapper::expenseValues())
+            ->where('type', 'expense')
             ->whereNotNull('installment_group_id')
             ->sum('amount');
 
@@ -151,7 +150,7 @@ class DashboardController extends Controller
 
         foreach ($transactions as $tx) {
             $day = (int) Carbon::parse($tx->transacted_at)->format('d');
-            if (in_array($tx->type, TransactionTypeMapper::incomeValues())) {
+            if ($tx->type === 'income') {
                 $byDay[$day]['income'] += (float) $tx->amount;
             } else {
                 $byDay[$day]['expense'] += (float) $tx->amount;
@@ -159,6 +158,149 @@ class DashboardController extends Controller
         }
 
         return ApiResponse::data(array_values($byDay));
+    }
+
+    public function monthlyComparison(Request $request): JsonResponse
+    {
+        $this->ensureOwnership($request, $request->user()->id);
+
+        [$year, $month] = $this->resolveMonth($request);
+        $anchor = Carbon::createFromDate($year, $month, 1);
+
+        $months = [];
+        for ($i = 2; $i >= 0; $i--) {
+            $date = $anchor->copy()->subMonths($i);
+
+            $income = (float) $this->baseQuery($request, $date->year, $date->month)
+                ->where('type', 'income')
+                ->sum('amount');
+            $expense = (float) $this->baseQuery($request, $date->year, $date->month)
+                ->where('type', 'expense')
+                ->sum('amount');
+
+            $months[] = [
+                'month' => $date->format('Y-m'),
+                'income' => $income,
+                'expense' => $expense,
+            ];
+        }
+
+        return ApiResponse::data(['months' => $months]);
+    }
+
+    public function mtdComparison(Request $request): JsonResponse
+    {
+        $this->ensureOwnership($request, $request->user()->id);
+
+        [$year, $month] = $this->resolveMonth($request);
+        $selected = Carbon::createFromDate($year, $month, 1);
+        $now = Carbon::now();
+
+        $isCurrentMonth = $selected->year === $now->year && $selected->month === $now->month;
+        $throughDay = $isCurrentMonth
+            ? min($now->day, $selected->daysInMonth)
+            : $selected->daysInMonth;
+
+        $previous = $selected->copy()->subMonth();
+        $previousThroughDay = min($throughDay, $previous->daysInMonth);
+
+        $sumThrough = function (int $year, int $month, int $throughDay, string $type, bool $installmentsOnly = false) use ($request) {
+            $query = $this->baseQuery($request, $year, $month)
+                ->where('type', $type)
+                ->whereDay('transacted_at', '<=', $throughDay);
+
+            if ($installmentsOnly) {
+                $query->whereNotNull('installment_group_id');
+            }
+
+            return (float) $query->sum('amount');
+        };
+
+        $currentIncome = $sumThrough($selected->year, $selected->month, $throughDay, 'income');
+        $previousIncome = $sumThrough($previous->year, $previous->month, $previousThroughDay, 'income');
+
+        $currentExpense = $sumThrough($selected->year, $selected->month, $throughDay, 'expense');
+        $previousExpense = $sumThrough($previous->year, $previous->month, $previousThroughDay, 'expense');
+
+        $currentInstallments = $sumThrough($selected->year, $selected->month, $throughDay, 'expense', true);
+        $previousInstallments = $sumThrough($previous->year, $previous->month, $previousThroughDay, 'expense', true);
+
+        $buildComparison = function (float $currentTotal, float $previousTotal) use ($selected, $previous, $throughDay, $previousThroughDay) {
+            return [
+                'current' => [
+                    'month' => $selected->format('Y-m'),
+                    'through_day' => $throughDay,
+                    'total' => $currentTotal,
+                ],
+                'previous' => [
+                    'month' => $previous->format('Y-m'),
+                    'through_day' => $previousThroughDay,
+                    'total' => $previousTotal,
+                ],
+                'change_percent' => $previousTotal != 0
+                    ? round((($currentTotal - $previousTotal) / $previousTotal) * 100, 2)
+                    : null,
+            ];
+        };
+
+        return ApiResponse::data([
+            'income' => $buildComparison($currentIncome, $previousIncome),
+            'expense' => $buildComparison($currentExpense, $previousExpense),
+            'balance' => $buildComparison($currentIncome - $currentExpense, $previousIncome - $previousExpense),
+            'installments' => $buildComparison($currentInstallments, $previousInstallments),
+        ]);
+    }
+
+    public function byPaymentMethod(Request $request): JsonResponse
+    {
+        $this->ensureOwnership($request, $request->user()->id);
+
+        [$year, $month] = $this->resolveMonth($request);
+
+        $result = $this->baseQuery($request, $year, $month)
+            ->where('type', 'expense')
+            ->get()
+            ->groupBy('payment_method')
+            ->map(fn ($transactions, $method) => [
+                'name' => $method,
+                'value' => (float) $transactions->sum('amount'),
+            ])
+            ->values();
+
+        return ApiResponse::data($result);
+    }
+
+    public function weeklyExpenses(Request $request): JsonResponse
+    {
+        $this->ensureOwnership($request, $request->user()->id);
+
+        $startOfWeek = Carbon::now()->startOfWeek(Carbon::MONDAY);
+
+        $byWeekday = [];
+        for ($i = 0; $i < 7; $i++) {
+            $date = $startOfWeek->copy()->addDays($i);
+            $byWeekday[$date->dayOfWeekIso] = [
+                'weekday' => $date->dayOfWeekIso,
+                'date' => $date->toDateString(),
+                'expense' => 0.0,
+            ];
+        }
+
+        $transactions = Transaction::query()
+            ->where('user_id', $request->user()->id)
+            ->where('type', 'expense')
+            ->whereDate('transacted_at', '>=', $startOfWeek->toDateString())
+            ->whereDate('transacted_at', '<=', $startOfWeek->copy()->addDays(6)->toDateString())
+            ->get();
+
+        foreach ($transactions as $tx) {
+            $weekday = Carbon::parse($tx->transacted_at)->dayOfWeekIso;
+            if (isset($byWeekday[$weekday])) {
+                $byWeekday[$weekday]['expense'] += (float) $tx->amount;
+            }
+        }
+
+        return ApiResponse::data(array_values($byWeekday));
     }
 
     private function resolveMonth(Request $request): array

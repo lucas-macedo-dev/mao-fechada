@@ -172,6 +172,38 @@ export function useInstallmentsTotal(month?: string) {
   })
 }
 
+export function useDashboardMonthlyComparison(month?: string) {
+  return useQuery({
+    queryKey: ['dashboard', 'monthly-comparison', month],
+    queryFn: () => api.getDashboardMonthlyComparison(month),
+    enabled: !!localStorage.getItem('auth_token'),
+  })
+}
+
+export function useDashboardMtdComparison(month?: string) {
+  return useQuery({
+    queryKey: ['dashboard', 'mtd-comparison', month],
+    queryFn: () => api.getDashboardMtdComparison(month),
+    enabled: !!localStorage.getItem('auth_token'),
+  })
+}
+
+export function useDashboardByPaymentMethod(month?: string) {
+  return useQuery({
+    queryKey: ['dashboard', 'by-payment-method', month],
+    queryFn: () => api.getDashboardByPaymentMethod(month),
+    enabled: !!localStorage.getItem('auth_token'),
+  })
+}
+
+export function useDashboardWeeklyExpenses() {
+  return useQuery({
+    queryKey: ['dashboard', 'weekly-expenses'],
+    queryFn: () => api.getDashboardWeeklyExpenses(),
+    enabled: !!localStorage.getItem('auth_token'),
+  })
+}
+
 export function useSubscription() {
   return useQuery({
     queryKey: ['subscription'],

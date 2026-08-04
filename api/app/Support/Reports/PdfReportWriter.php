@@ -3,7 +3,6 @@
 namespace App\Support\Reports;
 
 use App\Models\User;
-use App\Support\TransactionTypeMapper;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Contracts\Database\Eloquent\Builder;
 
@@ -20,7 +19,7 @@ class PdfReportWriter
         $totalExpense = 0;
 
         foreach ($transactions as $transaction) {
-            if ($transaction->type === TransactionTypeMapper::toDatabase('income')) {
+            if ($transaction->type === 'income') {
                 $totalIncome += $transaction->amount;
             } else {
                 $totalExpense += $transaction->amount;

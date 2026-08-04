@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\Budget;
 use App\Models\Transaction;
 use App\Support\ApiResponse;
-use App\Support\TransactionTypeMapper;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -28,10 +27,10 @@ class MonthlySummaryController extends Controller
             ->get();
 
         $incomeTotal = $transactions
-            ->whereIn('type', TransactionTypeMapper::incomeValues())
+            ->where('type', 'income')
             ->sum('amount');
         $expenseTotal = $transactions
-            ->whereIn('type', TransactionTypeMapper::expenseValues())
+            ->where('type', 'expense')
             ->sum('amount');
 
         $budgets = Budget::query()
@@ -43,7 +42,7 @@ class MonthlySummaryController extends Controller
             ->keyBy('category_id');
 
         $actualByCategory = $transactions
-            ->whereIn('type', TransactionTypeMapper::expenseValues())
+            ->where('type', 'expense')
             ->groupBy('category_id')
             ->map(fn (Collection $group): float => (float) $group->sum('amount'));
         $categoryNames = $transactions

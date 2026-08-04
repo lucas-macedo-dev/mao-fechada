@@ -1,5 +1,15 @@
 import { useTranslation } from 'react-i18next'
-import { useDashboardSummary, useDashboardByCategory, useDashboardByDay, useTransactions, useInstallmentsTotal } from '../hooks/api'
+import {
+  useDashboardSummary,
+  useDashboardByCategory,
+  useDashboardByDay,
+  useTransactions,
+  useInstallmentsTotal,
+  useDashboardMonthlyComparison,
+  useDashboardMtdComparison,
+  useDashboardByPaymentMethod,
+  useDashboardWeeklyExpenses,
+} from '../hooks/api'
 import { useTutorial } from '../context/TutorialContext'
 import { TutorialHint } from '../components/tutorial/TutorialHint'
 import { getCategoryIconClass } from '../constants/categoryIcons'
@@ -14,9 +24,11 @@ import {
   TextInput,
   ActionIcon,
   Stack,
-  LoadingOverlay
+  LoadingOverlay,
+  ThemeIcon,
+  Tabs,
 } from '@mantine/core'
-import { DonutChart, BarChart } from '@mantine/charts'
+import { DonutChart, BarChart, LineChart } from '@mantine/charts'
 import { PageContainer } from '../components/ui/PageContainer'
 import { SectionCard } from '../components/ui/SectionCard'
 
@@ -32,28 +44,34 @@ function formatTransactionDate(value: string): string {
   return Number.isNaN(parsed.getTime()) ? value : parsed.toLocaleDateString()
 }
 
-function normalizeType(type: string | undefined): 'entrada' | 'saida' {
-  if (type === 'income' || type === 'entrada') {
-    return 'entrada'
-  }
-
-  return 'saida'
-}
-
 function shiftMonth(value: string, delta: number): string {
   const [year, mon] = value.split('-').map(Number)
   const d = new Date(year, mon - 1 + delta)
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
 }
 
-const summaryCardStyles: Record<string, { borderLeftColor: string }> = {
-  income: { borderLeftColor: '#4caf50' },
-  expense: { borderLeftColor: '#dd3442' },
-  balance: { borderLeftColor: '#2196f3' },
+const summaryCardIcons: Record<string, { icon: string; color: string }> = {
+  income: { icon: 'fa-solid fa-arrow-trend-up', color: 'green' },
+  expense: { icon: 'fa-solid fa-arrow-trend-down', color: 'red' },
+  balance: { icon: 'fa-solid fa-scale-balanced', color: 'blue' },
+}
+
+const MTD_POLARITY: Record<'income' | 'expense' | 'balance' | 'installments', 'good' | 'bad'> = {
+  income: 'good',
+  balance: 'good',
+  expense: 'bad',
+  installments: 'bad',
+}
+
+function mtdChangeColor(key: keyof typeof MTD_POLARITY, changePercent: number | null): string {
+  if (changePercent === null) return 'gray'
+  const isIncrease = changePercent > 0
+  const isGood = MTD_POLARITY[key] === 'good' ? isIncrease : !isIncrease
+  return isGood ? 'green' : 'red'
 }
 
 export function HomePage() {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const { completeStep } = useTutorial()
   const [month, setMonth] = useState(new Date().toISOString().slice(0, 7))
   const { data: summary, isLoading } = useDashboardSummary(month)
@@ -65,11 +83,28 @@ export function HomePage() {
   const { data: rawCategoryData = [] } = useDashboardByCategory(month)
   const { data: dayData = [] } = useDashboardByDay(month)
   const { data: transactionsResponse } = useTransactions({ month, per_page: 5 })
+  const { data: monthlyComparison } = useDashboardMonthlyComparison(month)
+  const { data: mtdComparison } = useDashboardMtdComparison(month)
+  const { data: rawPaymentMethodData = [] } = useDashboardByPaymentMethod(month)
+  const { data: weeklyExpenses = [] } = useDashboardWeeklyExpenses()
 
   const CHART_COLORS = ['indigo.6', 'orange.5', 'teal.6', 'pink.5', 'yellow.5', 'cyan.6', 'grape.5', 'green.6', 'red.5']
   const categoryData = rawCategoryData.map((item, i) => ({
     ...item,
     color: CHART_COLORS[i % CHART_COLORS.length],
+  }))
+
+  const paymentMethodData = rawPaymentMethodData.map((item, i) => ({
+    name: t(`transactions.payment.${item.name}`),
+    value: item.value,
+    color: CHART_COLORS[i % CHART_COLORS.length],
+  }))
+
+  const monthlyComparisonData = monthlyComparison?.months ?? []
+
+  const weeklyExpensesData = weeklyExpenses.map((item) => ({
+    ...item,
+    label: new Date(`${item.date}T00:00:00`).toLocaleDateString(i18n.language, { weekday: 'short' }),
   }))
 
   const transactions = transactionsResponse?.data || []
@@ -137,112 +172,270 @@ export function HomePage() {
                   balance: summary.totals.saldo.toFixed(2),
                 }
 
+                const metricComparison = mtdComparison?.[key]
+                const changePercent = metricComparison?.change_percent ?? null
+                const changeColor = mtdChangeColor(key, changePercent)
+
                 return (
-                  <Paper
-                    key={key}
-                    shadow="xs"
-                    radius="md"
-                    p="lg"
-                    withBorder
-                    style={{ borderLeft: `4px solid ${summaryCardStyles[key].borderLeftColor}` }}
-                  >
-                    <Text size="sm" c="dimmed" tt="uppercase" fw={500} mb="xs">
-                      {labels[key]}
-                    </Text>
-                    <Text size="xl" fw={700}>
-                      R$ {values[key]}
-                    </Text>
+                  <Paper key={key} shadow="xs" radius="md" p="lg" withBorder>
+                    <Group align="flex-start" gap="sm" wrap="nowrap">
+                      <ThemeIcon variant="light" color={summaryCardIcons[key].color} size="lg" radius="xl">
+                        <i className={summaryCardIcons[key].icon} />
+                      </ThemeIcon>
+                      <Stack gap={2} style={{ minWidth: 0 }}>
+                        <Text size="sm" c="dimmed" fw={500}>
+                          {labels[key]}
+                        </Text>
+                        <Text size="xl" fw={700}>
+                          R$ {values[key]}
+                        </Text>
+                        <Box mt={4}>
+                          <Text size="sm" fw={700} c={changeColor}>
+                            {changePercent === null
+                              ? t('dashboard.mtd_comparison_no_data')
+                              : `${changePercent > 0 ? '+' : ''}${changePercent}%`}
+                          </Text>
+                          <Text size="xs" c="dimmed">
+                            {t('dashboard.mtd_comparison_subtitle')}
+                          </Text>
+                        </Box>
+                      </Stack>
+                    </Group>
                   </Paper>
                 )
               })}
 
-              <Paper
-                shadow="xs"
-                radius="md"
-                p="lg"
-                withBorder
-                style={{ borderLeft: '4px solid #9c27b0' }}
-              >
-                <Text size="sm" c="dimmed" tt="uppercase" fw={500} mb="xs">
-                  {t('dashboard.installments')}
-                </Text>
-                <Text size="xl" fw={700}>
-                  R$ {(installmentsData?.total ?? 0).toFixed(2)}
-                </Text>
-              </Paper>
+              {(() => {
+                const installmentsComparison = mtdComparison?.installments
+                const installmentsChangePercent = installmentsComparison?.change_percent ?? null
+                const installmentsChangeColor = mtdChangeColor('installments', installmentsChangePercent)
+
+                return (
+                  <Paper shadow="xs" radius="md" p="lg" withBorder>
+                    <Group align="flex-start" gap="sm" wrap="nowrap">
+                      <ThemeIcon variant="light" color="grape" size="lg" radius="xl">
+                        <i className="fa-solid fa-layer-group" />
+                      </ThemeIcon>
+                      <Stack gap={2} style={{ minWidth: 0 }}>
+                        <Text size="sm" c="dimmed" fw={500}>
+                          {t('dashboard.installments')}
+                        </Text>
+                        <Text size="xl" fw={700}>
+                          R$ {(installmentsData?.total ?? 0).toFixed(2)}
+                        </Text>
+                        <Box mt={4}>
+                          <Text size="sm" fw={700} c={installmentsChangeColor}>
+                            {installmentsChangePercent === null
+                              ? t('dashboard.mtd_comparison_no_data')
+                              : `${installmentsChangePercent > 0 ? '+' : ''}${installmentsChangePercent}%`}
+                          </Text>
+                          <Text size="xs" c="dimmed">
+                            {t('dashboard.mtd_comparison_subtitle')}
+                          </Text>
+                        </Box>
+                      </Stack>
+                    </Group>
+                  </Paper>
+                )
+              })()}
             </SimpleGrid>
           </TutorialHint>
 
-          <SimpleGrid cols={{ base: 1, md: 2 }} mb="lg">
-            <SectionCard>
-              <Title order={2} size="h4" mb="md">
-                {t('dashboard.expenses_by_category')}
-              </Title>
-              {categoryData.length === 0 ? (
-                <Text c="dimmed" ta="center" py="xl" fs="italic" size="sm">
-                  {t('dashboard.no_expenses')}
-                </Text>
-              ) : (
-                <>
-                  <Group justify="center">
-                    <DonutChart
-                      data={categoryData}
-                      size={200}
-                      thickness={36}
-                      withTooltip
-                      tooltipDataSource="segment"
-                      paddingAngle={2}
-                    />
-                  </Group>
-                  <Box mt="md">
-                    {categoryData.map((item) => {
-                      const [colorName, shade] = item.color.split('.')
-                      const cssColor = `var(--mantine-color-${colorName}-${shade ?? '6'})`
-                      return (
-                        <Group key={item.name} gap="xs" mb={4} align="center">
-                          <Box
-                            style={{
-                              width: 12,
-                              height: 12,
-                              borderRadius: 3,
-                              background: cssColor,
-                              flexShrink: 0,
-                            }}
-                          />
-                          <Text size="sm" style={{ flex: 1 }}>{item.name}</Text>
-                          <Text size="sm" fw={600} c="dimmed">R$ {item.value.toFixed(2)}</Text>
-                        </Group>
-                      )
-                    })}
-                  </Box>
-                </>
-              )}
-            </SectionCard>
+          <Tabs defaultValue="overview" mb="lg">
+            <Tabs.List>
+              <Tabs.Tab value="overview">{t('dashboard.tab_overview')}</Tabs.Tab>
+              <Tabs.Tab value="expenses">{t('dashboard.tab_expenses')}</Tabs.Tab>
+            </Tabs.List>
 
-            <SectionCard>
-              <Title order={2} size="h4" mb="md">
-                {t('dashboard.income_expense_by_day')}
-              </Title>
-              {dayData.every((d) => d.income === 0 && d.expense === 0) ? (
-                <Text c="dimmed" ta="center" py="xl" fs="italic" size="sm">
-                  {t('dashboard.no_transactions')}
-                </Text>
-              ) : (
-                <BarChart
-                  h={240}
-                  data={dayData}
-                  dataKey="day"
-                  series={[
-                    { name: 'income', color: 'green.6', label: t('dashboard.income') },
-                    { name: 'expense', color: 'red.5', label: t('dashboard.expense') },
-                  ]}
-                  gridAxis="x"
-                  withLegend
-                  valueFormatter={(v) => `R$ ${v.toFixed(2)}`}
-                />
-              )}
-            </SectionCard>
-          </SimpleGrid>
+            <Tabs.Panel value="overview" pt="lg">
+              <SectionCard>
+                <Title order={2} size="h4" mb="md">
+                  {t('dashboard.monthly_comparison')}
+                </Title>
+                {monthlyComparisonData.every((m) => m.income === 0 && m.expense === 0) ? (
+                  <Text c="dimmed" ta="center" py="xl" fs="italic" size="sm">
+                    {t('dashboard.no_transactions')}
+                  </Text>
+                ) : (
+                  <BarChart
+                    h={280}
+                    data={monthlyComparisonData}
+                    dataKey="month"
+                    series={[
+                      { name: 'income', color: 'green.6', label: t('dashboard.income') },
+                      { name: 'expense', color: 'red.5', label: t('dashboard.expense') },
+                    ]}
+                    gridAxis="x"
+                    withLegend
+                    valueFormatter={(v) => `R$ ${v.toFixed(2)}`}
+                  />
+                )}
+              </SectionCard>
+            </Tabs.Panel>
+
+            <Tabs.Panel value="expenses" pt="lg">
+              <SimpleGrid cols={{ base: 1, md: 2 }} mb="lg">
+                <SectionCard>
+                  <Title order={2} size="h4" mb="md">
+                    {t('dashboard.expenses_by_category')}
+                  </Title>
+                  {categoryData.length === 0 ? (
+                    <Text c="dimmed" ta="center" py="xl" fs="italic" size="sm">
+                      {t('dashboard.no_expenses')}
+                    </Text>
+                  ) : (
+                    <>
+                      <Group justify="center">
+                        <DonutChart
+                          data={categoryData}
+                          size={200}
+                          thickness={36}
+                          withTooltip
+                          tooltipDataSource="segment"
+                          paddingAngle={2}
+                          withLabels
+                          withLabelsLine={false}
+                          labelsType="percent"
+                        />
+                      </Group>
+                      <Box mt="md">
+                        {categoryData.map((item) => {
+                          const [colorName, shade] = item.color.split('.')
+                          const cssColor = `var(--mantine-color-${colorName}-${shade ?? '6'})`
+                          return (
+                            <Group key={item.name} gap="xs" mb={4} align="center">
+                              <Box
+                                style={{
+                                  width: 12,
+                                  height: 12,
+                                  borderRadius: 3,
+                                  background: cssColor,
+                                  flexShrink: 0,
+                                }}
+                              />
+                              <Text size="sm" style={{ flex: 1 }}>{item.name}</Text>
+                              <Text size="sm" fw={600} c="dimmed">R$ {item.value.toFixed(2)}</Text>
+                            </Group>
+                          )
+                        })}
+                      </Box>
+                    </>
+                  )}
+                </SectionCard>
+
+                <SectionCard>
+                  <Title order={2} size="h4" mb="md">
+                    {t('dashboard.by_payment_method')}
+                  </Title>
+                  {paymentMethodData.length === 0 ? (
+                    <Text c="dimmed" ta="center" py="xl" fs="italic" size="sm">
+                      {t('dashboard.no_expenses')}
+                    </Text>
+                  ) : (
+                    <>
+                      <Group justify="center">
+                        <DonutChart
+                          data={paymentMethodData}
+                          size={200}
+                          thickness={36}
+                          withTooltip
+                          tooltipDataSource="segment"
+                          paddingAngle={2}
+                          withLabels
+                          withLabelsLine={false}
+                          labelsType="percent"
+                        />
+                      </Group>
+                      <Box mt="md">
+                        {paymentMethodData.map((item) => {
+                          const [colorName, shade] = item.color.split('.')
+                          const cssColor = `var(--mantine-color-${colorName}-${shade ?? '6'})`
+                          return (
+                            <Group key={item.name} gap="xs" mb={4} align="center">
+                              <Box
+                                style={{
+                                  width: 12,
+                                  height: 12,
+                                  borderRadius: 3,
+                                  background: cssColor,
+                                  flexShrink: 0,
+                                }}
+                              />
+                              <Text size="sm" style={{ flex: 1 }}>{item.name}</Text>
+                              <Text size="sm" fw={600} c="dimmed">R$ {item.value.toFixed(2)}</Text>
+                            </Group>
+                          )
+                        })}
+                      </Box>
+                    </>
+                  )}
+                </SectionCard>
+              </SimpleGrid>
+
+              <SectionCard>
+                <Title order={2} size="h4" mb="md">
+                  {t('dashboard.expenses_per_day')}
+                </Title>
+                {dayData.every((d) => d.expense === 0) ? (
+                  <Text c="dimmed" ta="center" py="xl" fs="italic" size="sm">
+                    {t('dashboard.no_expenses')}
+                  </Text>
+                ) : (
+                  <LineChart
+                    h={240}
+                    data={dayData}
+                    dataKey="day"
+                    series={[{ name: 'expense', color: 'red.5', label: t('dashboard.expense') }]}
+                    gridAxis="x"
+                    valueFormatter={(v) => `R$ ${v.toFixed(2)}`}
+                  />
+                )}
+              </SectionCard>
+
+              <SimpleGrid cols={{ base: 1, md: 2 }} mb="lg">
+                <SectionCard>
+                  <Title order={2} size="h4" mb="md">
+                    {t('dashboard.weekly_expenses')}
+                  </Title>
+                  {weeklyExpensesData.every((d) => d.expense === 0) ? (
+                    <Text c="dimmed" ta="center" py="xl" fs="italic" size="sm">
+                      {t('dashboard.no_expenses')}
+                    </Text>
+                  ) : (
+                    <BarChart
+                      h={240}
+                      data={weeklyExpensesData}
+                      dataKey="label"
+                      series={[{ name: 'expense', color: 'red.5', label: t('dashboard.expense') }]}
+                      gridAxis="x"
+                      valueFormatter={(v) => `R$ ${v.toFixed(2)}`}
+                    />
+                  )}
+                </SectionCard>
+
+                <SectionCard>
+                  <Title order={2} size="h4" mb="md">
+                    {t('dashboard.main_categories')}
+                  </Title>
+                  {categoryData.length === 0 ? (
+                    <Text c="dimmed" ta="center" py="xl" fs="italic" size="sm">
+                      {t('dashboard.no_expenses')}
+                    </Text>
+                  ) : (
+                    <BarChart
+                      h={240}
+                      data={categoryData}
+                      dataKey="name"
+                      orientation="vertical"
+                      series={[{ name: 'value', color: 'red.5', label: t('dashboard.expense') }]}
+                      gridAxis="x"
+                      valueFormatter={(v) => `R$ ${v.toFixed(2)}`}
+                    />
+                  )}
+                </SectionCard>
+              </SimpleGrid>
+            </Tabs.Panel>
+          </Tabs>
 
           <SectionCard>
             <Title order={2} mb="md">
@@ -284,9 +477,9 @@ export function HomePage() {
                       </Group>
                       <Text
                         fw={700}
-                        c={normalizeType(tx.type) === 'entrada' ? 'green' : 'red'}
+                        c={tx.type === 'income' ? 'green' : 'red'}
                       >
-                        {normalizeType(tx.type) === 'entrada' ? '+' : '−'} R$ {Number(tx.amount).toFixed(2)}
+                        {tx.type === 'income' ? '+' : '−'} R$ {Number(tx.amount).toFixed(2)}
                       </Text>
                     </Group>
                   </Paper>

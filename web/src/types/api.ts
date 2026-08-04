@@ -28,7 +28,7 @@ export interface Transaction {
   id: number
   category_id: number
   type: 'income' | 'expense'
-  payment_method: string
+  payment_method: 'credit_card' | 'debit_card' | 'cash' | 'pix' | 'bank_slip' | 'bank_transfer'
   amount: string | number
   transacted_at: string
   notes?: string
@@ -103,6 +103,36 @@ export interface DashboardCategoryItem {
 export interface DashboardDayItem {
   day: number
   income: number
+  expense: number
+}
+
+export interface DashboardMonthlyComparisonItem {
+  month: string
+  income: number
+  expense: number
+}
+
+export interface DashboardMtdComparisonMetric {
+  current: { month: string; through_day: number; total: number }
+  previous: { month: string; through_day: number; total: number }
+  change_percent: number | null
+}
+
+export interface DashboardMtdComparison {
+  income: DashboardMtdComparisonMetric
+  expense: DashboardMtdComparisonMetric
+  balance: DashboardMtdComparisonMetric
+  installments: DashboardMtdComparisonMetric
+}
+
+export interface DashboardPaymentMethodItem {
+  name: 'credit_card' | 'debit_card' | 'cash' | 'pix' | 'bank_slip' | 'bank_transfer'
+  value: number
+}
+
+export interface DashboardWeeklyExpenseItem {
+  weekday: number
+  date: string
   expense: number
 }
 

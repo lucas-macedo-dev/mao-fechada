@@ -8,7 +8,6 @@ use App\Http\Requests\Api\V1\UpdateCategoryRequest;
 use App\Models\Category;
 use App\Services\FallbackCategoryResolver;
 use App\Support\ApiResponse;
-use App\Support\TransactionTypeMapper;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -39,7 +38,6 @@ class CategoryController extends Controller
     public function store(StoreCategoryRequest $request): JsonResponse
     {
         $validated = $request->validated();
-        $validated['type'] = TransactionTypeMapper::toDatabase($validated['type']);
 
         $this->validateParent($request, $validated['parent_id'] ?? null, $validated['type']);
 
@@ -64,10 +62,6 @@ class CategoryController extends Controller
         $this->ensureOwnership($request, $category->user_id);
 
         $validated = $request->validated();
-
-        if (isset($validated['type'])) {
-            $validated['type'] = TransactionTypeMapper::toDatabase($validated['type']);
-        }
 
         $effectiveType = $validated['type'] ?? $category->type;
         $targetParentId = array_key_exists('parent_id', $validated)

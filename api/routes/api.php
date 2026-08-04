@@ -48,6 +48,10 @@ Route::prefix('v1')->group(function (): void {
             Route::get('/dashboard/by-category', [DashboardController::class, 'byCategory']);
             Route::get('/dashboard/by-day', [DashboardController::class, 'byDay']);
             Route::get('/dashboard/installments-total', [DashboardController::class, 'installmentsTotal']);
+            Route::get('/dashboard/monthly-comparison', [DashboardController::class, 'monthlyComparison']);
+            Route::get('/dashboard/expenses-mtd-comparison', [DashboardController::class, 'mtdComparison']);
+            Route::get('/dashboard/by-payment-method', [DashboardController::class, 'byPaymentMethod']);
+            Route::get('/dashboard/weekly-expenses', [DashboardController::class, 'weeklyExpenses']);
 
             Route::get('/budgets', [BudgetController::class, 'index']);
             Route::post('/budgets', [BudgetController::class, 'store']);

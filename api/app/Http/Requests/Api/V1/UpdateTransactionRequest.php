@@ -16,14 +16,14 @@ class UpdateTransactionRequest extends FormRequest
     {
         return [
             'category_id' => ['sometimes', 'required', 'integer', 'exists:categories,id'],
-            'type' => ['sometimes', 'required', Rule::in(['entrada', 'saida', 'income', 'expense'])],
+            'type' => ['sometimes', 'required', Rule::in(['income', 'expense'])],
             'payment_method' => ['sometimes', 'required', Rule::in([
-                'cartao_credito',
-                'cartao_debito',
-                'dinheiro',
+                'credit_card',
+                'debit_card',
+                'cash',
                 'pix',
-                'boleto',
-                'ted',
+                'bank_slip',
+                'bank_transfer',
             ])],
             'amount' => ['sometimes', 'required', 'numeric', 'gt:0'],
             'transacted_at' => ['sometimes', 'required', 'date'],
