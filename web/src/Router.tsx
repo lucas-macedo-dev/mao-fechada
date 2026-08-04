@@ -17,7 +17,6 @@ import { ProfilePage } from './pages/ProfilePage'
 import { SubscriptionPage } from './pages/SubscriptionPage'
 import { PaymentMethodsPage } from './pages/PaymentMethodsPage'
 import i18n from './i18n/config'
-import './App.css'
 import { ReportsPage } from './pages/ReportsPage'
 
 // Initialize i18n and auth

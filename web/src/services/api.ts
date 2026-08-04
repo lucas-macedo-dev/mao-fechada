@@ -1,5 +1,5 @@
 import axios from 'axios'
-import type { ApiError, User, Category, Transaction, DashboardSummary, MonthlySummary, SubscriptionStatus, PaginatedResponse, Plan, DashboardCategoryItem, DashboardDayItem, Report } from '../types/api'
+import type { ApiError, User, Category, Transaction, DashboardSummary, MonthlySummary, SubscriptionStatus, PaginatedResponse, Plan, DashboardCategoryItem, DashboardDayItem, DashboardMonthlyComparisonItem, DashboardMtdComparison, DashboardPaymentMethodItem, DashboardWeeklyExpenseItem, Report } from '../types/api'
 
 const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api'
 
@@ -170,6 +170,32 @@ export const api = {
     const response = await client.get<{ data: { month: string; total: number } }>('/v1/dashboard/installments-total', {
       params: { month },
     })
+    return response.data.data
+  },
+
+  getDashboardMonthlyComparison: async (month?: string) => {
+    const response = await client.get<{ data: { months: DashboardMonthlyComparisonItem[] } }>('/v1/dashboard/monthly-comparison', {
+      params: { month },
+    })
+    return response.data.data
+  },
+
+  getDashboardMtdComparison: async (month?: string) => {
+    const response = await client.get<{ data: DashboardMtdComparison }>('/v1/dashboard/expenses-mtd-comparison', {
+      params: { month },
+    })
+    return response.data.data
+  },
+
+  getDashboardByPaymentMethod: async (month?: string) => {
+    const response = await client.get<{ data: DashboardPaymentMethodItem[] }>('/v1/dashboard/by-payment-method', {
+      params: { month },
+    })
+    return response.data.data
+  },
+
+  getDashboardWeeklyExpenses: async () => {
+    const response = await client.get<{ data: DashboardWeeklyExpenseItem[] }>('/v1/dashboard/weekly-expenses')
     return response.data.data
   },
 
