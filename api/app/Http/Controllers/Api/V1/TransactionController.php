@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
@@ -36,9 +38,9 @@ class TransactionController extends Controller
 
         return ApiResponse::data($paginator->items(), meta: [
             'current_page' => $paginator->currentPage(),
-            'last_page' => $paginator->lastPage(),
-            'per_page' => $paginator->perPage(),
-            'total' => $paginator->total(),
+            'last_page'    => $paginator->lastPage(),
+            'per_page'     => $paginator->perPage(),
+            'total'        => $paginator->total(),
         ]);
     }
 
@@ -71,10 +73,10 @@ class TransactionController extends Controller
                     $records[] = $request->user()->transactions()->create(array_merge(
                         $validated,
                         [
-                            'transacted_at' => $date,
+                            'transacted_at'        => $date,
                             'installment_group_id' => $groupId,
-                            'installment_number' => $i,
-                            'installment_total' => $installmentTotal,
+                            'installment_number'   => $i,
+                            'installment_total'    => $installmentTotal,
                         ]
                     ));
                 }

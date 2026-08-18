@@ -1,6 +1,5 @@
 <?php
 
-use App\Models\Budget;
 use App\Models\Category;
 use App\Models\Transaction;
 use App\Models\User;
@@ -13,11 +12,11 @@ it('does not expose user_id on transaction endpoints', function () {
     $category = Category::factory()->for($user)->create(['type' => 'expense']);
 
     $storeResponse = $this->postJson('/api/v1/transactions', [
-        'category_id' => $category->id,
-        'type' => 'expense',
+        'category_id'    => $category->id,
+        'type'           => 'expense',
         'payment_method' => 'pix',
-        'amount' => 100,
-        'transacted_at' => '2026-06-20',
+        'amount'         => 100,
+        'transacted_at'  => '2026-06-20',
     ]);
     $storeResponse->assertCreated();
     expect($storeResponse->json('data'))->not()->toHaveKey('user_id');
@@ -75,9 +74,9 @@ it('does not expose user_id on budget endpoints', function () {
 
     $storeResponse = $this->postJson('/api/v1/budgets', [
         'category_id' => $category->id,
-        'year' => 2026,
-        'month' => 6,
-        'amount' => 500,
+        'year'        => 2026,
+        'month'       => 6,
+        'amount'      => 500,
     ]);
     $storeResponse->assertOk();
     expect($storeResponse->json('data'))->not()->toHaveKey('user_id');
@@ -93,8 +92,8 @@ it('does not expose user_id on dashboard endpoints', function () {
 
     $category = Category::factory()->for($user)->create(['type' => 'expense']);
     Transaction::factory()->for($user)->create([
-        'category_id' => $category->id,
-        'type' => 'expense',
+        'category_id'   => $category->id,
+        'type'          => 'expense',
         'transacted_at' => now()->format('Y-m-d'),
     ]);
 

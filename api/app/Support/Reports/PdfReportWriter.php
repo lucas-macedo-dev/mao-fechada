@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Support\Reports;
 
 use App\Models\User;
@@ -27,12 +29,12 @@ class PdfReportWriter
         }
 
         return Pdf::loadView('reports.transactions-pdf', [
-            'user' => $user,
+            'user'         => $user,
             'transactions' => $transactions,
-            'filters' => $filters,
-            'totalIncome' => $totalIncome,
+            'filters'      => $filters,
+            'totalIncome'  => $totalIncome,
             'totalExpense' => $totalExpense,
-            'totalNet' => $totalIncome - $totalExpense,
+            'totalNet'     => $totalIncome - $totalExpense,
         ])->output();
     }
 }

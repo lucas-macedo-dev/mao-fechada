@@ -3,8 +3,8 @@
 use App\Http\Middleware\EnsureEmailIsVerified;
 use App\Http\Middleware\ResolveApiLocale;
 use App\Services\ActivityLogger;
-use Illuminate\Auth\AuthenticationException;
 use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Auth\AuthenticationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -12,8 +12,8 @@ use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
-use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -33,15 +33,15 @@ return Application::configure(basePath: dirname(__DIR__))
             fn (Request $request) => $request->is('api/*'),
         );
 
-        $exceptions->render(function (\Throwable $exception, Request $request): ?JsonResponse {
-            if (!$request->is('api/*')) {
+        $exceptions->render(function (Throwable $exception, Request $request): ?JsonResponse {
+            if (! $request->is('api/*')) {
                 return null;
             }
 
             if ($exception instanceof ValidationException) {
                 return response()->json([
                     'error' => [
-                        'type' => 'validation_error',
+                        'type'    => 'validation_error',
                         'message' => __('messages.validation_failed'),
                         'details' => $exception->errors(),
                     ],
@@ -51,7 +51,7 @@ return Application::configure(basePath: dirname(__DIR__))
             if ($exception instanceof AuthenticationException) {
                 return response()->json([
                     'error' => [
-                        'type' => 'authentication_error',
+                        'type'    => 'authentication_error',
                         'message' => __('messages.unauthenticated'),
                     ],
                 ], Response::HTTP_UNAUTHORIZED);
@@ -60,7 +60,7 @@ return Application::configure(basePath: dirname(__DIR__))
             if ($exception instanceof AuthorizationException) {
                 return response()->json([
                     'error' => [
-                        'type' => 'authorization_error',
+                        'type'    => 'authorization_error',
                         'message' => $exception->getMessage() ?: __('messages.forbidden'),
                     ],
                 ], Response::HTTP_FORBIDDEN);
@@ -69,7 +69,7 @@ return Application::configure(basePath: dirname(__DIR__))
             if ($exception instanceof ModelNotFoundException) {
                 return response()->json([
                     'error' => [
-                        'type' => 'not_found',
+                        'type'    => 'not_found',
                         'message' => __('messages.resource_not_found'),
                     ],
                 ], Response::HTTP_NOT_FOUND);
@@ -82,14 +82,14 @@ return Application::configure(basePath: dirname(__DIR__))
                 if ($statusCode >= 500) {
                     app(ActivityLogger::class)->log('system.exception', auth()->id(), [
                         'exception_class' => get_class($exception),
-                        'message' => mb_substr($exception->getMessage(), 0, 2000),
-                        'path' => $request->path(),
+                        'message'         => mb_substr($exception->getMessage(), 0, 2000),
+                        'path'            => $request->path(),
                     ]);
                 }
 
                 return response()->json([
                     'error' => [
-                        'type' => $statusCode === Response::HTTP_FORBIDDEN ? 'authorization_error' : 'http_error',
+                        'type'    => $statusCode === Response::HTTP_FORBIDDEN ? 'authorization_error' : 'http_error',
                         'message' => $exception->getMessage() ?: $fallbackMessage ?: __('messages.http_error'),
                     ],
                 ], $statusCode);
@@ -97,13 +97,13 @@ return Application::configure(basePath: dirname(__DIR__))
 
             app(ActivityLogger::class)->log('system.exception', auth()->id(), [
                 'exception_class' => get_class($exception),
-                'message' => mb_substr($exception->getMessage(), 0, 2000),
-                'path' => $request->path(),
+                'message'         => mb_substr($exception->getMessage(), 0, 2000),
+                'path'            => $request->path(),
             ]);
 
             return response()->json([
                 'error' => [
-                    'type' => 'server_error',
+                    'type'    => 'server_error',
                     'message' => config('app.debug') ? $exception->getMessage() : __('messages.server_error'),
                 ],
             ], Response::HTTP_INTERNAL_SERVER_ERROR);

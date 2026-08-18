@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
@@ -24,14 +26,14 @@ class AuthController extends Controller
     public function register(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'max:255', 'unique:users,email'],
+            'name'     => ['required', 'string', 'max:255'],
+            'email'    => ['required', 'email', 'max:255', 'unique:users,email'],
             'password' => ['required', 'string', 'min:8', 'regex:/[0-9\W]/'],
-            'locale' => ['sometimes', 'required', 'in:pt-BR,en'],
+            'locale'   => ['sometimes', 'required', 'in:pt-BR,en'],
         ]);
 
         $user = User::query()->create($validated);
-        (new DefaultCategorySeeder())->seedFor($user);
+        (new DefaultCategorySeeder)->seedFor($user);
         event(new Registered($user));
         $token = $user->createToken('web')->plainTextToken;
 
@@ -41,20 +43,20 @@ class AuthController extends Controller
 
         return ApiResponse::data([
             'token' => $token,
-            'user' => new UserResource($user),
+            'user'  => new UserResource($user),
         ], 201);
     }
 
     public function login(Request $request): JsonResponse
     {
         $credentials = $request->validate([
-            'email' => ['required', 'email'],
+            'email'    => ['required', 'email'],
             'password' => ['required', 'string'],
         ]);
 
         $user = User::query()->where('email', $credentials['email'])->first();
 
-        if (!$user || !Hash::check($credentials['password'], $user->password)) {
+        if (! $user || ! Hash::check($credentials['password'], $user->password)) {
             $this->activityLogger->log('auth.login_failure', $user?->id ?? null);
 
             throw ValidationException::withMessages([
@@ -66,7 +68,7 @@ class AuthController extends Controller
 
         return ApiResponse::data([
             'token' => $user->createToken('web')->plainTextToken,
-            'user' => new UserResource($user),
+            'user'  => new UserResource($user),
         ]);
     }
 

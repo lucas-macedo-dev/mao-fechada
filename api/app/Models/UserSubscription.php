@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -25,9 +27,9 @@ class UserSubscription extends Model
     protected function casts(): array
     {
         return [
-            'trial_ends_at' => 'datetime',
+            'trial_ends_at'          => 'datetime',
             'current_period_ends_at' => 'datetime',
-            'canceled_at' => 'datetime',
+            'canceled_at'            => 'datetime',
         ];
     }
 

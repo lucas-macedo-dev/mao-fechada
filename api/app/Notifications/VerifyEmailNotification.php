@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Notifications;
 
 use Illuminate\Auth\Notifications\VerifyEmail;
@@ -26,9 +28,9 @@ class VerifyEmailNotification extends VerifyEmail
 
         $frontendUrl = rtrim(config('services.frontend_url', 'http://localhost:5173'), '/');
 
-        return $frontendUrl . '/auth/verify-email/' . $id . '/' . $hash
-            . '?expires=' . ($queryParams['expires'] ?? '')
-            . '&signature=' . ($queryParams['signature'] ?? '');
+        return $frontendUrl.'/auth/verify-email/'.$id.'/'.$hash
+            .'?expires='.($queryParams['expires'] ?? '')
+            .'&signature='.($queryParams['signature'] ?? '');
     }
 
     public function toMail($notifiable): MailMessage

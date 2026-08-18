@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -18,8 +20,8 @@ class Budget extends Model
     {
         return [
             'amount' => 'decimal:2',
-            'year' => 'integer',
-            'month' => 'integer',
+            'year'   => 'integer',
+            'month'  => 'integer',
         ];
     }
 

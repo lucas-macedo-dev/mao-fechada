@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -19,8 +21,8 @@ class Report extends Model
     protected function casts(): array
     {
         return [
-            'filters' => 'array',
-            'expires_at' => 'datetime',
+            'filters'      => 'array',
+            'expires_at'   => 'datetime',
             'completed_at' => 'datetime',
         ];
     }

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Console\Commands;
 
 use App\Models\User;
@@ -22,11 +24,12 @@ class SeedDefaultCategories extends Command
 
         if ($isDryRun) {
             $this->info("Dry run: {$toSeedCount} users would be seeded. {$skippedCount} users would be skipped.");
+
             return;
         }
 
         $seeded = 0;
-        $seeder = new DefaultCategorySeeder();
+        $seeder = new DefaultCategorySeeder;
 
         User::query()
             ->whereDoesntHave('categories')

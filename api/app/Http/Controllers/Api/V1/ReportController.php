@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
@@ -32,9 +34,9 @@ class ReportController extends Controller
 
         return ApiResponse::data($paginator->items(), meta: [
             'current_page' => $paginator->currentPage(),
-            'last_page' => $paginator->lastPage(),
-            'per_page' => $paginator->perPage(),
-            'total' => $paginator->total(),
+            'last_page'    => $paginator->lastPage(),
+            'per_page'     => $paginator->perPage(),
+            'total'        => $paginator->total(),
         ]);
     }
 
@@ -43,8 +45,8 @@ class ReportController extends Controller
         $validated = $request->validated();
 
         $report = $request->user()->reports()->create([
-            'format' => $validated['format'],
-            'status' => 'pending',
+            'format'  => $validated['format'],
+            'status'  => 'pending',
             'filters' => Arr::except($validated, ['format']),
         ]);
 

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
@@ -19,7 +21,7 @@ class ActivityLog extends Model
     ];
 
     protected $casts = [
-        'metadata' => 'array',
+        'metadata'   => 'array',
         'created_at' => 'datetime',
     ];
 

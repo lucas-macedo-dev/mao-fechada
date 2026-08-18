@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -17,10 +19,10 @@ class Transaction extends Model
     protected function casts(): array
     {
         return [
-            'amount' => 'decimal:2',
-            'transacted_at' => 'date',
+            'amount'             => 'decimal:2',
+            'transacted_at'      => 'date',
             'installment_number' => 'integer',
-            'installment_total' => 'integer',
+            'installment_total'  => 'integer',
         ];
     }
 

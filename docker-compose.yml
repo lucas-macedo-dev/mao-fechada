@@ -5,6 +5,9 @@ services:
     build:
       context: ./docker/php
       dockerfile: Dockerfile
+      args:
+        UID: ${UID:-1000}
+        GID: ${GID:-1000}
     container_name: mao_fechada_api
     working_dir: /var/www/api
     volumes:

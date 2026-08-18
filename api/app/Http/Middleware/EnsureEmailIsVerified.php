@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Middleware;
 
 use Closure;
@@ -11,11 +13,11 @@ class EnsureEmailIsVerified
 {
     public function handle(Request $request, Closure $next): Response
     {
-        if (!$request->user() ||
-            ($request->user() instanceof MustVerifyEmail && !$request->user()->hasVerifiedEmail())) {
+        if (! $request->user() ||
+            ($request->user() instanceof MustVerifyEmail && ! $request->user()->hasVerifiedEmail())) {
             return response()->json([
                 'error' => [
-                    'type' => 'email_not_verified',
+                    'type'    => 'email_not_verified',
                     'message' => 'Your email address is not verified.',
                 ],
             ], 403);

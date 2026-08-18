@@ -34,6 +34,16 @@ COPY php-local.ini /usr/local/etc/php/conf.d/local.ini
 
 WORKDIR /var/www/api
 
+# Realinha o www-data com o UID/GID do usuário do host, para que os arquivos
+# escritos pelo container (composer, artisan, pint, phpstan) fiquem com o
+# dono correto no bind mount, evitando erros de permissão dos dois lados.
+ARG UID=1000
+ARG GID=1000
+RUN deluser www-data 2>/dev/null || true; \
+    delgroup www-data 2>/dev/null || true; \
+    addgroup -g "${GID}" www-data && \
+    adduser -D -u "${UID}" -G www-data -h /var/www www-data
+
 # Permissões corretas para www-data
 RUN chown -R www-data:www-data /var/www
 

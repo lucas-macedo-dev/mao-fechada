@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Artisan;
 
 it('does not seed categories when user already has at least one category', function () {
     $user = User::factory()->create(['locale' => 'en']);
-    $seeder = new DefaultCategorySeeder();
+    $seeder = new DefaultCategorySeeder;
 
     $seeder->seedFor($user);
     $countAfterFirst = $user->categories()->count();
@@ -21,10 +21,10 @@ it('does not seed categories when user already has at least one category', funct
 
 it('creates 8 default categories after registration', function () {
     $response = $this->postJson('/api/v1/auth/register', [
-        'name' => 'Test User',
-        'email' => 'newuser@example.com',
+        'name'     => 'Test User',
+        'email'    => 'newuser@example.com',
         'password' => 'password1!',
-        'locale' => 'en',
+        'locale'   => 'en',
     ]);
 
     $response->assertCreated();
@@ -38,10 +38,10 @@ it('creates 8 default categories after registration', function () {
 
 it('creates pt-BR categories when locale is pt-BR', function () {
     $response = $this->postJson('/api/v1/auth/register', [
-        'name' => 'Usuário Teste',
-        'email' => 'usuario@example.com',
+        'name'     => 'Usuário Teste',
+        'email'    => 'usuario@example.com',
         'password' => 'senha1234!',
-        'locale' => 'pt-BR',
+        'locale'   => 'pt-BR',
     ]);
 
     $response->assertCreated();

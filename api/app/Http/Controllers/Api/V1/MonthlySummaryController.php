@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
@@ -15,7 +17,7 @@ class MonthlySummaryController extends Controller
     public function show(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'year' => ['required', 'integer', 'min:2000', 'max:2100'],
+            'year'  => ['required', 'integer', 'min:2000', 'max:2100'],
             'month' => ['required', 'integer', 'between:1,12'],
         ]);
 
@@ -57,20 +59,20 @@ class MonthlySummaryController extends Controller
             $budgetAmount = (float) ($budget?->amount ?? 0);
 
             return [
-                'category_id' => (int) $categoryId,
+                'category_id'   => (int) $categoryId,
                 'category_name' => $budget?->category?->name ?: ($categoryNames->get($categoryId) ?: null),
-                'budget' => $budgetAmount,
-                'actual' => $actual,
-                'variance' => $budgetAmount - $actual,
+                'budget'        => $budgetAmount,
+                'actual'        => $actual,
+                'variance'      => $budgetAmount - $actual,
             ];
         })->values();
 
         return ApiResponse::data([
-            'year' => $validated['year'],
-            'month' => $validated['month'],
-            'income_total' => (float) $incomeTotal,
-            'expense_total' => (float) $expenseTotal,
-            'net_balance' => (float) $incomeTotal - (float) $expenseTotal,
+            'year'              => $validated['year'],
+            'month'             => $validated['month'],
+            'income_total'      => (float) $incomeTotal,
+            'expense_total'     => (float) $expenseTotal,
+            'net_balance'       => (float) $incomeTotal - (float) $expenseTotal,
             'category_variance' => $variance,
         ]);
     }
