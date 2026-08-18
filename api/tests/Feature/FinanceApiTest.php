@@ -24,7 +24,7 @@ it('denies cross-user resource access', function () {
     ]);
     $transaction = Transaction::factory()->for($owner)->create([
         'category_id' => $category->id,
-        'type' => 'expense',
+        'type'        => 'expense',
     ]);
 
     Sanctum::actingAs($intruder);
@@ -65,22 +65,22 @@ it('returns monthly summary totals and variance', function () {
 
     Budget::factory()->for($user)->create([
         'category_id' => $expenseCategory->id,
-        'year' => 2026,
-        'month' => 6,
-        'amount' => 500,
+        'year'        => 2026,
+        'month'       => 6,
+        'amount'      => 500,
     ]);
 
     Transaction::factory()->for($user)->create([
-        'category_id' => $expenseCategory->id,
-        'type' => 'expense',
-        'amount' => 300,
+        'category_id'   => $expenseCategory->id,
+        'type'          => 'expense',
+        'amount'        => 300,
         'transacted_at' => '2026-06-10',
     ]);
 
     Transaction::factory()->for($user)->create([
-        'category_id' => $incomeCategory->id,
-        'type' => 'income',
-        'amount' => 2000,
+        'category_id'   => $incomeCategory->id,
+        'type'          => 'income',
+        'amount'        => 2000,
         'transacted_at' => '2026-06-05',
     ]);
 
@@ -97,14 +97,14 @@ it('returns hierarchical categories when tree flag is enabled', function () {
     Sanctum::actingAs($user);
 
     $root = Category::factory()->for($user)->create([
-        'name' => 'Moradia',
-        'type' => 'expense',
+        'name'      => 'Moradia',
+        'type'      => 'expense',
         'parent_id' => null,
     ]);
 
     $child = Category::factory()->for($user)->create([
-        'name' => 'Aluguel',
-        'type' => 'expense',
+        'name'      => 'Aluguel',
+        'type'      => 'expense',
         'parent_id' => $root->id,
     ]);
 
@@ -124,17 +124,17 @@ it('returns paginated transactions with filters', function () {
     ]);
 
     Transaction::factory()->for($user)->create([
-        'category_id' => $expenseCategory->id,
-        'type' => 'expense',
+        'category_id'    => $expenseCategory->id,
+        'type'           => 'expense',
         'payment_method' => 'pix',
-        'transacted_at' => '2026-06-15',
+        'transacted_at'  => '2026-06-15',
     ]);
 
     Transaction::factory()->for($user)->create([
-        'category_id' => $expenseCategory->id,
-        'type' => 'expense',
+        'category_id'    => $expenseCategory->id,
+        'type'           => 'expense',
         'payment_method' => 'cash',
-        'transacted_at' => '2026-05-15',
+        'transacted_at'  => '2026-05-15',
     ]);
 
     $response = $this->getJson('/api/v1/transactions?month=2026-06&payment_method=pix&per_page=1');
@@ -154,11 +154,11 @@ it('rejects legacy portuguese transaction type and payment method values', funct
     ]);
 
     $response = $this->postJson('/api/v1/transactions', [
-        'category_id' => $category->id,
-        'type' => 'saida',
+        'category_id'    => $category->id,
+        'type'           => 'saida',
         'payment_method' => 'dinheiro',
-        'amount' => 150.50,
-        'transacted_at' => '2026-06-20',
+        'amount'         => 150.50,
+        'transacted_at'  => '2026-06-20',
     ]);
 
     $response->assertStatus(422)
@@ -181,15 +181,15 @@ it('allows locale preference update for authenticated user', function () {
 
 it('allows profile update for authenticated user', function () {
     $user = User::factory()->create([
-        'name' => 'Old Name',
-        'email' => 'old@example.com',
+        'name'   => 'Old Name',
+        'email'  => 'old@example.com',
         'locale' => 'pt-BR',
     ]);
     Sanctum::actingAs($user);
 
     $response = $this->patchJson('/api/v1/users/me', [
-        'name' => 'New Name',
-        'email' => 'new@example.com',
+        'name'   => 'New Name',
+        'email'  => 'new@example.com',
         'locale' => 'en',
     ]);
 

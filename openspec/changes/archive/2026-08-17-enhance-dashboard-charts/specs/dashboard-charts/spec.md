@@ -1,31 +1,4 @@
-## Purpose
-
-Define the visual chart data and display requirements for the HomePage dashboard, scoped to the user's selected month.
-
-## Requirements
-
-### Requirement: HomePage SHALL display an expenses-by-category chart for the selected month
-The HomePage SHALL render a donut (or pie) chart showing the breakdown of total spending per expense category for the currently selected month.
-
-#### Scenario: Month has expense transactions across multiple categories
-- **WHEN** the user views the HomePage for a month with expenses in multiple categories
-- **THEN** the chart displays each category as a slice proportional to its share of total expenses for that month
-
-#### Scenario: A category has no expenses in the selected month
-- **WHEN** a category has zero expense transactions in the selected month
-- **THEN** that category does not appear in the chart
-
-#### Scenario: Month has no expense transactions
-- **WHEN** the selected month has no expense transactions
-- **THEN** the chart area shows an empty-state message instead of a chart
-
-#### Scenario: Chart is capped at a maximum number of slices
-- **WHEN** the number of distinct expense categories exceeds 8
-- **THEN** the top 8 categories by spend are shown individually, and the remainder are grouped into a single "Other" slice
-
-#### Scenario: User changes the month selector
-- **WHEN** the user selects a different month
-- **THEN** the expenses-by-category chart updates to reflect data for the new month
+## MODIFIED Requirements
 
 ### Requirement: HomePage SHALL display an expenses-per-day chart
 The HomePage SHALL render a line chart showing daily total expenses for every calendar day in the selected month.
@@ -93,28 +66,7 @@ The frontend SHALL fetch chart data from dedicated endpoints: one for category b
 - **WHEN** `GET /dashboard/weekly-expenses` is called
 - **THEN** the API returns an array of exactly 7 objects, one per weekday of the current real calendar week (Monday through Sunday), each with `weekday` (integer `1`–`7`, Monday `1`), `date` (string `YYYY-MM-DD`), and `expense` (total expense amount for that day)
 
-### Requirement: HomePage SHALL display an installment purchases summary card
-The HomePage SHALL render a summary card showing the total expense amount from installment transactions for the currently selected month.
-
-#### Scenario: Month has installment transactions
-- **WHEN** the user views the HomePage for a month that contains at least one transaction with an `installment_group_id`
-- **THEN** the installment summary card displays the sum of amounts for all installment-type expense transactions in that month
-
-#### Scenario: Month has no installment transactions
-- **WHEN** the selected month has no installment transactions
-- **THEN** the installment summary card displays R$ 0,00 or an appropriate zero-state message
-
-#### Scenario: Card updates when month changes
-- **WHEN** the user changes the month selector on the HomePage
-- **THEN** the installment summary card refreshes to reflect the installment total for the newly selected month
-
-#### Scenario: Frontend fetches installment total from dedicated endpoint
-- **WHEN** the HomePage mounts or the month changes
-- **THEN** the frontend calls `GET /dashboard/installments-total?month=YYYY-MM` and uses the `total` field in the response to populate the installment card
-
-#### Scenario: API response for installments-total
-- **WHEN** `GET /dashboard/installments-total?month=YYYY-MM` is called by an authenticated user
-- **THEN** the API returns an object with `month` (string YYYY-MM) and `total` (decimal, the sum of amounts of all installment expense transactions for that user in that month)
+## ADDED Requirements
 
 ### Requirement: HomePage SHALL display an income-vs-expenses monthly comparison chart
 The HomePage SHALL render a grouped bar chart comparing total income and total expenses across the currently selected month and the 2 calendar months immediately preceding it.

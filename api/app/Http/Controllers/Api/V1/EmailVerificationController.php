@@ -18,11 +18,11 @@ class EmailVerificationController extends Controller
     {
         $user = User::findOrFail($id);
 
-        if (!hash_equals($hash, sha1($user->getEmailForVerification()))) {
+        if (! hash_equals($hash, sha1($user->getEmailForVerification()))) {
             return response()->json(['error' => ['type' => 'invalid_verification_link', 'message' => 'Invalid verification link.']], 400);
         }
 
-        if (!$request->hasValidSignature()) {
+        if (! $request->hasValidSignature()) {
             return response()->json(['error' => ['type' => 'verification_link_expired', 'message' => 'Verification link has expired.']], 400);
         }
 

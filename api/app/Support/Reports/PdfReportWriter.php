@@ -27,12 +27,12 @@ class PdfReportWriter
         }
 
         return Pdf::loadView('reports.transactions-pdf', [
-            'user' => $user,
+            'user'         => $user,
             'transactions' => $transactions,
-            'filters' => $filters,
-            'totalIncome' => $totalIncome,
+            'filters'      => $filters,
+            'totalIncome'  => $totalIncome,
             'totalExpense' => $totalExpense,
-            'totalNet' => $totalIncome - $totalExpense,
+            'totalNet'     => $totalIncome - $totalExpense,
         ])->output();
     }
 }

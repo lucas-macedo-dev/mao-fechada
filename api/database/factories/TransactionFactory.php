@@ -17,9 +17,9 @@ class TransactionFactory extends Factory
         $type = fake()->randomElement(['income', 'expense']);
 
         return [
-            'user_id' => User::factory(),
-            'category_id' => Category::factory()->state(['type' => $type]),
-            'type' => $type,
+            'user_id'        => User::factory(),
+            'category_id'    => Category::factory()->state(['type' => $type]),
+            'type'           => $type,
             'payment_method' => fake()->randomElement([
                 'credit_card',
                 'debit_card',
@@ -28,9 +28,9 @@ class TransactionFactory extends Factory
                 'bank_slip',
                 'bank_transfer',
             ]),
-            'amount' => fake()->randomFloat(2, 1, 5000),
+            'amount'        => fake()->randomFloat(2, 1, 5000),
             'transacted_at' => fake()->date(),
-            'notes' => fake()->boolean(50) ? fake()->sentence() : null,
+            'notes'         => fake()->boolean(50) ? fake()->sentence() : null,
         ];
     }
 }

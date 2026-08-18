@@ -25,10 +25,10 @@ it('generates a unique uuid for every created user', function () {
 
 it('exposes only essential fields with the uuid as id on register', function () {
     $response = $this->postJson('/api/v1/auth/register', [
-        'name' => 'Shape Test',
-        'email' => 'shape-register@example.com',
+        'name'     => 'Shape Test',
+        'email'    => 'shape-register@example.com',
         'password' => 'password1!',
-        'locale' => 'en',
+        'locale'   => 'en',
     ]);
 
     $response->assertCreated();
@@ -43,7 +43,7 @@ it('exposes only essential fields with the uuid as id on login', function () {
     $user = User::factory()->create(['password' => 'password1!']);
 
     $response = $this->postJson('/api/v1/auth/login', [
-        'email' => $user->email,
+        'email'    => $user->email,
         'password' => 'password1!',
     ]);
 
@@ -68,7 +68,7 @@ it('exposes only essential fields on tutorial update', function () {
     Sanctum::actingAs($user);
 
     $response = $this->putJson('/api/v1/users/me/tutorial', [
-        'step_id' => 'create-category',
+        'step_id'   => 'create-category',
         'completed' => true,
     ]);
 

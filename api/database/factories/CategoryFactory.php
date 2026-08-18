@@ -14,10 +14,10 @@ class CategoryFactory extends Factory
     public function definition(): array
     {
         return [
-            'user_id' => User::factory(),
-            'name' => fake()->unique()->word(),
-            'type' => fake()->randomElement(['income', 'expense']),
-            'icon' => null,
+            'user_id'   => User::factory(),
+            'name'      => fake()->unique()->word(),
+            'type'      => fake()->randomElement(['income', 'expense']),
+            'icon'      => null,
             'parent_id' => null,
         ];
     }

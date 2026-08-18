@@ -15,9 +15,9 @@ class UpdateCategoryRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => ['sometimes', 'required', 'string', 'max:100'],
-            'type' => ['sometimes', 'required', Rule::in(['income', 'expense'])],
-            'icon' => ['nullable', 'string', 'max:100'],
+            'name'      => ['sometimes', 'required', 'string', 'max:100'],
+            'type'      => ['sometimes', 'required', Rule::in(['income', 'expense'])],
+            'icon'      => ['nullable', 'string', 'max:100'],
             'parent_id' => ['sometimes', 'nullable', 'integer', 'exists:categories,id'],
         ];
     }

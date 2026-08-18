@@ -24,15 +24,15 @@ class DashboardController extends Controller
             ->sum('amount');
 
         return ApiResponse::data([
-            'month' => sprintf('%04d-%02d', $year, $month),
+            'month'  => sprintf('%04d-%02d', $year, $month),
             'totals' => [
                 'entradas' => $income,
-                'saidas' => $expense,
-                'saldo' => $income - $expense,
+                'saidas'   => $expense,
+                'saldo'    => $income - $expense,
             ],
             'chart' => [
                 'entradas' => $income,
-                'saidas' => $expense,
+                'saidas'   => $expense,
             ],
             'recent_transactions' => $this->baseQuery($request, $year, $month)
                 ->with('category')
@@ -55,10 +55,10 @@ class DashboardController extends Controller
             ->sum('amount');
 
         return ApiResponse::data([
-            'month' => sprintf('%04d-%02d', $year, $month),
+            'month'  => sprintf('%04d-%02d', $year, $month),
             'series' => [
                 'entradas' => $income,
-                'saidas' => $expense,
+                'saidas'   => $expense,
             ],
         ]);
     }
@@ -86,7 +86,6 @@ class DashboardController extends Controller
 
         [$year, $month] = $this->resolveMonth($request);
 
-
         $rows = $this->baseQuery($request, $year, $month)
             ->where('type', 'expense')
             ->with('category.parent')
@@ -104,8 +103,8 @@ class DashboardController extends Controller
             ->values()
             ->sortByDesc('value');
 
-        $top   = $rows->take(8);
-        $other = $rows->skip(8);
+        $top = $rows->take(5);
+        $other = $rows->skip(5);
 
         $result = $top->values()->toArray();
 
@@ -141,7 +140,7 @@ class DashboardController extends Controller
         [$year, $month] = $this->resolveMonth($request);
 
         $transactions = $this->baseQuery($request, $year, $month)->get();
-        $daysInMonth  = Carbon::createFromDate($year, $month, 1)->daysInMonth;
+        $daysInMonth = Carbon::createFromDate($year, $month, 1)->daysInMonth;
 
         $byDay = [];
         for ($day = 1; $day <= $daysInMonth; $day++) {
@@ -179,8 +178,8 @@ class DashboardController extends Controller
                 ->sum('amount');
 
             $months[] = [
-                'month' => $date->format('Y-m'),
-                'income' => $income,
+                'month'   => $date->format('Y-m'),
+                'income'  => $income,
                 'expense' => $expense,
             ];
         }
@@ -228,14 +227,14 @@ class DashboardController extends Controller
         $buildComparison = function (float $currentTotal, float $previousTotal) use ($selected, $previous, $throughDay, $previousThroughDay) {
             return [
                 'current' => [
-                    'month' => $selected->format('Y-m'),
+                    'month'       => $selected->format('Y-m'),
                     'through_day' => $throughDay,
-                    'total' => $currentTotal,
+                    'total'       => $currentTotal,
                 ],
                 'previous' => [
-                    'month' => $previous->format('Y-m'),
+                    'month'       => $previous->format('Y-m'),
                     'through_day' => $previousThroughDay,
-                    'total' => $previousTotal,
+                    'total'       => $previousTotal,
                 ],
                 'change_percent' => $previousTotal != 0
                     ? round((($currentTotal - $previousTotal) / $previousTotal) * 100, 2)
@@ -244,9 +243,9 @@ class DashboardController extends Controller
         };
 
         return ApiResponse::data([
-            'income' => $buildComparison($currentIncome, $previousIncome),
-            'expense' => $buildComparison($currentExpense, $previousExpense),
-            'balance' => $buildComparison($currentIncome - $currentExpense, $previousIncome - $previousExpense),
+            'income'       => $buildComparison($currentIncome, $previousIncome),
+            'expense'      => $buildComparison($currentExpense, $previousExpense),
+            'balance'      => $buildComparison($currentIncome - $currentExpense, $previousIncome - $previousExpense),
             'installments' => $buildComparison($currentInstallments, $previousInstallments),
         ]);
     }
@@ -262,9 +261,10 @@ class DashboardController extends Controller
             ->get()
             ->groupBy('payment_method')
             ->map(fn ($transactions, $method) => [
-                'name' => $method,
+                'name'  => $method,
                 'value' => (float) $transactions->sum('amount'),
             ])
+            ->sortByDesc('value')
             ->values();
 
         return ApiResponse::data($result);
@@ -281,7 +281,7 @@ class DashboardController extends Controller
             $date = $startOfWeek->copy()->addDays($i);
             $byWeekday[$date->dayOfWeekIso] = [
                 'weekday' => $date->dayOfWeekIso,
-                'date' => $date->toDateString(),
+                'date'    => $date->toDateString(),
                 'expense' => 0.0,
             ];
         }

@@ -15,7 +15,7 @@ class BudgetController extends Controller
     public function index(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'year' => ['required', 'integer', 'min:2000', 'max:2100'],
+            'year'  => ['required', 'integer', 'min:2000', 'max:2100'],
             'month' => ['required', 'integer', 'between:1,12'],
         ]);
 
@@ -34,9 +34,9 @@ class BudgetController extends Controller
     {
         $validated = $request->validate([
             'category_id' => ['required', 'integer', 'exists:categories,id'],
-            'year' => ['required', 'integer', 'min:2000', 'max:2100'],
-            'month' => ['required', 'integer', 'between:1,12'],
-            'amount' => ['required', 'numeric', 'gt:0'],
+            'year'        => ['required', 'integer', 'min:2000', 'max:2100'],
+            'month'       => ['required', 'integer', 'between:1,12'],
+            'amount'      => ['required', 'numeric', 'gt:0'],
         ]);
 
         $category = Category::query()->findOrFail($validated['category_id']);
@@ -50,10 +50,10 @@ class BudgetController extends Controller
 
         $budget = Budget::query()->updateOrCreate(
             [
-                'user_id' => $request->user()->id,
+                'user_id'     => $request->user()->id,
                 'category_id' => $validated['category_id'],
-                'year' => $validated['year'],
-                'month' => $validated['month'],
+                'year'        => $validated['year'],
+                'month'       => $validated['month'],
             ],
             [
                 'amount' => $validated['amount'],

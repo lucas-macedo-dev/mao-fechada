@@ -25,7 +25,7 @@ class ResolveApiLocale
         return $next($request);
     }
 
-    private function normalizeLocale(string|null $locale): string|null
+    private function normalizeLocale(?string $locale): ?string
     {
         if ($locale === null) {
             return null;

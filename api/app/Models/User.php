@@ -4,8 +4,8 @@ namespace App\Models;
 
 use App\Notifications\ResetPasswordNotification;
 use App\Notifications\VerifyEmailNotification;
-use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Database\Factories\UserFactory;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -41,7 +41,7 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return [
             'email_verified_at' => 'datetime',
-            'password' => 'hashed',
+            'password'          => 'hashed',
             'tutorial_progress' => 'array',
         ];
     }
@@ -73,7 +73,7 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function sendEmailVerificationNotification(): void
     {
-        $this->notify((new VerifyEmailNotification())->locale($this->locale ?? config('app.locale')));
+        $this->notify((new VerifyEmailNotification)->locale($this->locale ?? config('app.locale')));
     }
 
     public function sendPasswordResetNotification($token): void
@@ -83,7 +83,7 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function getProfilePhotoUrlAttribute(): ?string
     {
-        if (!$this->profile_photo_path) {
+        if (! $this->profile_photo_path) {
             return null;
         }
 

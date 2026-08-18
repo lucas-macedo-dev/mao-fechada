@@ -15,8 +15,8 @@ class UpdateTransactionRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'category_id' => ['sometimes', 'required', 'integer', 'exists:categories,id'],
-            'type' => ['sometimes', 'required', Rule::in(['income', 'expense'])],
+            'category_id'    => ['sometimes', 'required', 'integer', 'exists:categories,id'],
+            'type'           => ['sometimes', 'required', Rule::in(['income', 'expense'])],
             'payment_method' => ['sometimes', 'required', Rule::in([
                 'credit_card',
                 'debit_card',
@@ -25,9 +25,9 @@ class UpdateTransactionRequest extends FormRequest
                 'bank_slip',
                 'bank_transfer',
             ])],
-            'amount' => ['sometimes', 'required', 'numeric', 'gt:0'],
+            'amount'        => ['sometimes', 'required', 'numeric', 'gt:0'],
             'transacted_at' => ['sometimes', 'required', 'date'],
-            'notes' => ['nullable', 'string', 'max:2000'],
+            'notes'         => ['nullable', 'string', 'max:2000'],
         ];
     }
 }

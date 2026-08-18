@@ -7,7 +7,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        if (!app()->isProduction()) {
+        if (! app()->isProduction()) {
             DB::table('users')
                 ->whereNull('email_verified_at')
                 ->update(['email_verified_at' => now()]);

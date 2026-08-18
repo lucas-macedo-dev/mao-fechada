@@ -18,7 +18,7 @@ class MercadoPagoWebhookController extends Controller
 
         $this->activityLogger->log('billing.webhook_received', null, [
             'topic' => $topic,
-            'id' => $id,
+            'id'    => $id,
         ]);
 
         try {
@@ -26,12 +26,12 @@ class MercadoPagoWebhookController extends Controller
 
             $this->activityLogger->log('billing.webhook_processed', null, [
                 'topic' => $topic,
-                'id' => $id,
+                'id'    => $id,
             ]);
         } catch (\Throwable $e) {
             $this->activityLogger->log('billing.webhook_failed', null, [
                 'exception_class' => get_class($e),
-                'message' => mb_substr($e->getMessage(), 0, 500),
+                'message'         => mb_substr($e->getMessage(), 0, 500),
             ]);
 
             throw $e;

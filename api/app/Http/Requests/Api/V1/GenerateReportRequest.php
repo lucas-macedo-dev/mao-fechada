@@ -15,9 +15,9 @@ class GenerateReportRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'format' => ['required', Rule::in(['csv', 'pdf'])],
-            'category_id' => ['nullable', 'integer', 'exists:categories,id'],
-            'type' => ['nullable', Rule::in(['income', 'expense'])],
+            'format'         => ['required', Rule::in(['csv', 'pdf'])],
+            'category_id'    => ['nullable', 'integer', 'exists:categories,id'],
+            'type'           => ['nullable', Rule::in(['income', 'expense'])],
             'payment_method' => ['nullable', Rule::in([
                 'credit_card',
                 'debit_card',
@@ -26,9 +26,9 @@ class GenerateReportRequest extends FormRequest
                 'bank_slip',
                 'bank_transfer',
             ])],
-            'date_from' => ['nullable', 'date'],
-            'date_to' => ['nullable', 'date'],
-            'month' => ['nullable', 'date_format:Y-m'],
+            'date_from'   => ['nullable', 'date'],
+            'date_to'     => ['nullable', 'date'],
+            'month'       => ['nullable', 'date_format:Y-m'],
             'installment' => ['nullable'],
         ];
     }

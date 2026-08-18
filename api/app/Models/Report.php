@@ -19,8 +19,8 @@ class Report extends Model
     protected function casts(): array
     {
         return [
-            'filters' => 'array',
-            'expires_at' => 'datetime',
+            'filters'      => 'array',
+            'expires_at'   => 'datetime',
             'completed_at' => 'datetime',
         ];
     }

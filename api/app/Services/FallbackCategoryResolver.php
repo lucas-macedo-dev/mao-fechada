@@ -13,10 +13,10 @@ class FallbackCategoryResolver
 
         return Category::firstOrCreate(
             [
-                'user_id' => $user->id,
+                'user_id'   => $user->id,
                 'parent_id' => null,
-                'name' => $name,
-                'type' => $type,
+                'name'      => $name,
+                'type'      => $type,
             ]
         );
     }

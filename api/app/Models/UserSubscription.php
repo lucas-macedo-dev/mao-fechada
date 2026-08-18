@@ -25,9 +25,9 @@ class UserSubscription extends Model
     protected function casts(): array
     {
         return [
-            'trial_ends_at' => 'datetime',
+            'trial_ends_at'          => 'datetime',
             'current_period_ends_at' => 'datetime',
-            'canceled_at' => 'datetime',
+            'canceled_at'            => 'datetime',
         ];
     }
 

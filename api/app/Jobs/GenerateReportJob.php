@@ -20,9 +20,7 @@ class GenerateReportJob implements ShouldQueue
 
     public int $tries = 2;
 
-    public function __construct(public int $reportId)
-    {
-    }
+    public function __construct(public int $reportId) {}
 
     public function handle(CsvReportWriter $csvWriter, PdfReportWriter $pdfWriter): void
     {
@@ -49,14 +47,14 @@ class GenerateReportJob implements ShouldQueue
             Storage::disk('local')->put($path, $contents);
 
             $report->update([
-                'status' => 'completed',
-                'file_path' => $path,
+                'status'       => 'completed',
+                'file_path'    => $path,
                 'completed_at' => now(),
-                'expires_at' => now()->addDays((int) config('reports.expires_after_days')),
+                'expires_at'   => now()->addDays((int) config('reports.expires_after_days')),
             ]);
         } catch (Throwable $e) {
             $report->update([
-                'status' => 'failed',
+                'status'         => 'failed',
                 'failure_reason' => substr($e->getMessage(), 0, 1000),
             ]);
         }
@@ -68,7 +66,7 @@ class GenerateReportJob implements ShouldQueue
             ->where('id', $this->reportId)
             ->whereNotIn('status', ['completed', 'failed'])
             ->update([
-                'status' => 'failed',
+                'status'         => 'failed',
                 'failure_reason' => substr($exception->getMessage(), 0, 1000),
             ]);
     }

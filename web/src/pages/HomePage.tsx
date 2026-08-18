@@ -382,11 +382,12 @@ export function HomePage() {
                   </Text>
                 ) : (
                   <LineChart
-                    h={240}
+                    h={300}
                     data={dayData}
                     dataKey="day"
                     series={[{ name: 'expense', color: 'red.5', label: t('dashboard.expense') }]}
                     gridAxis="x"
+                    curveType="bump"
                     valueFormatter={(v) => `R$ ${v.toFixed(2)}`}
                   />
                 )}
@@ -423,12 +424,14 @@ export function HomePage() {
                     </Text>
                   ) : (
                     <BarChart
+                      barProps={{ radius: 10 }}
                       h={240}
                       data={categoryData}
                       dataKey="name"
                       orientation="vertical"
                       series={[{ name: 'value', color: 'red.5', label: t('dashboard.expense') }]}
                       gridAxis="x"
+                      yAxisProps={{ width: 80 }}
                       valueFormatter={(v) => `R$ ${v.toFixed(2)}`}
                     />
                   )}

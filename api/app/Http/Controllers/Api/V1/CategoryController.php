@@ -117,7 +117,7 @@ class CategoryController extends Controller
         }
     }
 
-    private function validateParent(Request $request, int|null $parentId, string $type): void
+    private function validateParent(Request $request, ?int $parentId, string $type): void
     {
         if ($parentId === null) {
             return;

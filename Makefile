@@ -1,7 +1,7 @@
 # mao_fechada — atalhos de desenvolvimento
 # Uso: make <comando>
 
-.PHONY: up down build restart logs shell-api shell-web migrate fresh seed test
+.PHONY: up down build restart logs shell-api shell-web migrate fresh seed test pint pint-fix stan
 
 # ─── Docker ───────────────────────────────────────────────────────
 up:
@@ -53,6 +53,23 @@ artisan:
 
 cache-clear:
 	docker compose exec api php artisan optimize:clear
+
+# ─── Qualidade de código ──────────────────────────────────────────
+# Uso:
+#   make pint              -> checa (dry-run) o projeto inteiro
+#   make pint FILES=path   -> checa (dry-run) arquivos/pastas específicos
+#   make pint-fix          -> corrige o projeto inteiro
+#   make pint-fix FILES=path -> corrige arquivos/pastas específicos
+#   make stan               -> analisa o projeto inteiro
+#   make stan FILES=path    -> analisa arquivos/pastas específicos
+pint:
+	docker compose exec api ./vendor/bin/pint --test $(FILES)
+
+pint-fix:
+	docker compose exec api ./vendor/bin/pint $(FILES)
+
+stan:
+	docker compose exec api ./vendor/bin/phpstan analyse $(FILES)
 
 # ─── NPM ───────────────────────────────────────────────────────
 

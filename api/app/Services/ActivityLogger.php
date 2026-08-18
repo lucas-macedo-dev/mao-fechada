@@ -17,8 +17,8 @@ class ActivityLogger
         try {
             ActivityLog::create([
                 'event_type' => $event,
-                'user_id' => $userId,
-                'metadata' => $this->sanitize($metadata),
+                'user_id'    => $userId,
+                'metadata'   => $this->sanitize($metadata),
             ]);
         } catch (\Throwable $e) {
             Log::error("ActivityLogger failed for event [{$event}]: {$e->getMessage()}");
@@ -34,6 +34,7 @@ class ActivityLogger
             }
             $result[$key] = is_array($value) ? $this->sanitize($value) : $value;
         }
+
         return $result;
     }
 }
