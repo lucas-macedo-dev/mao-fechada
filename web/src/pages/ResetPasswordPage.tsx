@@ -3,7 +3,7 @@ import { useState, type SyntheticEvent } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
 import { useForm } from '@mantine/form'
 import appLogo from '../assets/icon_mao_fechada.png'
-import { api } from '../services/api'
+import { api, extractApiError } from '../services/api'
 import {
   Box,
   Paper,
@@ -51,8 +51,7 @@ export function ResetPasswordPage() {
       })
       navigate('/login?reset=1')
     } catch (err: unknown) {
-      const data = (err as any)?.response?.data
-      setError(data?.error?.message || t('common.error'))
+      setError(extractApiError(err).message || t('common.error'))
     } finally {
       setLoading(false)
     }

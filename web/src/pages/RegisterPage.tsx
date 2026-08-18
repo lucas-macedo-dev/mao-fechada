@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../hooks/api'
+import { extractApiError } from '../services/api'
 import { useState, type SyntheticEvent } from 'react'
 import { useNavigate, Navigate } from 'react-router-dom'
 import { useForm } from '@mantine/form'
@@ -50,9 +51,9 @@ export function RegisterPage() {
       await register.mutateAsync({ ...payload, locale: localStorage.getItem('app_locale') || 'pt-BR' })
       navigate('/auth/verify-email')
     } catch (err: unknown) {
-      const data = (err as any)?.response?.data
-      if (data?.errors && typeof data.errors === 'object') {
-        Object.entries(data.errors as Record<string, string[]>).forEach(([field, messages]) => {
+      const { details } = extractApiError(err)
+      if (details) {
+        Object.entries(details).forEach(([field, messages]) => {
           form.setFieldError(field, messages[0])
         })
       } else {

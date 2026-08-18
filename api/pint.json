@@ -5,6 +5,7 @@
             "operators": {
                 "=>": "align_single_space_minimal"
             }
-        }
+        },
+        "declare_strict_types": true
     }
 }
