@@ -99,6 +99,9 @@ export const api = {
     month?: string
     date_from?: string
     date_to?: string
+    amount_min?: number
+    amount_max?: number
+    notes?: string
     per_page?: number
     page?: number
     installment?: boolean

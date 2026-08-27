@@ -30,6 +30,14 @@ class ListTransactionsRequest extends FormRequest
             'date_from'   => ['nullable', 'date'],
             'date_to'     => ['nullable', 'date'],
             'month'       => ['nullable', 'date_format:Y-m'],
+            'amount_min'  => ['nullable', 'numeric', 'min:0'],
+            'amount_max'  => [
+                'nullable',
+                'numeric',
+                'min:0',
+                Rule::when($this->filled('amount_min'), ['gte:amount_min']),
+            ],
+            'notes'       => ['nullable', 'string', 'max:255'],
             'per_page'    => ['nullable', 'integer', 'min:1', 'max:100'],
             'installment' => ['nullable'],
         ];

@@ -145,6 +145,113 @@ it('returns paginated transactions with filters', function () {
         ->assertJsonPath('data.0.payment_method', 'pix');
 });
 
+it('filters transactions by amount range', function () {
+    $user = User::factory()->create();
+    Sanctum::actingAs($user);
+
+    $category = Category::factory()->for($user)->create(['type' => 'expense']);
+
+    Transaction::factory()->for($user)->create(['category_id' => $category->id, 'type' => 'expense', 'amount' => 20]);
+    Transaction::factory()->for($user)->create(['category_id' => $category->id, 'type' => 'expense', 'amount' => 100]);
+    Transaction::factory()->for($user)->create(['category_id' => $category->id, 'type' => 'expense', 'amount' => 300]);
+
+    $this->getJson('/api/v1/transactions?amount_min=50&amount_max=200')
+        ->assertOk()
+        ->assertJsonPath('meta.total', 1)
+        ->assertJsonPath('data.0.amount', '100.00');
+
+    $this->getJson('/api/v1/transactions?amount_min=50')
+        ->assertOk()
+        ->assertJsonPath('meta.total', 2);
+
+    $this->getJson('/api/v1/transactions?amount_max=100')
+        ->assertOk()
+        ->assertJsonPath('meta.total', 2);
+});
+
+it('rejects an inverted amount range', function () {
+    $user = User::factory()->create();
+    Sanctum::actingAs($user);
+
+    $response = $this->getJson('/api/v1/transactions?amount_min=200&amount_max=50');
+
+    $response->assertStatus(422)
+        ->assertJsonPath('error.type', 'validation_error');
+});
+
+it('filters transactions by a case-insensitive notes match', function () {
+    $user = User::factory()->create();
+    Sanctum::actingAs($user);
+
+    $category = Category::factory()->for($user)->create(['type' => 'expense']);
+
+    Transaction::factory()->for($user)->create(['category_id' => $category->id, 'type' => 'expense', 'notes' => 'Uber ride home']);
+    Transaction::factory()->for($user)->create(['category_id' => $category->id, 'type' => 'expense', 'notes' => 'Grocery run']);
+
+    $response = $this->getJson('/api/v1/transactions?notes=UBER');
+
+    $response->assertOk()
+        ->assertJsonPath('meta.total', 1)
+        ->assertJsonPath('data.0.notes', 'Uber ride home');
+});
+
+it('filters transactions by an explicit date range independent of month', function () {
+    $user = User::factory()->create();
+    Sanctum::actingAs($user);
+
+    $category = Category::factory()->for($user)->create(['type' => 'expense']);
+
+    Transaction::factory()->for($user)->create(['category_id' => $category->id, 'type' => 'expense', 'transacted_at' => '2026-08-05']);
+    Transaction::factory()->for($user)->create(['category_id' => $category->id, 'type' => 'expense', 'transacted_at' => '2026-08-20']);
+
+    $response = $this->getJson('/api/v1/transactions?date_from=2026-08-01&date_to=2026-08-10');
+
+    $response->assertOk()
+        ->assertJsonPath('meta.total', 1);
+    expect($response->json('data.0.transacted_at'))->toStartWith('2026-08-05');
+});
+
+it('combines category, amount range, notes, and date range filters', function () {
+    $user = User::factory()->create();
+    Sanctum::actingAs($user);
+
+    $matchingCategory = Category::factory()->for($user)->create(['type' => 'expense']);
+    $otherCategory = Category::factory()->for($user)->create(['type' => 'expense']);
+
+    Transaction::factory()->for($user)->create([
+        'category_id'   => $matchingCategory->id,
+        'type'          => 'expense',
+        'amount'        => 150,
+        'notes'         => 'Monthly gym plan',
+        'transacted_at' => '2026-08-10',
+    ]);
+
+    // Wrong category
+    Transaction::factory()->for($user)->create([
+        'category_id'   => $otherCategory->id,
+        'type'          => 'expense',
+        'amount'        => 150,
+        'notes'         => 'Monthly gym plan',
+        'transacted_at' => '2026-08-10',
+    ]);
+
+    // Amount out of range
+    Transaction::factory()->for($user)->create([
+        'category_id'   => $matchingCategory->id,
+        'type'          => 'expense',
+        'amount'        => 500,
+        'notes'         => 'Monthly gym plan',
+        'transacted_at' => '2026-08-10',
+    ]);
+
+    $response = $this->getJson(
+        '/api/v1/transactions?category_id='.$matchingCategory->id
+        .'&amount_min=100&amount_max=200&notes=gym&date_from=2026-08-01&date_to=2026-08-15'
+    );
+
+    $response->assertOk()->assertJsonPath('meta.total', 1);
+});
+
 it('rejects legacy portuguese transaction type and payment method values', function () {
     $user = User::factory()->create();
     Sanctum::actingAs($user);

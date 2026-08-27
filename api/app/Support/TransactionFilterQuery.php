@@ -38,6 +38,19 @@ class TransactionFilterQuery
             $query->whereDate('transacted_at', '<=', $filters['date_to']);
         }
 
+        if (isset($filters['amount_min'])) {
+            $query->where('amount', '>=', $filters['amount_min']);
+        }
+
+        if (isset($filters['amount_max'])) {
+            $query->where('amount', '<=', $filters['amount_max']);
+        }
+
+        if (isset($filters['notes']) && $filters['notes'] !== '') {
+            $escaped = str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $filters['notes']);
+            $query->whereRaw('LOWER(notes) LIKE ?', ['%'.mb_strtolower($escaped).'%']);
+        }
+
         if (isset($filters['installment']) && filter_var($filters['installment'], FILTER_VALIDATE_BOOLEAN)) {
             $query->whereNotNull('installment_group_id');
         }
