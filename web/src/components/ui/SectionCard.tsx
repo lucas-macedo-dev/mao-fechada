@@ -2,6 +2,7 @@ import { Paper, type PaperProps } from '@mantine/core'
 import type { ReactNode } from 'react'
 
 interface SectionCardProps extends Omit<PaperProps, 'children'> {
+  id?: string
   children: ReactNode
 }
 

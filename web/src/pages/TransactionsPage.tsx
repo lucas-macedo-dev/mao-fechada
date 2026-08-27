@@ -11,6 +11,7 @@ import { TutorialHint } from "../components/tutorial/TutorialHint";
 import { getCategoryIconClass } from "../constants/categoryIcons";
 import { extractApiError } from "../services/api";
 import { useMemo, useState, type SyntheticEvent } from "react";
+import { useDebouncedValue, useMediaQuery } from "@mantine/hooks";
 import {
   Title,
   Text,
@@ -26,6 +27,7 @@ import {
   Box,
   SimpleGrid,
   Paper,
+  Collapse,
   LoadingOverlay
 } from "@mantine/core";
 import { PageContainer } from "../components/ui/PageContainer";
@@ -76,6 +78,21 @@ export function TransactionsPage() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
+  // Filter fields
+  const [filterParentCategoryId, setFilterParentCategoryId] = useState("");
+  const [filterSubcategoryId, setFilterSubcategoryId] = useState("");
+  const [amountMin, setAmountMin] = useState<number | string>("");
+  const [amountMax, setAmountMax] = useState<number | string>("");
+  const [descriptionFilter, setDescriptionFilter] = useState("");
+  const [debouncedDescriptionFilter] = useDebouncedValue(descriptionFilter, 400);
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+  const isMobile = useMediaQuery("(max-width: 767px)");
+  const [moreFiltersOverride, setMoreFiltersOverride] = useState<
+    boolean | null
+  >(null);
+  const moreFiltersExpanded = moreFiltersOverride ?? !isMobile;
+
   // Form modal state
   const [formModal, setFormModal] = useState<FormModalState>(null);
   const [formType, setFormType] = useState<"income" | "expense">("expense");
@@ -103,9 +120,17 @@ export function TransactionsPage() {
   const deleteTransaction = useDeleteTransaction();
   const { data: categories = [] } = useCategories();
 
+  const filterCategoryId = filterSubcategoryId || filterParentCategoryId;
+
   const params = {
-    month,
+    month: month || undefined,
     type: type || undefined,
+    category_id: filterCategoryId ? Number(filterCategoryId) : undefined,
+    amount_min: amountMin === "" ? undefined : Number(amountMin),
+    amount_max: amountMax === "" ? undefined : Number(amountMax),
+    notes: debouncedDescriptionFilter || undefined,
+    date_from: dateFrom || undefined,
+    date_to: dateTo || undefined,
     per_page: 20,
     page,
     installment: showInstallmentsOnly ? true : undefined,
@@ -114,6 +139,66 @@ export function TransactionsPage() {
   const { data: transactionsResponse, isLoading } = useTransactions(params);
   const transactions = transactionsResponse?.data || [];
   const meta = transactionsResponse?.meta;
+
+  const filterParentCategories = useMemo(
+    () => categories.filter((cat) => !cat.parent_id && (!type || cat.type === type)),
+    [categories, type],
+  );
+
+  const extraFiltersActiveCount = [
+    !!filterCategoryId,
+    amountMin !== "",
+    amountMax !== "",
+    !!descriptionFilter,
+    !!dateFrom,
+    !!dateTo,
+  ].filter(Boolean).length;
+
+  const filterSubcategoryOptions = useMemo(
+    () =>
+      categories.filter(
+        (cat) =>
+          filterParentCategoryId &&
+          String(cat.parent_id) === filterParentCategoryId,
+      ),
+    [categories, filterParentCategoryId],
+  );
+
+  const handleMonthFilterChange = (value: string) => {
+    setMonth(value);
+    if (value) {
+      setDateFrom("");
+      setDateTo("");
+    }
+    setPage(1);
+  };
+
+  const handleDateFromFilterChange = (value: string) => {
+    setDateFrom(value);
+    if (value) setMonth("");
+    setPage(1);
+  };
+
+  const handleDateToFilterChange = (value: string) => {
+    setDateTo(value);
+    if (value) setMonth("");
+    setPage(1);
+  };
+
+  const handleClearFilters = () => {
+    setMonth(new Date().toISOString().slice(0, 7));
+    setType("");
+    setFilterParentCategoryId("");
+    setFilterSubcategoryId("");
+    setAmountMin("");
+    setAmountMax("");
+    setDescriptionFilter("");
+    setDateFrom("");
+    setDateTo("");
+    setShowInstallmentsOnly(false);
+    setMoreFiltersOverride(null);
+    setPage(1);
+  };
 
   const parentFormCategories = useMemo(
     () =>
@@ -311,23 +396,24 @@ export function TransactionsPage() {
         </TutorialHint>
       </Group>
 
-      <SectionCard mb="lg">
+      <SectionCard id="transactions-filters" mb="lg">
         <SimpleGrid cols={{ base: 1, sm: 2 }} mb="sm">
           <TextInput
+            id="transactions-filter-month"
             label={t("transactions.period")}
             type="month"
             value={month}
-            onChange={(e) => {
-              setMonth(e.target.value);
-              setPage(1);
-            }}
+            onChange={(e) => handleMonthFilterChange(e.target.value)}
           />
 
           <Select
+            id="transactions-filter-type"
             label={t("transactions.type")}
             value={type}
             onChange={(val) => {
               setType(val ?? "");
+              setFilterParentCategoryId("");
+              setFilterSubcategoryId("");
               setPage(1);
             }}
             data={[
@@ -338,14 +424,135 @@ export function TransactionsPage() {
           />
         </SimpleGrid>
 
-        <Switch
-          label={t("transactions.filter_installments_only")}
-          checked={showInstallmentsOnly}
-          onChange={(e) => {
-            setShowInstallmentsOnly(e.currentTarget.checked);
-            setPage(1);
-          }}
-        />
+        <Group justify="space-between" align="center" mb="sm">
+          <Button
+            id="transactions-more-filters-toggle"
+            variant="subtle"
+            size="xs"
+            onClick={() => setMoreFiltersOverride(!moreFiltersExpanded)}
+            rightSection={
+              <i
+                className={`fa-solid ${moreFiltersExpanded ? "fa-chevron-up" : "fa-chevron-down"}`}
+                aria-hidden="true"
+              />
+            }
+          >
+            {t("transactions.more_filters")}
+            {extraFiltersActiveCount > 0 && ` (${extraFiltersActiveCount})`}
+          </Button>
+
+          <Button
+            id="transactions-clear-filters-button"
+            variant="subtle"
+            size="xs"
+            color="red"
+            onClick={handleClearFilters}
+          >
+            {t("transactions.clear_filters")}
+          </Button>
+        </Group>
+
+        <Collapse expanded={moreFiltersExpanded}>
+          <SimpleGrid cols={{ base: 1, sm: 2 }} mb="sm">
+            <Select
+              id="transactions-filter-category"
+              label={t("transactions.filter_category")}
+              value={filterParentCategoryId}
+              onChange={(val) => {
+                setFilterParentCategoryId(val ?? "");
+                setFilterSubcategoryId("");
+                setPage(1);
+              }}
+              data={filterParentCategories.map((cat) => ({
+                value: String(cat.id),
+                label: cat.name,
+              }))}
+              placeholder={t("transactions.select_category")}
+              clearable
+            />
+
+            {filterSubcategoryOptions.length > 0 && (
+              <Select
+                id="transactions-filter-subcategory"
+                label={t("transactions.subcategory")}
+                value={filterSubcategoryId}
+                onChange={(val) => {
+                  setFilterSubcategoryId(val ?? "");
+                  setPage(1);
+                }}
+                data={filterSubcategoryOptions.map((cat) => ({
+                  value: String(cat.id),
+                  label: cat.name,
+                }))}
+                placeholder={t("transactions.select_subcategory")}
+                clearable
+              />
+            )}
+
+            <NumberInput
+              id="transactions-filter-amount-min"
+              label={t("transactions.filter_amount_min")}
+              value={amountMin}
+              onChange={(val) => {
+                setAmountMin(val);
+                setPage(1);
+              }}
+              min={0}
+              step={0.01}
+              decimalScale={2}
+            />
+
+            <NumberInput
+              id="transactions-filter-amount-max"
+              label={t("transactions.filter_amount_max")}
+              value={amountMax}
+              onChange={(val) => {
+                setAmountMax(val);
+                setPage(1);
+              }}
+              min={0}
+              step={0.01}
+              decimalScale={2}
+            />
+
+            <TextInput
+              id="transactions-filter-description"
+              label={t("transactions.filter_description")}
+              placeholder={t("transactions.filter_description_placeholder")}
+              value={descriptionFilter}
+              onChange={(e) => {
+                setDescriptionFilter(e.target.value);
+                setPage(1);
+              }}
+            />
+
+            <TextInput
+              id="transactions-filter-date-from"
+              label={t("transactions.filter_date_from")}
+              type="date"
+              value={dateFrom}
+              onChange={(e) => handleDateFromFilterChange(e.target.value)}
+            />
+
+            <TextInput
+              id="transactions-filter-date-to"
+              label={t("transactions.filter_date_to")}
+              type="date"
+              value={dateTo}
+              onChange={(e) => handleDateToFilterChange(e.target.value)}
+            />
+          </SimpleGrid>
+
+          <Switch
+            id="transactions-filter-installments-only"
+            label={t("transactions.filter_installments_only")}
+            checked={showInstallmentsOnly}
+            onChange={(e) => {
+              setShowInstallmentsOnly(e.currentTarget.checked);
+              setPage(1);
+            }}
+          />
+        </Collapse>
       </SectionCard>
 
       {error && (

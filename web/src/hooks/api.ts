@@ -94,7 +94,20 @@ export function useDeleteCategory() {
 }
 
 // Transactions
-export function useTransactions(params?: { category_id?: number; type?: string; payment_method?: string; month?: string; per_page?: number; page?: number; installment?: boolean }) {
+export function useTransactions(params?: {
+  category_id?: number
+  type?: string
+  payment_method?: string
+  month?: string
+  date_from?: string
+  date_to?: string
+  amount_min?: number
+  amount_max?: number
+  notes?: string
+  per_page?: number
+  page?: number
+  installment?: boolean
+}) {
   return useQuery({
     queryKey: ['transactions', params],
     queryFn: () => api.listTransactions(params),
