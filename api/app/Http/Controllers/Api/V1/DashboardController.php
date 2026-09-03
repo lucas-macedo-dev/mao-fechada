@@ -10,39 +10,53 @@ use App\Support\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Cache;
 
 class DashboardController extends Controller
 {
     public function summary(Request $request): JsonResponse
     {
         [$year, $month] = $this->resolveMonth($request);
+        $userId = $request->user()->id;
 
-        $transactions = $this->baseQuery($request, $year, $month)->get();
-        $income = (float) $transactions
-            ->where('type', 'income')
-            ->sum('amount');
-        $expense = (float) $transactions
-            ->where('type', 'expense')
-            ->sum('amount');
+        // Cached in Redis: this aggregate is read on every dashboard load but only
+        // changes when the user's transactions for the month change (see
+        // Transaction::booted(), which flushes this tag on save/delete).
+        $payload = Cache::tags(["dashboard-summary:{$userId}"])
+            ->remember(
+                "dashboard-summary:{$userId}:{$year}-{$month}",
+                now()->addMinutes(10),
+                function () use ($request, $year, $month): array {
+                    $transactions = $this->baseQuery($request, $year, $month)->get();
+                    $income = (float) $transactions
+                        ->where('type', 'income')
+                        ->sum('amount');
+                    $expense = (float) $transactions
+                        ->where('type', 'expense')
+                        ->sum('amount');
 
-        return ApiResponse::data([
-            'month'  => sprintf('%04d-%02d', $year, $month),
-            'totals' => [
-                'entradas' => $income,
-                'saidas'   => $expense,
-                'saldo'    => $income - $expense,
-            ],
-            'chart' => [
-                'entradas' => $income,
-                'saidas'   => $expense,
-            ],
-            'recent_transactions' => $this->baseQuery($request, $year, $month)
-                ->with('category')
-                ->orderByDesc('transacted_at')
-                ->orderByDesc('id')
-                ->limit(5)
-                ->get(),
-        ]);
+                    return [
+                        'month'  => sprintf('%04d-%02d', $year, $month),
+                        'totals' => [
+                            'entradas' => $income,
+                            'saidas'   => $expense,
+                            'saldo'    => $income - $expense,
+                        ],
+                        'chart' => [
+                            'entradas' => $income,
+                            'saidas'   => $expense,
+                        ],
+                        'recent_transactions' => $this->baseQuery($request, $year, $month)
+                            ->with('category')
+                            ->orderByDesc('transacted_at')
+                            ->orderByDesc('id')
+                            ->limit(5)
+                            ->get(),
+                    ];
+                }
+            );
+
+        return ApiResponse::data($payload);
     }
 
     public function chart(Request $request): JsonResponse
