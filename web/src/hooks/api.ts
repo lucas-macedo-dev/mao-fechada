@@ -118,11 +118,12 @@ export function useTransactions(params?: {
 export function useCreateTransaction() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (payload: { category_id: number; type: string; payment_method: string; amount: number; transacted_at: string; notes?: string; installment_number?: number; installment_total?: number }) =>
+    mutationFn: (payload: { category_id: number; type: string; payment_method: string; amount: number; transacted_at: string; notes?: string; installment_number?: number; installment_total?: number; recurring?: boolean }) =>
       api.createTransaction(payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['transactions'] })
       queryClient.invalidateQueries({ queryKey: ['dashboard'] })
+      queryClient.invalidateQueries({ queryKey: ['recurring-transactions'] })
     },
   })
 }
@@ -146,6 +147,27 @@ export function useDeleteTransaction() {
   return useMutation({
     mutationFn: (id: number) => api.deleteTransaction(id),
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['transactions'] })
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] })
+    },
+  })
+}
+
+// Recurring Transactions
+export function useRecurringTransactions() {
+  return useQuery({
+    queryKey: ['recurring-transactions'],
+    queryFn: () => api.listRecurringTransactions(),
+    enabled: !!localStorage.getItem('auth_token'),
+  })
+}
+
+export function useCancelRecurringTransaction() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (id: number) => api.cancelRecurringTransaction(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['recurring-transactions'] })
       queryClient.invalidateQueries({ queryKey: ['transactions'] })
       queryClient.invalidateQueries({ queryKey: ['dashboard'] })
     },

@@ -2,6 +2,7 @@
 
 use App\Models\Budget;
 use App\Models\Category;
+use App\Models\RecurringTransaction;
 use App\Models\Transaction;
 use App\Models\User;
 use Illuminate\Http\UploadedFile;
@@ -48,6 +49,92 @@ it('validates transaction payload', function () {
         ->assertJsonStructure([
             'error' => ['type', 'message', 'details'],
         ]);
+});
+
+it('creates a recurring transaction rule and the first transaction', function () {
+    $user = User::factory()->create();
+    $category = Category::factory()->for($user)->create(['type' => 'expense']);
+    Sanctum::actingAs($user);
+
+    $response = $this->postJson('/api/v1/transactions', [
+        'category_id'    => $category->id,
+        'type'           => 'expense',
+        'payment_method' => 'credit_card',
+        'amount'         => 49.9,
+        'transacted_at'  => '2026-09-15',
+        'recurring'      => true,
+    ]);
+
+    $response->assertStatus(201);
+
+    $transactionId = $response->json('data.id');
+    $transaction = Transaction::query()->findOrFail($transactionId);
+
+    expect($transaction->recurring_transaction_id)->not->toBeNull();
+
+    $rule = RecurringTransaction::query()->findOrFail($transaction->recurring_transaction_id);
+
+    expect($rule->status)->toBe('active');
+    expect($rule->day_of_month)->toBe(15);
+    expect($rule->user_id)->toBe($user->id);
+    expect(RecurringTransaction::query()->count())->toBe(1);
+    expect(Transaction::query()->count())->toBe(1);
+});
+
+it('rejects a transaction payload with both installment and recurring flags', function () {
+    $user = User::factory()->create();
+    $category = Category::factory()->for($user)->create(['type' => 'expense']);
+    Sanctum::actingAs($user);
+
+    $response = $this->postJson('/api/v1/transactions', [
+        'category_id'         => $category->id,
+        'type'                => 'expense',
+        'payment_method'      => 'credit_card',
+        'amount'              => 49.9,
+        'transacted_at'       => '2026-09-15',
+        'recurring'           => true,
+        'installment_number'  => 1,
+        'installment_total'   => 3,
+    ]);
+
+    $response->assertStatus(422)
+        ->assertJsonPath('error.type', 'validation_error');
+
+    expect(RecurringTransaction::query()->count())->toBe(0);
+    expect(Transaction::query()->count())->toBe(0);
+});
+
+it('does not cascade edit or delete for a recurring-generated transaction', function () {
+    $user = User::factory()->create();
+    $category = Category::factory()->for($user)->create(['type' => 'expense']);
+    $rule = RecurringTransaction::factory()->for($user)->create([
+        'category_id' => $category->id,
+        'type'        => 'expense',
+    ]);
+    $first = Transaction::factory()->for($user)->create([
+        'category_id'              => $category->id,
+        'type'                     => 'expense',
+        'recurring_transaction_id' => $rule->id,
+    ]);
+    $second = Transaction::factory()->for($user)->create([
+        'category_id'              => $category->id,
+        'type'                     => 'expense',
+        'recurring_transaction_id' => $rule->id,
+    ]);
+    Sanctum::actingAs($user);
+
+    $updateResponse = $this->patchJson("/api/v1/transactions/{$first->id}", [
+        'notes' => 'only this one',
+    ]);
+    $updateResponse->assertStatus(200);
+
+    expect($second->fresh()->notes)->not->toBe('only this one');
+
+    $deleteResponse = $this->deleteJson("/api/v1/transactions/{$first->id}");
+    $deleteResponse->assertStatus(204);
+
+    expect(Transaction::query()->find($first->id))->toBeNull();
+    expect(Transaction::query()->find($second->id))->not->toBeNull();
 });
 
 it('returns monthly summary totals and variance', function () {

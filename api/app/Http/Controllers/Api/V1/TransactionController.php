@@ -9,6 +9,7 @@ use App\Http\Requests\Api\V1\ListTransactionsRequest;
 use App\Http\Requests\Api\V1\StoreTransactionRequest;
 use App\Http\Requests\Api\V1\UpdateTransactionRequest;
 use App\Models\Category;
+use App\Models\RecurringTransaction;
 use App\Models\Transaction;
 use App\Support\ApiResponse;
 use App\Support\TransactionFilterQuery;
@@ -55,6 +56,30 @@ class TransactionController extends Controller
             throw ValidationException::withMessages([
                 'type' => [__('messages.transaction_type_must_match_category')],
             ]);
+        }
+
+        if ($validated['recurring'] ?? false) {
+            $transaction = DB::transaction(function () use ($request, $validated): Transaction {
+                $transactedAt = Carbon::parse($validated['transacted_at']);
+
+                $rule = $request->user()->recurringTransactions()->create([
+                    'category_id'       => $validated['category_id'],
+                    'type'              => $validated['type'],
+                    'payment_method'    => $validated['payment_method'],
+                    'amount'            => $validated['amount'],
+                    'notes'             => $validated['notes'] ?? null,
+                    'day_of_month'      => $transactedAt->day,
+                    'status'            => 'active',
+                    'last_generated_at' => $transactedAt->format('Y-m-d'),
+                ]);
+
+                return $request->user()->transactions()->create(array_merge(
+                    array_diff_key($validated, ['recurring' => null]),
+                    ['recurring_transaction_id' => $rule->id]
+                ));
+            });
+
+            return ApiResponse::data($transaction->load('category'), 201);
         }
 
         $installmentNumber = $validated['installment_number'] ?? null;

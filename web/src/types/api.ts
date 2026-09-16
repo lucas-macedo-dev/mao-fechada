@@ -35,6 +35,22 @@ export interface Transaction {
   installment_group_id?: string | null
   installment_number?: number | null
   installment_total?: number | null
+  recurring_transaction_id?: number | null
+  category?: Category
+  created_at: string
+  updated_at: string
+}
+
+export interface RecurringTransaction {
+  id: number
+  category_id: number
+  type: 'income' | 'expense'
+  payment_method: 'credit_card' | 'debit_card' | 'cash' | 'pix' | 'bank_slip' | 'bank_transfer'
+  amount: string | number
+  notes?: string
+  day_of_month: number
+  status: 'active' | 'cancelled'
+  last_generated_at?: string | null
   category?: Category
   created_at: string
   updated_at: string

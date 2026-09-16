@@ -1,5 +1,5 @@
 import axios from 'axios'
-import type { ApiError, User, Category, Transaction, DashboardSummary, MonthlySummary, SubscriptionStatus, PaginatedResponse, Plan, DashboardCategoryItem, DashboardDayItem, DashboardMonthlyComparisonItem, DashboardMtdComparison, DashboardPaymentMethodItem, DashboardWeeklyExpenseItem, Report } from '../types/api'
+import type { ApiError, User, Category, Transaction, RecurringTransaction, DashboardSummary, MonthlySummary, SubscriptionStatus, PaginatedResponse, Plan, DashboardCategoryItem, DashboardDayItem, DashboardMonthlyComparisonItem, DashboardMtdComparison, DashboardPaymentMethodItem, DashboardWeeklyExpenseItem, Report } from '../types/api'
 
 const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api'
 
@@ -119,6 +119,7 @@ export const api = {
     notes?: string
     installment_number?: number
     installment_total?: number
+    recurring?: boolean
   }) => {
     const response = await client.post<{ data: Transaction | Transaction[] }>('/v1/transactions', payload)
     return response.data.data
@@ -131,6 +132,17 @@ export const api = {
 
   deleteTransaction: async (id: number) => {
     await client.delete(`/v1/transactions/${id}`)
+  },
+
+  // Recurring Transactions
+  listRecurringTransactions: async () => {
+    const response = await client.get<{ data: RecurringTransaction[] }>('/v1/recurring-transactions')
+    return response.data.data
+  },
+
+  cancelRecurringTransaction: async (id: number) => {
+    const response = await client.post<{ data: RecurringTransaction }>(`/v1/recurring-transactions/${id}/cancel`)
+    return response.data.data
   },
 
   // Dashboard

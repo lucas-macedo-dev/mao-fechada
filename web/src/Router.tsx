@@ -13,6 +13,7 @@ import { ResetPasswordPage } from './pages/ResetPasswordPage'
 import { HomePage } from './pages/HomePage'
 import { CategoriesPage } from './pages/CategoriesPage'
 import { TransactionsPage } from './pages/TransactionsPage'
+import { RecurringTransactionsPage } from './pages/RecurringTransactionsPage'
 import { ProfilePage } from './pages/ProfilePage'
 import { SubscriptionPage } from './pages/SubscriptionPage'
 import { PaymentMethodsPage } from './pages/PaymentMethodsPage'
@@ -63,6 +64,16 @@ function AppRoutes() {
           <PrivateRoute>
             <Layout>
               <TransactionsPage />
+            </Layout>
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/recurring-transactions"
+        element={
+          <PrivateRoute>
+            <Layout>
+              <RecurringTransactionsPage />
             </Layout>
           </PrivateRoute>
         }

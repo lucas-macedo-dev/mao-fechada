@@ -60,6 +60,10 @@ export function Layout({ children }: Readonly<{ children: React.ReactNode }>) {
               <i className="fa-solid fa-receipt" aria-hidden="true"></i>
               &nbsp;{t("nav.transactions")}
             </Link>
+            <Link to="/recurring-transactions" className="nav-link">
+              <i className="fa-solid fa-arrows-rotate" aria-hidden="true"></i>
+              &nbsp;{t("nav.recurring")}
+            </Link>
             <Link to="/subscription" className="nav-link">
               <i className="fa-solid fa-bell" aria-hidden="true" />
               &nbsp;{t("nav.subscription")}
@@ -132,6 +136,13 @@ export function Layout({ children }: Readonly<{ children: React.ReactNode }>) {
                 leftSection={<i className="fa-solid fa-user" />}
               >
                 {t("nav.profile")}
+              </Menu.Item>
+              <Menu.Item
+                component={Link}
+                to="/recurring-transactions"
+                leftSection={<i className="fa-solid fa-arrows-rotate" />}
+              >
+                {t("nav.recurring")}
               </Menu.Item>
               <Menu.Item
                 component={Link}
