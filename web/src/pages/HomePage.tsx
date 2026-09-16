@@ -27,6 +27,7 @@ import {
   LoadingOverlay,
   ThemeIcon,
   Tabs,
+  Tooltip
 } from '@mantine/core'
 import { DonutChart, BarChart, LineChart } from '@mantine/charts'
 import { PageContainer } from '../components/ui/PageContainer'
@@ -213,9 +214,11 @@ export function HomePage() {
                 return (
                   <Paper shadow="xs" radius="md" p="lg" withBorder>
                     <Group align="flex-start" gap="sm" wrap="nowrap">
-                      <ThemeIcon variant="light" color="grape" size="lg" radius="xl">
-                        <i className="fa-solid fa-layer-group" />
-                      </ThemeIcon>
+                      <Tooltip label={`${t('dashboard.installments')} ${t('or')} ${t('nav.recurring')}`} >
+                        <ThemeIcon variant="light" color="grape" size="lg" radius="xl">
+                          <i className="fa-solid fa-layer-group" />
+                        </ThemeIcon>
+                      </Tooltip>
                       <Stack gap={2} style={{ minWidth: 0 }}>
                         <Text size="sm" c="dimmed" fw={500}>
                           {t('dashboard.installments')}

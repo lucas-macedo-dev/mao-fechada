@@ -240,6 +240,7 @@ const resources = {
       'recurring.cancel_confirm_title': 'Cancelar transação recorrente',
       'recurring.cancel_confirm_message': 'Isso interrompe as próximas gerações desta transação recorrente. As transações já geradas não serão alteradas. Deseja continuar?',
       'recurring.cancel_success': 'Transação recorrente cancelada com sucesso.',
+      'or' : 'ou'
     },
   },
   en: {
@@ -478,6 +479,7 @@ const resources = {
       'recurring.cancel_confirm_title': 'Cancel recurring transaction',
       'recurring.cancel_confirm_message': 'This stops future generations of this recurring transaction. Transactions already generated will not be affected. Continue?',
       'recurring.cancel_success': 'Recurring transaction cancelled successfully.',
+      'or' : 'or'
     },
   },
 }
