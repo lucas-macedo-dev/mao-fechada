@@ -14,6 +14,8 @@ return [
     'category_type_must_match_parent'      => 'Subcategory type must match parent category type.',
     'category_type_must_match_children'    => 'Category type must match existing subcategory types.',
     'transaction_type_must_match_category' => 'Transaction type must match category type.',
+    'transaction_already_installment'      => 'This transaction is part of an installment purchase and cannot be converted to recurring.',
+    'transaction_already_recurring'        => 'This transaction is already linked to a recurring rule.',
     'category_fallback_name'               => 'No Category',
     'category_delete_with_transactions'    => 'This category has linked transactions. Deleting it will move them to "No Category". Continue?',
     'report_not_ready'                     => 'This report is not ready for download yet.',

@@ -153,6 +153,18 @@ export function useDeleteTransaction() {
   })
 }
 
+export function useConvertTransactionToRecurring() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (id: number) => api.convertTransactionToRecurring(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['transactions'] })
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] })
+      queryClient.invalidateQueries({ queryKey: ['recurring-transactions'] })
+    },
+  })
+}
+
 // Recurring Transactions
 export function useRecurringTransactions() {
   return useQuery({
