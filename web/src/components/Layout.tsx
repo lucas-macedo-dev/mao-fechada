@@ -68,10 +68,6 @@ export function Layout({ children }: Readonly<{ children: React.ReactNode }>) {
               <i className="fa-solid fa-bell" aria-hidden="true" />
               &nbsp;{t("nav.subscription")}
             </Link>
-            <Link to="/payment" className="nav-link">
-              <i className="fa-solid fa-credit-card" aria-hidden="true" />
-              &nbsp;{t("nav.payment")}
-            </Link>
             <Link to="/Reports" className="nav-link">
               <i className="fa-solid fa-file-pdf" aria-hidden="true"></i>
               &nbsp;{t("nav.reports")}
@@ -150,13 +146,6 @@ export function Layout({ children }: Readonly<{ children: React.ReactNode }>) {
                 leftSection={<i className="fa-solid fa-bell" />}
               >
                 {t("nav.subscription")}
-              </Menu.Item>
-              <Menu.Item
-                component={Link}
-                to="/payment"
-                leftSection={<i className="fa-solid fa-credit-card" />}
-              >
-                {t("nav.payment")}
               </Menu.Item>
               <Menu.Item
                 leftSection={<i className="fa-solid fa-circle-question" />}

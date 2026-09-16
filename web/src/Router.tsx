@@ -16,7 +16,6 @@ import { TransactionsPage } from './pages/TransactionsPage'
 import { RecurringTransactionsPage } from './pages/RecurringTransactionsPage'
 import { ProfilePage } from './pages/ProfilePage'
 import { SubscriptionPage } from './pages/SubscriptionPage'
-import { PaymentMethodsPage } from './pages/PaymentMethodsPage'
 import i18n from './i18n/config'
 import { ReportsPage } from './pages/ReportsPage'
 
@@ -94,16 +93,6 @@ function AppRoutes() {
           <PrivateRoute>
             <Layout>
               <SubscriptionPage />
-            </Layout>
-          </PrivateRoute>
-        }
-      />
-      <Route
-        path="/payment"
-        element={
-          <PrivateRoute>
-            <Layout>
-              <PaymentMethodsPage />
             </Layout>
           </PrivateRoute>
         }
