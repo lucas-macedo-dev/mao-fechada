@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Cache;
 
-#[Fillable(['user_id', 'category_id', 'type', 'payment_method', 'amount', 'transacted_at', 'notes', 'installment_group_id', 'installment_number', 'installment_total'])]
+#[Fillable(['user_id', 'category_id', 'type', 'payment_method', 'amount', 'transacted_at', 'notes', 'installment_group_id', 'installment_number', 'installment_total', 'recurring_transaction_id'])]
 #[Hidden(['user_id'])]
 class Transaction extends Model
 {
@@ -45,5 +45,10 @@ class Transaction extends Model
     public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class);
+    }
+
+    public function recurringTransaction(): BelongsTo
+    {
+        return $this->belongsTo(RecurringTransaction::class);
     }
 }

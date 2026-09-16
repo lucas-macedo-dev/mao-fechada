@@ -112,6 +112,9 @@ export function TransactionsPage() {
   );
   const [installmentTotal, setInstallmentTotal] = useState<number | string>(2);
 
+  // Recurring field (create only)
+  const [recurringEnabled, setRecurringEnabled] = useState(false);
+
   // Confirm dialog state
   const [confirmState, setConfirmState] = useState<ConfirmState>(null);
 
@@ -236,6 +239,7 @@ export function TransactionsPage() {
     setInstallmentEnabled(false);
     setInstallmentCurrent(1);
     setInstallmentTotal(2);
+    setRecurringEnabled(false);
     setError("");
     setFormModal({ mode: "create" });
   };
@@ -292,6 +296,7 @@ export function TransactionsPage() {
     try {
       if (formModal.mode === "create") {
         const isInstallment =
+          !recurringEnabled &&
           installmentEnabled &&
           formPaymentMethod === "credit_card" &&
           formType === "expense";
@@ -307,6 +312,7 @@ export function TransactionsPage() {
             installment_number: Number(installmentCurrent),
             installment_total: Number(installmentTotal),
           }),
+          ...(recurringEnabled && { recurring: true }),
         });
 
         completeStep("record-transaction");
@@ -622,6 +628,11 @@ export function TransactionsPage() {
                           })}
                         </Text>
                       )}
+                    {tx.recurring_transaction_id != null && (
+                      <Text size="xs" c="indigo" fw={500}>
+                        {t("transactions.recurring_badge")}
+                      </Text>
+                    )}
                   </Stack>
 
                   <Group gap="xs" align="center">
@@ -830,16 +841,18 @@ export function TransactionsPage() {
             />
           </SimpleGrid>
 
-          {formModal?.mode === "create" &&
+          {formModal?.mode === "create" && !recurringEnabled &&
             formPaymentMethod === "credit_card" &&
             formType === "expense" && (
               <Box mb="sm">
                 <Switch
                   label={t("transactions.installment_toggle")}
                   checked={installmentEnabled}
-                  onChange={(e) =>
-                    setInstallmentEnabled(e.currentTarget.checked)
-                  }
+                  onChange={(e) => {
+                    const checked = e.currentTarget.checked;
+                    setInstallmentEnabled(checked);
+                    if (checked) setRecurringEnabled(false);
+                  }}
                   mb="sm"
                 />
                 {installmentEnabled && (
@@ -864,6 +877,17 @@ export function TransactionsPage() {
                 )}
               </Box>
             )}
+
+          {formModal?.mode === "create" && !installmentEnabled && (
+            <Box mb="sm">
+              <Switch
+                label={t("transactions.recurring_toggle")}
+                checked={recurringEnabled}
+                onChange={(e) => setRecurringEnabled(e.currentTarget.checked)}
+                mb="sm"
+              />
+            </Box>
+          )}
 
           {error && (
             <Alert color="red" mb="sm" radius="md">

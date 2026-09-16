@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\V1\EmailVerificationController;
 use App\Http\Controllers\Api\V1\MercadoPagoWebhookController;
 use App\Http\Controllers\Api\V1\MonthlySummaryController;
 use App\Http\Controllers\Api\V1\PasswordResetController;
+use App\Http\Controllers\Api\V1\RecurringTransactionController;
 use App\Http\Controllers\Api\V1\ReportController;
 use App\Http\Controllers\Api\V1\TransactionController;
 use App\Http\Controllers\Api\V1\TutorialController;
@@ -38,6 +39,9 @@ Route::prefix('v1')->group(function (): void {
         Route::middleware('verified')->group(function (): void {
             Route::apiResource('categories', CategoryController::class);
             Route::apiResource('transactions', TransactionController::class);
+
+            Route::get('/recurring-transactions', [RecurringTransactionController::class, 'index']);
+            Route::post('/recurring-transactions/{id}/cancel', [RecurringTransactionController::class, 'cancel']);
 
             Route::get('/plans', [BillingController::class, 'plans']);
             Route::get('/subscription', [BillingController::class, 'subscription']);
