@@ -417,7 +417,7 @@ export function HomePage() {
                   )}
                 </SectionCard>
 
-                <SectionCard>
+                <SectionCard id='main_categories'>
                   <Title order={2} size="h4" mb="md">
                     {t('dashboard.main_categories')}
                   </Title>
@@ -428,13 +428,13 @@ export function HomePage() {
                   ) : (
                     <BarChart
                       barProps={{ radius: 10 }}
-                      h={240}
+                      h={Math.max(240, categoryData.length * 32)}
                       data={categoryData}
                       dataKey="name"
                       orientation="vertical"
                       series={[{ name: 'value', color: 'red.5', label: t('dashboard.expense') }]}
                       gridAxis="x"
-                      yAxisProps={{ width: 80 }}
+                      yAxisProps={{ width: 80, interval: 0 }}
                       valueFormatter={(v) => `R$ ${v.toFixed(2)}`}
                     />
                   )}
