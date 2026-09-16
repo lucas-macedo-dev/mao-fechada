@@ -113,21 +113,21 @@ class DashboardController extends Controller
 
                 return [
                     'name'  => $mainCategory?->name ?? 'Sem categoria',
-                    'value' => (float) $transactions->sum('amount'),
+                    'value' => (float) number_format($transactions->sum('amount'), 2, '.', ''),
                 ];
             })
             ->values()
             ->sortByDesc('value');
 
-        $top = $rows->take(5);
-        $other = $rows->skip(5);
+        $top = $rows->take(10);
+        $other = $rows->skip(10);
 
         $result = $top->values()->toArray();
 
         if ($other->isNotEmpty()) {
             $result[] = [
                 'name'  => 'Outros',
-                'value' => (float) $other->sum('value'),
+                'value' =>  (float) number_format(  $other->sum('value'), 2, '.', ''),
             ];
         }
 
@@ -279,7 +279,7 @@ class DashboardController extends Controller
             ->groupBy('payment_method')
             ->map(fn ($transactions, $method) => [
                 'name'  => $method,
-                'value' => (float) $transactions->sum('amount'),
+                'value' => (float) number_format($transactions->sum('amount'), 2, '.', ''),
             ])
             ->sortByDesc('value')
             ->values();
