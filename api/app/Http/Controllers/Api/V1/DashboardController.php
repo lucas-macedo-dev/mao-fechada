@@ -141,6 +141,7 @@ class DashboardController extends Controller
         $total = (float) $this->baseQuery($request, $year, $month)
             ->where('type', 'expense')
             ->whereNotNull('installment_group_id')
+            ->orWhereNotNull('recurring_transaction_id')
             ->sum('amount');
 
         return ApiResponse::data([

@@ -14,6 +14,8 @@ return [
     'category_type_must_match_parent'      => 'O tipo da subcategoria deve ser igual ao da categoria pai.',
     'category_type_must_match_children'    => 'O tipo da categoria deve ser compativel com as subcategorias existentes.',
     'transaction_type_must_match_category' => 'O tipo da transacao deve ser igual ao da categoria.',
+    'transaction_already_installment'      => 'Esta transacao faz parte de uma compra parcelada e nao pode ser convertida em recorrente.',
+    'transaction_already_recurring'        => 'Esta transacao ja esta vinculada a uma regra recorrente.',
     'category_fallback_name'               => 'Sem Categoria',
     'category_delete_with_transactions'    => 'Esta categoria possui transações vinculadas. Ao deletar, elas serão movidas para "Sem Categoria". Deseja continuar?',
     'report_not_ready'                     => 'Este relatório ainda não está pronto para download.',

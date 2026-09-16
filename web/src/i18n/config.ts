@@ -153,6 +153,10 @@ const resources = {
       'transactions.filter_installments_only': 'Somente parcelamentos',
       'transactions.recurring_toggle': 'Transação recorrente',
       'transactions.recurring_badge': 'Recorrente',
+      'transactions.convert_to_recurring': 'Tornar recorrente',
+      'transactions.convert_to_recurring_confirm_title': 'Tornar transação recorrente',
+      'transactions.convert_to_recurring_confirm': 'Isso criará uma regra recorrente mensal com o valor, categoria e dia deste lançamento. Deseja continuar?',
+      'transactions.convert_to_recurring_success': 'Transação convertida em recorrente com sucesso.',
       'transactions.more_filters': 'Mais filtros',
       'transactions.filter_category': 'Categoria',
       'transactions.filter_amount_min': 'Valor mínimo',
@@ -240,6 +244,7 @@ const resources = {
       'recurring.cancel_confirm_title': 'Cancelar transação recorrente',
       'recurring.cancel_confirm_message': 'Isso interrompe as próximas gerações desta transação recorrente. As transações já geradas não serão alteradas. Deseja continuar?',
       'recurring.cancel_success': 'Transação recorrente cancelada com sucesso.',
+      'or' : 'ou'
     },
   },
   en: {
@@ -393,6 +398,10 @@ const resources = {
       'transactions.filter_installments_only': 'Installments only',
       'transactions.recurring_toggle': 'Recurring transaction',
       'transactions.recurring_badge': 'Recurring',
+      'transactions.convert_to_recurring': 'Make recurring',
+      'transactions.convert_to_recurring_confirm_title': 'Make transaction recurring',
+      'transactions.convert_to_recurring_confirm': 'This will create a monthly recurring rule using this transaction\'s amount, category, and day. Continue?',
+      'transactions.convert_to_recurring_success': 'Transaction converted to recurring successfully.',
       'transactions.more_filters': 'More filters',
       'transactions.filter_category': 'Category',
       'transactions.filter_amount_min': 'Min amount',
@@ -478,6 +487,7 @@ const resources = {
       'recurring.cancel_confirm_title': 'Cancel recurring transaction',
       'recurring.cancel_confirm_message': 'This stops future generations of this recurring transaction. Transactions already generated will not be affected. Continue?',
       'recurring.cancel_success': 'Recurring transaction cancelled successfully.',
+      'or' : 'or'
     },
   },
 }

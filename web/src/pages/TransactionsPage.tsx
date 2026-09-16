@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import {
   useCategories,
+  useConvertTransactionToRecurring,
   useCreateTransaction,
   useDeleteTransaction,
   useTransactions,
@@ -121,6 +122,7 @@ export function TransactionsPage() {
   const createTransaction = useCreateTransaction();
   const updateTransaction = useUpdateTransaction();
   const deleteTransaction = useDeleteTransaction();
+  const convertToRecurring = useConvertTransactionToRecurring();
   const { data: categories = [] } = useCategories();
 
   const filterCategoryId = filterSubcategoryId || filterParentCategoryId;
@@ -369,6 +371,27 @@ export function TransactionsPage() {
       title: t("transactions.delete_confirm_title"),
       message,
       onConfirm: () => executeDelete(id),
+    });
+  };
+
+  const executeConvertToRecurring = async (id: number) => {
+    setError("");
+    setSuccess("");
+    try {
+      await convertToRecurring.mutateAsync(id);
+      setSuccess(t("transactions.convert_to_recurring_success"));
+    } catch (err) {
+      setError(extractApiError(err).message);
+    } finally {
+      setConfirmState(null);
+    }
+  };
+
+  const handleConvertToRecurring = (id: number) => {
+    setConfirmState({
+      title: t("transactions.convert_to_recurring_confirm_title"),
+      message: t("transactions.convert_to_recurring_confirm"),
+      onConfirm: () => executeConvertToRecurring(id),
     });
   };
 
@@ -658,6 +681,23 @@ export function TransactionsPage() {
                         style={{ fontSize: "0.8rem" }}
                       />
                     </ActionIcon>
+                    {tx.recurring_transaction_id == null &&
+                      tx.installment_group_id == null && (
+                        <ActionIcon
+                          variant="subtle"
+                          radius="xl"
+                          size="sm"
+                          onClick={() => handleConvertToRecurring(tx.id)}
+                          aria-label={t("transactions.convert_to_recurring")}
+                          title={t("transactions.convert_to_recurring")}
+                        >
+                          <i
+                            className="fa-solid fa-arrows-rotate"
+                            aria-hidden="true"
+                            style={{ fontSize: "0.8rem" }}
+                          />
+                        </ActionIcon>
+                      )}
                     <ActionIcon
                       variant="subtle"
                       color="red"
@@ -914,7 +954,7 @@ export function TransactionsPage() {
         message={confirmState?.message ?? ""}
         onConfirm={confirmState?.onConfirm ?? (() => {})}
         onCancel={() => setConfirmState(null)}
-        loading={deleteTransaction.isPending}
+        loading={deleteTransaction.isPending || convertToRecurring.isPending}
       />
     </PageContainer>
   );

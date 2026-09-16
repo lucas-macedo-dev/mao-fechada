@@ -39,6 +39,7 @@ Route::prefix('v1')->group(function (): void {
         Route::middleware('verified')->group(function (): void {
             Route::apiResource('categories', CategoryController::class);
             Route::apiResource('transactions', TransactionController::class);
+            Route::post('/transactions/{id}/convert-to-recurring', [TransactionController::class, 'convertToRecurring']);
 
             Route::get('/recurring-transactions', [RecurringTransactionController::class, 'index']);
             Route::post('/recurring-transactions/{id}/cancel', [RecurringTransactionController::class, 'cancel']);

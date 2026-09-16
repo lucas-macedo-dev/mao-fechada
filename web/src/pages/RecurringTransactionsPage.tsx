@@ -5,6 +5,7 @@ import {
   Alert,
   Stack,
   Group,
+  Flex,
   Paper,
   Text,
   Badge,
@@ -87,11 +88,17 @@ export function RecurringTransactionsPage() {
           {t("recurring.empty")}
         </Text>
       ) : (
-        <Stack gap="sm">
+        <Stack gap="sm" >
           {rules.map((rule) => (
-            <Paper key={rule.id} shadow="xs" radius="md" p="md" withBorder>
-              <Group justify="space-between" align="center">
-                <Stack gap={2}>
+            <Paper key={rule.id} shadow="xs" radius="md" p="md" withBorder >
+              <Flex
+                justify="space-between"
+                direction={{ base: "column", sm: "row" }}
+                gap="sm"
+              >
+                <Stack
+                  gap={2}
+                >
                   <Group gap="xs" align="center">
                     <Text
                       fw={600}
@@ -121,7 +128,12 @@ export function RecurringTransactionsPage() {
                   )}
                 </Stack>
 
-                <Group gap="xs" align="center">
+                <Group
+                  gap="xs"
+                  align="center"
+                  justify="center"
+                  wrap="nowrap"
+                >
                   <Text
                     fw={700}
                     size="lg"
@@ -141,7 +153,7 @@ export function RecurringTransactionsPage() {
                     </Button>
                   )}
                 </Group>
-              </Group>
+              </Flex>
             </Paper>
           ))}
         </Stack>

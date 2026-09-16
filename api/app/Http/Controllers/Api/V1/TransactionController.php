@@ -166,6 +166,45 @@ class TransactionController extends Controller
         return ApiResponse::data($transaction->fresh()->load('category'));
     }
 
+    public function convertToRecurring(Request $request, int $id): JsonResponse
+    {
+        $transaction = Transaction::query()->findOrFail($id);
+        $this->ensureOwnership($request, $transaction->user_id);
+
+        if ($transaction->installment_group_id !== null) {
+            throw ValidationException::withMessages([
+                'transaction' => [__('messages.transaction_already_installment')],
+            ]);
+        }
+
+        if ($transaction->recurring_transaction_id !== null) {
+            throw ValidationException::withMessages([
+                'transaction' => [__('messages.transaction_already_recurring')],
+            ]);
+        }
+
+        $transaction = DB::transaction(function () use ($request, $transaction): Transaction {
+            $transactedAt = Carbon::parse($transaction->transacted_at);
+
+            $rule = $request->user()->recurringTransactions()->create([
+                'category_id'       => $transaction->category_id,
+                'type'              => $transaction->type,
+                'payment_method'    => $transaction->payment_method,
+                'amount'            => $transaction->amount,
+                'notes'             => $transaction->notes,
+                'day_of_month'      => $transactedAt->day,
+                'status'            => 'active',
+                'last_generated_at' => $transactedAt->format('Y-m-d'),
+            ]);
+
+            $transaction->update(['recurring_transaction_id' => $rule->id]);
+
+            return $transaction;
+        });
+
+        return ApiResponse::data($transaction->fresh()->load('category'));
+    }
+
     public function destroy(Request $request, int $id): JsonResponse
     {
         $transaction = Transaction::query()->findOrFail($id);

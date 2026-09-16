@@ -134,6 +134,11 @@ export const api = {
     await client.delete(`/v1/transactions/${id}`)
   },
 
+  convertTransactionToRecurring: async (id: number) => {
+    const response = await client.post<{ data: Transaction }>(`/v1/transactions/${id}/convert-to-recurring`)
+    return response.data.data
+  },
+
   // Recurring Transactions
   listRecurringTransactions: async () => {
     const response = await client.get<{ data: RecurringTransaction[] }>('/v1/recurring-transactions')

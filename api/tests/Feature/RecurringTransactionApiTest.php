@@ -6,6 +6,7 @@ use App\Models\Transaction;
 use App\Models\User;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Str;
 use Laravel\Sanctum\Sanctum;
 
 it('lists the authenticated user\'s recurring rules with active ones first', function () {
@@ -181,6 +182,139 @@ it('flushes the dashboard summary cache tag when relaunching', function () {
     $this->artisan('transactions:relaunch-recurring');
 
     expect(Cache::tags(["dashboard-summary:{$user->id}"])->get('summary'))->toBeNull();
+
+    Carbon::setTestNow();
+});
+
+it('converts an eligible transaction into a recurring rule without duplicating it', function () {
+    $user = User::factory()->create();
+    $category = Category::factory()->for($user)->create(['type' => 'expense']);
+    $transaction = Transaction::factory()->for($user)->create([
+        'category_id'    => $category->id,
+        'type'           => 'expense',
+        'payment_method' => 'pix',
+        'amount'         => 99.90,
+        'transacted_at'  => '2026-09-12',
+        'notes'          => 'Gym membership',
+    ]);
+    Sanctum::actingAs($user);
+
+    $response = $this->postJson("/api/v1/transactions/{$transaction->id}/convert-to-recurring");
+
+    $response->assertStatus(200)
+        ->assertJsonPath('data.recurring_transaction_id', fn ($id) => $id !== null);
+
+    $rule = RecurringTransaction::query()->findOrFail($response->json('data.recurring_transaction_id'));
+    expect($rule->status)->toBe('active');
+    expect($rule->day_of_month)->toBe(12);
+    expect($rule->last_generated_at->format('Y-m-d'))->toBe('2026-09-12');
+    expect((float) $rule->amount)->toBe(99.90);
+
+    expect($transaction->fresh()->recurring_transaction_id)->toBe($rule->id);
+    expect(Transaction::query()->where('user_id', $user->id)->count())->toBe(1);
+});
+
+it('rejects converting another user\'s transaction', function () {
+    $owner = User::factory()->create();
+    $intruder = User::factory()->create();
+    $category = Category::factory()->for($owner)->create(['type' => 'expense']);
+    $transaction = Transaction::factory()->for($owner)->create([
+        'category_id' => $category->id,
+        'type'        => 'expense',
+    ]);
+    Sanctum::actingAs($intruder);
+
+    $response = $this->postJson("/api/v1/transactions/{$transaction->id}/convert-to-recurring");
+
+    $response->assertStatus(403);
+    expect($transaction->fresh()->recurring_transaction_id)->toBeNull();
+});
+
+it('rejects converting an already-recurring transaction', function () {
+    $user = User::factory()->create();
+    $category = Category::factory()->for($user)->create(['type' => 'expense']);
+    $rule = RecurringTransaction::factory()->for($user)->create([
+        'category_id' => $category->id,
+        'type'        => 'expense',
+        'status'      => 'active',
+    ]);
+    $transaction = Transaction::factory()->for($user)->create([
+        'category_id'              => $category->id,
+        'type'                     => 'expense',
+        'recurring_transaction_id' => $rule->id,
+    ]);
+    Sanctum::actingAs($user);
+
+    $response = $this->postJson("/api/v1/transactions/{$transaction->id}/convert-to-recurring");
+
+    $response->assertStatus(422);
+    expect(RecurringTransaction::query()->where('user_id', $user->id)->count())->toBe(1);
+});
+
+it('rejects converting an installment-linked transaction', function () {
+    $user = User::factory()->create();
+    $category = Category::factory()->for($user)->create(['type' => 'expense']);
+    $transaction = Transaction::factory()->for($user)->create([
+        'category_id'           => $category->id,
+        'type'                  => 'expense',
+        'installment_group_id'  => (string) Str::uuid(),
+        'installment_number'    => 1,
+        'installment_total'     => 3,
+    ]);
+    Sanctum::actingAs($user);
+
+    $response = $this->postJson("/api/v1/transactions/{$transaction->id}/convert-to-recurring");
+
+    $response->assertStatus(422);
+    expect($transaction->fresh()->recurring_transaction_id)->toBeNull();
+    expect(RecurringTransaction::query()->where('user_id', $user->id)->count())->toBe(0);
+});
+
+it('does not generate a duplicate when the converted transaction is dated in the current cycle', function () {
+    Carbon::setTestNow('2026-09-15');
+
+    $user = User::factory()->create();
+    $category = Category::factory()->for($user)->create(['type' => 'expense']);
+    $transaction = Transaction::factory()->for($user)->create([
+        'category_id'   => $category->id,
+        'type'          => 'expense',
+        'transacted_at' => '2026-09-12',
+    ]);
+    Sanctum::actingAs($user);
+
+    $this->postJson("/api/v1/transactions/{$transaction->id}/convert-to-recurring")->assertStatus(200);
+
+    $this->artisan('transactions:relaunch-recurring');
+
+    expect(Transaction::query()->where('user_id', $user->id)->count())->toBe(1);
+
+    Carbon::setTestNow();
+});
+
+it('generates the current cycle instance on next relaunch when the converted transaction is dated in a past cycle', function () {
+    Carbon::setTestNow('2026-09-15');
+
+    $user = User::factory()->create();
+    $category = Category::factory()->for($user)->create(['type' => 'expense']);
+    $transaction = Transaction::factory()->for($user)->create([
+        'category_id'   => $category->id,
+        'type'          => 'expense',
+        'transacted_at' => '2026-08-12',
+    ]);
+    Sanctum::actingAs($user);
+
+    $response = $this->postJson("/api/v1/transactions/{$transaction->id}/convert-to-recurring");
+    $response->assertStatus(200);
+    $ruleId = $response->json('data.recurring_transaction_id');
+
+    $this->artisan('transactions:relaunch-recurring');
+
+    expect(Transaction::query()->where('user_id', $user->id)->count())->toBe(2);
+    $generated = Transaction::query()
+        ->where('recurring_transaction_id', $ruleId)
+        ->where('id', '!=', $transaction->id)
+        ->firstOrFail();
+    expect($generated->transacted_at->format('Y-m-d'))->toBe('2026-09-12');
 
     Carbon::setTestNow();
 });
