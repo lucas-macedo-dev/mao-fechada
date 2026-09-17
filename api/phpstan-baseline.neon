@@ -61,28 +61,76 @@ parameters:
 			path: app/Http/Controllers/Api/V1/BillingController.php
 
 		-
-			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Relations\\HasMany\:\:rootsWithChildren\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: app/Http/Controllers/Api/V1/CategoryController.php
-
-		-
 			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
 			identifier: nullsafe.neverNull
 			count: 1
-			path: app/Http/Controllers/Api/V1/DashboardController.php
+			path: app/Services/DashboardService.php
 
 		-
 			message: '#^Using nullsafe property access "\?\-\>parent" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
 			identifier: nullsafe.neverNull
 			count: 1
-			path: app/Http/Controllers/Api/V1/DashboardController.php
+			path: app/Services/DashboardService.php
 
 		-
 			message: '#^Using nullsafe property access "\?\-\>parent_id" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
 			identifier: nullsafe.neverNull
 			count: 1
-			path: app/Http/Controllers/Api/V1/DashboardController.php
+			path: app/Services/DashboardService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$parent\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/DashboardService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$parent_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/DashboardService.php
+
+		-
+			message: '#^Parameter \#1 \$category of static method App\\DataTransferObjects\\Output\\CategoryData\:\:fromModel\(\) expects App\\Models\\Category, Illuminate\\Database\\Eloquent\\Model given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/DataTransferObjects/Output/BudgetData.php
+
+		-
+			message: '#^Parameter \#1 \$category of static method App\\DataTransferObjects\\Output\\CategoryData\:\:fromModel\(\) expects App\\Models\\Category, Illuminate\\Database\\Eloquent\\Model given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/DataTransferObjects/Output/CategoryData.php
+
+		-
+			message: '#^Parameter \#1 \$category of static method App\\DataTransferObjects\\Output\\CategoryData\:\:fromModel\(\) expects App\\Models\\Category, Illuminate\\Database\\Eloquent\\Model given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/DataTransferObjects/Output/RecurringTransactionData.php
+
+		-
+			message: '#^Cannot call method toJSON\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/DataTransferObjects/Output/RecurringTransactionData.php
+
+		-
+			message: '#^Parameter \#1 \$category of static method App\\DataTransferObjects\\Output\\CategoryData\:\:fromModel\(\) expects App\\Models\\Category, Illuminate\\Database\\Eloquent\\Model given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/DataTransferObjects/Output/TransactionData.php
+
+		-
+			message: '#^Cannot call method toJSON\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/DataTransferObjects/Output/TransactionData.php
+
+		-
+			message: '#^Parameter \#1 \$category of static method App\\DataTransferObjects\\Output\\CategoryData\:\:fromModel\(\) expects App\\Models\\Category, Illuminate\\Database\\Eloquent\\Model given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Services/CategoryService.php
 
 		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
@@ -121,10 +169,10 @@ parameters:
 			path: app/Http/Controllers/Api/V1/ReportController.php
 
 		-
-			message: '#^Parameter \#1 \$attributes of method Illuminate\\Database\\Eloquent\\Relations\\HasOneOrMany\<Illuminate\\Database\\Eloquent\\Model,Illuminate\\Database\\Eloquent\\Model,Illuminate\\Database\\Eloquent\\Collection\<int, Illuminate\\Database\\Eloquent\\Model\>\>\:\:create\(\) expects array\<model property of Illuminate\\Database\\Eloquent\\Model, mixed\>, array\<string, mixed\> given\.$#'
+			message: '#^Parameter \#1 \$attributes of method Illuminate\\Database\\Eloquent\\Builder\<App\\Models\\Transaction\>\:\:create\(\) expects array\<model property of App\\Models\\Transaction, mixed\>, array\<string, mixed\> given\.$#'
 			identifier: argument.type
-			count: 2
-			path: app/Http/Controllers/Api/V1/TransactionController.php
+			count: 1
+			path: app/Repositories/TransactionRepository.php
 
 		-
 			message: '#^Offset ''completed_steps'' on array\{\}\|string on left side of \?\? does not exist\.$#'

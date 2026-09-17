@@ -5,41 +5,24 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
-use App\Models\RecurringTransaction;
+use App\Services\RecurringTransactionService;
 use App\Support\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class RecurringTransactionController extends Controller
 {
+    public function __construct(private readonly RecurringTransactionService $recurringTransactionService) {}
+
     public function index(Request $request): JsonResponse
     {
-        $rules = $request->user()
-            ->recurringTransactions()
-            ->with('category')
-            ->orderBy('status')
-            ->orderByDesc('id')
-            ->get();
-
-        return ApiResponse::data($rules);
+        return ApiResponse::data($this->recurringTransactionService->list($request));
     }
 
     public function cancel(Request $request, int $id): JsonResponse
     {
-        $rule = RecurringTransaction::query()->findOrFail($id);
-        $this->ensureOwnership($request, $rule->user_id);
+        $rule = $this->recurringTransactionService->cancel($request, $id);
 
-        if ($rule->status === 'active') {
-            $rule->update(['status' => 'cancelled']);
-        }
-
-        return ApiResponse::data($rule->fresh()->load('category'));
-    }
-
-    private function ensureOwnership(Request $request, int $ownerUserId): void
-    {
-        if ((int) $request->user()->id !== $ownerUserId) {
-            abort(403, __('messages.ownership_denied'));
-        }
+        return ApiResponse::data($rule->toArray());
     }
 }
