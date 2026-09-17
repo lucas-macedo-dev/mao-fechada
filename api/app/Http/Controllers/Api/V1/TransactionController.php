@@ -4,40 +4,29 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\DataTransferObjects\Input\CreateTransactionData;
+use App\DataTransferObjects\Input\ListTransactionsFilterData;
+use App\DataTransferObjects\Input\UpdateTransactionData;
+use App\DataTransferObjects\Output\TransactionData;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\ListTransactionsRequest;
 use App\Http\Requests\Api\V1\StoreTransactionRequest;
 use App\Http\Requests\Api\V1\UpdateTransactionRequest;
-use App\Models\Category;
-use App\Models\RecurringTransaction;
-use App\Models\Transaction;
+use App\Services\TransactionService;
 use App\Support\ApiResponse;
-use App\Support\TransactionFilterQuery;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
-use Illuminate\Validation\ValidationException;
 
 class TransactionController extends Controller
 {
+    public function __construct(private readonly TransactionService $transactionService) {}
+
     public function index(ListTransactionsRequest $request): JsonResponse
     {
-        $validated = $request->validated();
+        $data = ListTransactionsFilterData::fromArray($request->validated());
+        $paginator = $this->transactionService->paginate($request, $data)->appends($request->query());
 
-        $query = $request->user()
-            ->transactions()
-            ->with('category')
-            ->orderByDesc('transacted_at')
-            ->orderByDesc('id');
-
-        TransactionFilterQuery::apply($query, $validated);
-
-        $perPage = (int) ($validated['per_page'] ?? 20);
-        $paginator = $query->paginate($perPage)->appends($request->query());
-
-        return ApiResponse::data($paginator->items(), meta: [
+        return ApiResponse::data(TransactionData::collection($paginator->items()), meta: [
             'current_page' => $paginator->currentPage(),
             'last_page'    => $paginator->lastPage(),
             'per_page'     => $paginator->perPage(),
@@ -47,189 +36,40 @@ class TransactionController extends Controller
 
     public function store(StoreTransactionRequest $request): JsonResponse
     {
-        $validated = $request->validated();
+        $data = CreateTransactionData::fromArray($request->validated());
+        $result = $this->transactionService->create($request, $data);
 
-        $category = Category::query()->findOrFail($validated['category_id']);
-        $this->ensureOwnership($request, $category->user_id);
+        $payload = is_array($result) ? $result : $result->toArray();
 
-        if ($category->type !== $validated['type']) {
-            throw ValidationException::withMessages([
-                'type' => [__('messages.transaction_type_must_match_category')],
-            ]);
-        }
-
-        if ($validated['recurring'] ?? false) {
-            $transaction = DB::transaction(function () use ($request, $validated): Transaction {
-                $transactedAt = Carbon::parse($validated['transacted_at']);
-
-                $rule = $request->user()->recurringTransactions()->create([
-                    'category_id'       => $validated['category_id'],
-                    'type'              => $validated['type'],
-                    'payment_method'    => $validated['payment_method'],
-                    'amount'            => $validated['amount'],
-                    'notes'             => $validated['notes'] ?? null,
-                    'day_of_month'      => $transactedAt->day,
-                    'status'            => 'active',
-                    'last_generated_at' => $transactedAt->format('Y-m-d'),
-                ]);
-
-                return $request->user()->transactions()->create(array_merge(
-                    array_diff_key($validated, ['recurring' => null]),
-                    ['recurring_transaction_id' => $rule->id]
-                ));
-            });
-
-            return ApiResponse::data($transaction->load('category'), 201);
-        }
-
-        $installmentNumber = $validated['installment_number'] ?? null;
-        $installmentTotal = $validated['installment_total'] ?? null;
-
-        if ($installmentNumber !== null && $installmentTotal !== null) {
-            $transactions = DB::transaction(function () use ($request, $validated, $installmentNumber, $installmentTotal): array {
-                $groupId = Str::uuid()->toString();
-                $baseDate = Carbon::parse($validated['transacted_at']);
-                $records = [];
-
-                for ($i = 1; $i <= $installmentTotal; $i++) {
-                    $offset = $i - $installmentNumber;
-                    $date = $baseDate->copy()->addMonths($offset)->format('Y-m-d');
-
-                    $records[] = $request->user()->transactions()->create(array_merge(
-                        $validated,
-                        [
-                            'transacted_at'        => $date,
-                            'installment_group_id' => $groupId,
-                            'installment_number'   => $i,
-                            'installment_total'    => $installmentTotal,
-                        ]
-                    ));
-                }
-
-                return $records;
-            });
-
-            $loaded = collect($transactions)->map(fn ($t) => $t->load('category'));
-
-            return ApiResponse::data($loaded, 201);
-        }
-
-        $transaction = $request->user()
-            ->transactions()
-            ->create($validated);
-
-        return ApiResponse::data($transaction->load('category'), 201);
+        return ApiResponse::data($payload, 201);
     }
 
     public function show(Request $request, int $id): JsonResponse
     {
-        $transaction = Transaction::query()->with('category')->findOrFail($id);
-        $this->ensureOwnership($request, $transaction->user_id);
+        $transaction = $this->transactionService->find($request, $id);
 
-        return ApiResponse::data($transaction);
+        return ApiResponse::data($transaction->toArray());
     }
 
     public function update(UpdateTransactionRequest $request, int $id): JsonResponse
     {
-        $transaction = Transaction::query()->findOrFail($id);
-        $this->ensureOwnership($request, $transaction->user_id);
+        $data = UpdateTransactionData::fromArray($request->validated());
+        $transaction = $this->transactionService->update($request, $id, $data);
 
-        $validated = $request->validated();
-
-        if (isset($validated['category_id'])) {
-            $category = Category::query()->findOrFail($validated['category_id']);
-            $this->ensureOwnership($request, $category->user_id);
-
-            $transactionType = $validated['type'] ?? $transaction->type;
-            if ($category->type !== $transactionType) {
-                throw ValidationException::withMessages([
-                    'type' => [__('messages.transaction_type_must_match_category')],
-                ]);
-            }
-        }
-
-        if ($transaction->installment_group_id) {
-            $cascadeFields = array_diff_key($validated, array_flip(['transacted_at', 'installment_number', 'installment_total', 'installment_group_id']));
-
-            DB::transaction(function () use ($transaction, $cascadeFields): void {
-                Transaction::query()
-                    ->where('user_id', $transaction->user_id)
-                    ->where('installment_group_id', $transaction->installment_group_id)
-                    ->update($cascadeFields);
-            });
-
-            return ApiResponse::data($transaction->fresh()->load('category'));
-        }
-
-        $transaction->update($validated);
-
-        return ApiResponse::data($transaction->fresh()->load('category'));
+        return ApiResponse::data($transaction->toArray());
     }
 
     public function convertToRecurring(Request $request, int $id): JsonResponse
     {
-        $transaction = Transaction::query()->findOrFail($id);
-        $this->ensureOwnership($request, $transaction->user_id);
+        $transaction = $this->transactionService->convertToRecurring($request, $id);
 
-        if ($transaction->installment_group_id !== null) {
-            throw ValidationException::withMessages([
-                'transaction' => [__('messages.transaction_already_installment')],
-            ]);
-        }
-
-        if ($transaction->recurring_transaction_id !== null) {
-            throw ValidationException::withMessages([
-                'transaction' => [__('messages.transaction_already_recurring')],
-            ]);
-        }
-
-        $transaction = DB::transaction(function () use ($request, $transaction): Transaction {
-            $transactedAt = Carbon::parse($transaction->transacted_at);
-
-            $rule = $request->user()->recurringTransactions()->create([
-                'category_id'       => $transaction->category_id,
-                'type'              => $transaction->type,
-                'payment_method'    => $transaction->payment_method,
-                'amount'            => $transaction->amount,
-                'notes'             => $transaction->notes,
-                'day_of_month'      => $transactedAt->day,
-                'status'            => 'active',
-                'last_generated_at' => $transactedAt->format('Y-m-d'),
-            ]);
-
-            $transaction->update(['recurring_transaction_id' => $rule->id]);
-
-            return $transaction;
-        });
-
-        return ApiResponse::data($transaction->fresh()->load('category'));
+        return ApiResponse::data($transaction->toArray());
     }
 
     public function destroy(Request $request, int $id): JsonResponse
     {
-        $transaction = Transaction::query()->findOrFail($id);
-        $this->ensureOwnership($request, $transaction->user_id);
-
-        if ($transaction->installment_group_id) {
-            DB::transaction(function () use ($transaction): void {
-                Transaction::query()
-                    ->where('user_id', $transaction->user_id)
-                    ->where('installment_group_id', $transaction->installment_group_id)
-                    ->delete();
-            });
-
-            return response()->json([], 204);
-        }
-
-        $transaction->delete();
+        $this->transactionService->delete($request, $id);
 
         return response()->json([], 204);
-    }
-
-    private function ensureOwnership(Request $request, int $ownerUserId): void
-    {
-        if ((int) $request->user()->id !== $ownerUserId) {
-            abort(403, __('messages.ownership_denied'));
-        }
     }
 }

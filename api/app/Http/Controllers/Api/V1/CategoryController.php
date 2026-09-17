@@ -4,140 +4,56 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\DataTransferObjects\Input\CreateCategoryData;
+use App\DataTransferObjects\Input\UpdateCategoryData;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\StoreCategoryRequest;
 use App\Http\Requests\Api\V1\UpdateCategoryRequest;
-use App\Models\Category;
-use App\Services\FallbackCategoryResolver;
+use App\Services\CategoryService;
 use App\Support\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\ValidationException;
 
 class CategoryController extends Controller
 {
+    public function __construct(private readonly CategoryService $categoryService) {}
+
     public function index(Request $request): JsonResponse
     {
         if ($request->boolean('tree')) {
-            $categories = $request->user()
-                ->categories()
-                ->rootsWithChildren()
-                ->get();
-
-            return ApiResponse::data($categories);
+            return ApiResponse::data($this->categoryService->tree($request));
         }
 
-        $categories = $request->user()
-            ->categories()
-            ->with('parent')
-            ->orderBy('name')
-            ->get();
-
-        return ApiResponse::data($categories);
+        return ApiResponse::data($this->categoryService->list($request));
     }
 
     public function store(StoreCategoryRequest $request): JsonResponse
     {
-        $validated = $request->validated();
+        $data = CreateCategoryData::fromArray($request->validated());
+        $category = $this->categoryService->create($request, $data);
 
-        $this->validateParent($request, $validated['parent_id'] ?? null, $validated['type']);
-
-        $category = $request->user()
-            ->categories()
-            ->create($validated);
-
-        return ApiResponse::data($category, 201);
+        return ApiResponse::data($category->toArray(), 201);
     }
 
     public function show(Request $request, int $id): JsonResponse
     {
-        $category = Category::query()->with(['parent', 'children'])->findOrFail($id);
-        $this->ensureOwnership($request, $category->user_id);
+        $category = $this->categoryService->find($request, $id);
 
-        return ApiResponse::data($category);
+        return ApiResponse::data($category->toArray());
     }
 
     public function update(UpdateCategoryRequest $request, int $id): JsonResponse
     {
-        $category = Category::query()->findOrFail($id);
-        $this->ensureOwnership($request, $category->user_id);
+        $data = UpdateCategoryData::fromArray($request->validated());
+        $category = $this->categoryService->update($request, $id, $data);
 
-        $validated = $request->validated();
-
-        $effectiveType = $validated['type'] ?? $category->type;
-        $targetParentId = array_key_exists('parent_id', $validated)
-            ? $validated['parent_id']
-            : $category->parent_id;
-
-        if ($targetParentId !== null && (int) $targetParentId === (int) $category->id) {
-            throw ValidationException::withMessages([
-                'parent_id' => [__('messages.category_parent_self')],
-            ]);
-        }
-
-        $this->validateParent($request, $targetParentId, $effectiveType);
-
-        if (array_key_exists('type', $validated) && $category->children()->exists()) {
-            $hasMismatchedChildren = $category
-                ->children()
-                ->where('type', '!=', $validated['type'])
-                ->exists();
-
-            if ($hasMismatchedChildren) {
-                throw ValidationException::withMessages([
-                    'type' => [__('messages.category_type_must_match_children')],
-                ]);
-            }
-        }
-
-        $category->update($validated);
-
-        return ApiResponse::data($category->fresh()->load(['parent', 'children']));
+        return ApiResponse::data($category->toArray());
     }
 
     public function destroy(Request $request, int $id): JsonResponse
     {
-        $category = Category::query()->findOrFail($id);
-        $this->ensureOwnership($request, $category->user_id);
-
-        DB::transaction(function () use ($request, $category): void {
-            if ($category->transactions()->exists()) {
-                $fallback = FallbackCategoryResolver::findOrCreate($request->user(), $category->type);
-                $category->transactions()->update(['category_id' => $fallback->id]);
-            }
-            $category->delete();
-        });
+        $this->categoryService->delete($request, $id);
 
         return response()->json([], 204);
-    }
-
-    private function ensureOwnership(Request $request, int $ownerUserId): void
-    {
-        if ((int) $request->user()->id !== $ownerUserId) {
-            abort(403, __('messages.ownership_denied'));
-        }
-    }
-
-    private function validateParent(Request $request, ?int $parentId, string $type): void
-    {
-        if ($parentId === null) {
-            return;
-        }
-
-        $parent = Category::query()->findOrFail($parentId);
-        $this->ensureOwnership($request, $parent->user_id);
-
-        if ($parent->parent_id !== null) {
-            throw ValidationException::withMessages([
-                'parent_id' => [__('messages.category_parent_must_be_root')],
-            ]);
-        }
-
-        if ($parent->type !== $type) {
-            throw ValidationException::withMessages([
-                'type' => [__('messages.category_type_must_match_parent')],
-            ]);
-        }
     }
 }

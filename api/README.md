@@ -7,6 +7,23 @@
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
 </p>
 
+## Architecture
+
+New feature work under `app/Http/Controllers/Api/V1` follows a layered convention:
+
+```
+Controller → Input DTO → Service → Repository → Model
+                                 ↓
+Controller ← Output DTO ← Service
+```
+
+- **Controllers** (`app/Http/Controllers/Api/V1`) validate the request, map validated data into an input DTO, call one service method, and shape the HTTP response from the returned output DTO. They never call Eloquent directly.
+- **Services** (`app/Services`) hold business rules and orchestration (ownership checks via the `App\Services\Concerns\AuthorizesOwnership` trait, multi-step writes wrapped in `DB::transaction()`, cross-model coordination). They accept and return DTOs, never `Request` objects or raw arrays.
+- **Repositories** (`app/Repositories`) hold persistence and query logic for one Eloquent model each, extending `BaseRepository`. They are plain classes (no interfaces) since there's a single Eloquent implementation.
+- **DTOs** (`app/DataTransferObjects/Input` and `.../Output`) are readonly, hand-written classes. Input DTOs carry validated request data into services; output DTOs carry data back out and implement `toArray()` for JSON serialization, so services never leak raw Eloquent models to controllers.
+
+Currently applied to the Category, Budget, RecurringTransaction, Transaction, and Dashboard domains. Other controllers (Auth, Billing, Tutorial, Password Reset, Email Verification, MercadoPago webhook) haven't been migrated yet — follow the same pattern when touching them next.
+
 ## Local Dev Setup
 
 ### Email verification for existing users
